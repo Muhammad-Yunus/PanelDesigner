@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PanelDesigner — Electrical Panel Layout</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,-apple-system,sans-serif}
+html,body{height:100%;overflow:hidden;background:#0f1115;color:#d8dbe2}
+#app{display:flex;flex-direction:column;height:100%}
+#toolbar{height:46px;background:#171a21;border-bottom:1px solid #2a2e38;display:flex;align-items:center;gap:6px;padding:0 10px;flex-shrink:0;overflow-x:auto}
+.tb-group{display:flex;align-items:center;gap:4px;padding-right:8px;border-right:1px solid #2a2e38}
+.tb-group:last-child{border-right:none}
+.tb-btn{background:#222632;border:1px solid #323847;color:#c6cbd6;padding:5px 10px;border-radius:5px;font-size:12px;cursor:pointer;white-space:nowrap}
+.tb-btn:hover{background:#2b3040}
+.tb-btn.active{background:#2563eb;border-color:#3b82f6;color:#fff}
+.tb-title{font-weight:700;font-size:13px;color:#fff;margin-right:4px;letter-spacing:.3px}
+input.tb-num{background:#222632;border:1px solid #323847;color:#c6cbd6;border-radius:5px;padding:4px 6px;font-size:12px;width:58px;text-align:center}
+#main{display:flex;flex:1;min-height:0}
+#left{width:250px;background:#171a21;border-right:1px solid #2a2e38;display:flex;flex-direction:column;flex-shrink:0}
+#libSearch{margin:8px;padding:6px 8px;background:#0f1115;border:1px solid #2a2e38;border-radius:5px;color:#d8dbe2;font-size:12px;outline:none}
+#libSearch:focus{border-color:#3b82f6}
+#libList{flex:1;overflow-y:auto;padding:0 8px 10px}
+.lib-cat{margin-top:10px;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#7c8496;margin-bottom:5px}
+.lib-item{background:#1f2330;border:1px solid #2c3244;border-radius:6px;padding:6px 8px;margin-bottom:5px;cursor:grab;display:flex;justify-content:space-between;align-items:center;font-size:12px;user-select:none}
+.lib-item:hover{border-color:#3b82f6;background:#242a3a}
+.lib-item:active{cursor:grabbing}
+.lib-item .dim{color:#6b7386;font-size:10px}
+#canvasWrap{flex:1;position:relative;overflow:hidden;background:#0c0e13}
+#svg{width:100%;height:100%;display:block;cursor:default;touch-action:none}
+#right{width:280px;background:#171a21;border-left:1px solid #2a2e38;display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.rp-head{padding:9px 12px 6px;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#7c8496;border-bottom:1px solid #2a2e38;position:sticky;top:0;background:#171a21;z-index:2}
+.rp-body{padding:9px 12px}
+.rp-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;font-size:12px;gap:6px}
+.rp-row label{color:#9aa1b3;flex-shrink:0}
+.rp-row input,.rp-row select{background:#0f1115;border:1px solid #2a2e38;color:#d8dbe2;border-radius:4px;padding:4px 6px;font-size:12px;width:140px;min-width:0;outline:none}
+.rp-row input:focus,.rp-row select:focus{border-color:#3b82f6}
+.rp-sec{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:#6b7386;margin:10px 0 5px}
+.rp-btn{background:#222632;border:1px solid #323847;color:#c6cbd6;padding:6px;border-radius:5px;font-size:12px;cursor:pointer;width:100%;margin-top:6px}
+.rp-btn:hover{background:#2b3040}
+.rp-btn.danger{background:#2a1215;border-color:#7f1d1d;color:#fca5a5}
+.rp-btn.danger:hover{background:#45161b}
+.conn-item,.issue{font-size:11px;padding:5px 7px;border-radius:4px;margin-bottom:4px;background:#1f2330;border:1px solid #2c3244;cursor:default;line-height:1.35}
+.issue{cursor:pointer}
+.issue.error{border-color:#7f1d1d;background:#2a1215;color:#fca5a5}
+.issue.warn{border-color:#854d0e;background:#2a2110;color:#fde68a}
+.empty{color:#5a6174;font-size:12px;padding:12px 4px;text-align:center;line-height:1.5}
+#status{height:26px;background:#171a21;border-top:1px solid #2a2e38;display:flex;align-items:center;gap:18px;padding:0 12px;font-size:11px;color:#8a92a6;flex-shrink:0}
+#status .ok{color:#4ade80}
+#status .err{color:#f87171;font-weight:600}
+#modalBg{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;z-index:50}
+#modalBg.open{display:flex}
+.modal{background:#171a21;border:1px solid #2c3244;border-radius:10px;width:560px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.modal h3{padding:13px 16px;font-size:14px;border-bottom:1px solid #2a2e38;color:#fff}
+.modal .mbody{padding:14px 16px;overflow-y:auto}
+.modal .mfoot{padding:10px 16px;border-top:1px solid #2a2e38;display:flex;justify-content:flex-end;gap:8px}
+.mtable{width:100%;border-collapse:collapse;font-size:12px;margin-top:4px}
+.mtable th{color:#7c8496;font-size:10px;text-transform:uppercase;letter-spacing:.6px;text-align:left;padding:4px 5px;border-bottom:1px solid #2a2e38}
+.mtable td{padding:4px 5px;border-bottom:1px solid #1f2330}
+.mtable input{background:#0f1115;border:1px solid #2a2e38;color:#d8dbe2;border-radius:4px;padding:3px 5px;font-size:12px;width:74px;outline:none}
+.mtable .del{background:#2a1215;border:1px solid #7f1d1d;color:#fca5a5;border-radius:4px;padding:3px 7px;cursor:pointer;font-size:11px}
+.mtable .del:hover{background:#45161b}
+.mrow{display:flex;gap:8px;margin-bottom:8px}
+.mrow label{font-size:12px;color:#9aa1b3;width:90px;display:flex;align-items:center}
+.mrow input{background:#0f1115;border:1px solid #2a2e38;color:#d8dbe2;border-radius:4px;padding:5px 7px;font-size:12px;width:110px;outline:none}
+svg text{user-select:none}
+.el-name{pointer-events:none;text-anchor:middle}
+.el-sub{pointer-events:none;text-anchor:middle}
+.term-dot,.term-hit{cursor:crosshair}
+#svg[data-mode="wire"] .elem,#svg[data-mode="wire"] .rail,#svg[data-mode="wire"] .duct,#svg[data-mode="wire"] .lbl{cursor:crosshair}
+.wire{fill:none;stroke-linecap:round;stroke-linejoin:round;cursor:pointer}
+.wire-hit{fill:none;stroke:transparent;stroke-linecap:round;pointer-events:stroke;cursor:pointer}
+.sel-outline{fill:none;stroke:#3b82f6;stroke-dasharray:5 4;stroke-width:1.2;pointer-events:none}
+.ghost{pointer-events:none}
+.dim-text{font-size:4.6px;fill:#64748b;text-anchor:middle;pointer-events:none}
+.bus-label{font-size:5.2px;font-weight:700;text-anchor:middle;pointer-events:none}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="toolbar">
+    <span class="tb-title">PanelDesigner</span>
+    <div class="tb-group">
+      <button class="tb-btn" id="btnNew">New</button>
+      <button class="tb-btn" id="btnExport">Export</button>
+      <button class="tb-btn" id="btnImport">Import</button>
+    </div>
+    <div class="tb-group">
+      <button class="tb-btn active" data-mode="select" id="mSelect">Select</button>
+      <button class="tb-btn" data-mode="wire" id="mWire">Wire</button>
+      <button class="tb-btn" data-mode="label" id="mLabel">Label</button>
+      <button class="tb-btn" id="btnDelete">Delete</button>
+      <button class="tb-btn" id="btnUndo">Undo</button>
+      <button class="tb-btn" id="btnRedo">Redo</button>
+    </div>
+    <div class="tb-group">
+      <button class="tb-btn" id="btnZoomOut" title="Zoom out">−</button>
+      <input class="tb-num" id="zoomVal" value="100%">
+      <button class="tb-btn" id="btnZoomIn" title="Zoom in">+</button>
+      <button class="tb-btn" id="btnFit">Fit</button>
+      <button class="tb-btn active" id="btnGrid">Grid</button>
+      <button class="tb-btn" id="btnDim">Dimensions</button>
+    </div>
+    <div class="tb-group">
+      <button class="tb-btn" id="btnPanelSettings">Panel Settings…</button>
+    </div>
+  </div>
+  <div id="main">
+    <aside id="left">
+      <input id="libSearch" placeholder="Search part…" autocomplete="off">
+      <div id="libList"></div>
+    </aside>
+    <div id="canvasWrap">
+      <svg id="svg" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="gridMinor" width="10" height="10" patternUnits="userSpaceOnUse">
+            <path d="M10 0H0V10" fill="none" stroke="#1b1f2a" stroke-width=".5"/>
+          </pattern>
+          <pattern id="gridMajor" width="100" height="100" patternUnits="userSpaceOnUse">
+            <rect width="100" height="100" fill="url(#gridMinor)"/>
+            <path d="M100 0H0V100" fill="none" stroke="#262c3b" stroke-width=".8"/>
+          </pattern>
+        </defs>
+        <g id="viewport">
+          <g id="lyrGrid"></g>
+          <g id="lyrPanel"></g>
+          <g id="lyrBus"></g>
+          <g id="lyrRail"></g>
+          <g id="lyrDuct"></g>
+          <g id="lyrElem"></g>
+          <g id="lyrWire"></g>
+          <g id="lyrTerm"></g>
+          <g id="lyrLabel"></g>
+          <g id="lyrOver"></g>
+        </g>
+      </svg>
+    </div>
+    <aside id="right">
+      <div class="rp-head" id="rpTitle">Properties</div>
+      <div class="rp-body" id="rpBody"></div>
+      <div class="rp-head">Validation</div>
+      <div class="rp-body" id="rpIssues"></div>
+    </aside>
+  </div>
+  <div id="status">
+    <span id="stMode">Mode: Select</span>
+    <span id="stCoord">X: 0 Y: 0 mm</span>
+    <span id="stZoom">Zoom 100%</span>
+    <span id="stSave">Auto-save: —</span>
+    <span id="stIssues">Issues: 0</span>
+  </div>
+</div>
+<div id="modalBg"><div class="modal" id="modal"></div></div>
+<input type="file" id="fileImport" accept=".json,application/json" style="display:none">
+<script>
+'use strict';
+/* ===================== CONSTANTS & PARTS CATALOG ===================== */
+const CATALOG = {
+  mcb_1p: { label:'MCB 1P', catalog:'Schneider Acti9 iC60N 1P', rating:'C16A', w:18, h:85, poles:1,
+    terms:{ 'L-in':{x:9,y:0,side:'top'}, 'L-out':{x:9,y:85,side:'bottom'} } },
+  mcb_2p: { label:'MCB 2P', catalog:'Schneider Acti9 iC60N 2P', rating:'C32A', w:36, h:85, poles:2,
+    terms:{ 'L-in':{x:9,y:0,side:'top'}, 'N-in':{x:27,y:0,side:'top'}, 'L-out':{x:9,y:85,side:'bottom'}, 'N-out':{x:27,y:85,side:'bottom'} } },
+  mcb_3p: { label:'MCB 3P', catalog:'Schneider Acti9 iC60N 3P', rating:'C40A', w:54, h:85, poles:3,
+    terms:{ 'L1-in':{x:9,y:0,side:'top'}, 'L2-in':{x:27,y:0,side:'top'}, 'L3-in':{x:45,y:0,side:'top'},
+            'L1-out':{x:9,y:85,side:'bottom'}, 'L2-out':{x:27,y:85,side:'bottom'}, 'L3-out':{x:45,y:85,side:'bottom'} } },
+  mccb_3p: { label:'MCCB 3P', catalog:'Schneider NSX250N 3P', rating:'250A', w:100, h:138, poles:3,
+    terms:{ 'L1-in':{x:20,y:0,side:'top'}, 'L2-in':{x:50,y:0,side:'top'}, 'L3-in':{x:80,y:0,side:'top'},
+            'L1-out':{x:20,y:138,side:'bottom'}, 'L2-out':{x:50,y:138,side:'bottom'}, 'L3-out':{x:80,y:138,side:'bottom'} } },
+  meter_1p: { label:'Meter 1P', catalog:'Schneider IEM2050 1P', rating:'', w:96, h:48, poles:1,
+    terms:{ 'L-in':{x:24,y:0,side:'top'}, 'N-in':{x:72,y:0,side:'top'},
+            'L-out':{x:24,y:48,side:'bottom'}, 'N-out':{x:72,y:48,side:'bottom'} } },
+  meter_3p: { label:'Meter 3P', catalog:'Schneider IEM355 3P', rating:'', w:96, h:48, poles:3,
+    terms:{ 'L1-in':{x:12,y:0,side:'top'}, 'L2-in':{x:36,y:0,side:'top'}, 'L3-in':{x:60,y:0,side:'top'}, 'N-in':{x:84,y:0,side:'top'},
+            'L1-out':{x:12,y:48,side:'bottom'}, 'L2-out':{x:36,y:48,side:'bottom'}, 'L3-out':{x:60,y:48,side:'bottom'}, 'N-out':{x:84,y:48,side:'bottom'} } },
+  contactor: { label:'Contactor NCH8', catalog:'Schneider NCH8 8A', rating:'8A', w:85, h:105, poles:3,
+    terms:{ 'L1-in':{x:15,y:0,side:'top'}, 'L2-in':{x:32,y:0,side:'top'}, 'L3-in':{x:49,y:0,side:'top'},
+            'L1-out':{x:15,y:105,side:'bottom'}, 'L2-out':{x:32,y:105,side:'bottom'}, 'L3-out':{x:49,y:105,side:'bottom'},
+            'A1':{x:85,y:40,side:'right'}, 'A2':{x:85,y:70,side:'right'} } },
+  plc: { label:'PLC FX5U', catalog:'Mitsubishi FX5U-64MR', rating:'32DI/32DO', w:92, h:114, poles:0,
+    terms:{ '24V+':{x:12,y:0,side:'top'}, '24V-':{x:32,y:0,side:'top'}, 'COM':{x:52,y:0,side:'top'},
+            'X0-X31':{x:26,y:114,side:'bottom'}, 'Y0-Y31':{x:70,y:114,side:'bottom'} } }
+};
+const LIB = [
+  { cat:'Breakers', items:['mcb_1p','mcb_2p','mcb_3p','mccb_3p'] },
+  { cat:'Meters', items:['meter_1p','meter_3p'] },
+  { cat:'Control', items:['contactor','plc'] },
+  { cat:'Structure', items:['rail','duct'] }
+];
+const STRUCT = {
+  rail: { label:'Din Rail TS35', dim:'600×7.5 mm', len:600 },
+  duct: { label:'Ducting 3.5cm', dim:'600×35 mm', w:600, h:35 }
+};
+/* Fixed 4-busbar (L1/L2/L3/PE) — left side, not draggable */
+const BUS = [
+  { id:'B_L1', label:'L1', cls:'L1', x:36, color:'#ef4444' },
+  { id:'B_L2', label:'L2', cls:'L2', x:54, color:'#f97316' },
+  { id:'B_L3', label:'L3', cls:'L3', x:72, color:'#eab308' },
+  { id:'B_PE', label:'PE', cls:'PE', x:90, color:'#22c55e' }
+];
+const BUS_TAPS = 8, BUS_W = 6, BUS_Y0 = 40;
+const CLASS_COLOR = { L1:'#ef4444', L2:'#f97316', L3:'#eab308', L:'#dc2626', N:'#3b82f6', PE:'#16a34a',
+  'DC+':'#a855f7', 'DC-':'#15803d', COM:'#64748b', DC_IN:'#0ea5e9', DC_OUT:'#14b8a6', COIL:'#d946ef', OTHER:'#94a3b8' };
+const TYPE_FILL = { mcb_1p:'#f8fafc', mcb_2p:'#f8fafc', mcb_3p:'#f8fafc', mccb_3p:'#e2e8f0',
+  meter_1p:'#0f2740', meter_3p:'#0f2740', contactor:'#d6dbe5', plc:'#0b1220' };
+const TYPE_STROKE = { mcb_1p:'#334155', mcb_2p:'#334155', mcb_3p:'#334155', mccb_3p:'#334155',
+  meter_1p:'#1d4ed8', meter_3p:'#1d4ed8', contactor:'#475569', plc:'#3b82f6' };
+
+/* ===================== STATE ===================== */
+let S = null;            // design (serializable)
+let _n = 0;
+const uid = p => p + (++_n) + '_' + Date.now().toString(36).slice(-4);
+const ui = {
+  mode:'select', sel:null, view:{x:0,y:0,k:1},
+  grid:true, dim:false, spaceDown:false,
+  drag:null, drawing:null, ghost:null,
+  hist:[], future:[], dirty:false
+};
+function defaultDesign(){
+  return {
+    name:'Panel Utama', w:800, h:600, d:250,
+    rails:[ {id:'r1',x:150,y:150,len:600}, {id:'r2',x:150,y:300,len:600}, {id:'r3',x:150,y:450,len:600} ],
+    ducts:[ {id:'d1',x:150,y:90,w:600,h:35}, {id:'d2',x:150,y:225,w:600,h:35},
+            {id:'d3',x:150,y:375,w:600,h:35}, {id:'d4',x:150,y:525,w:600,h:35} ],
+    elements:[], wires:[], labels:[]
+  };
+}
+/* ===================== UTILITIES ===================== */
+const $ = id => document.getElementById(id);
+const svgNS = 'http://www.w3.org/2000/svg';
+function svgEl(tag, attrs, parent){
+  const el = document.createElementNS(svgNS, tag);
+  if (attrs) for (const k in attrs) el.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(el);
+  return el;
+}
+function clearEl(el){ while (el.firstChild) el.removeChild(el.firstChild); }
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+function rotPt(px,py,cx,cy,deg){
+  if (!deg) return {x:px,y:py};
+  const r = deg*Math.PI/180, dx=px-cx, dy=py-cy;
+  return { x:cx+dx*Math.cos(r)-dy*Math.sin(r), y:cy+dx*Math.sin(r)+dy*Math.cos(r) };
+}
+function termClass(elId, term){
+  if (elId && elId[0]==='B'){ const b=BUS.find(x=>x.id===elId); return b?b.cls:'OTHER'; }
+  if (term==='A1' || term==='A2') return 'COIL';
+  if (term==='24V+') return 'DC+';
+  if (term==='24V-') return 'DC-';
+  if (term==='COM') return 'COM';
+  if (/^X/.test(term)) return 'DC_IN';
+  if (/^Y/.test(term)) return 'DC_OUT';
+  if (/^PE/.test(term)) return 'PE';
+  if (/^N/.test(term)) return 'N';
+  const m = term.match(/^(L\d?)/); if (m) return m[1];
+  return 'OTHER';
+}
+function classGroup(c){ return /^L/.test(c) ? 'L' : c; }
+function busTapPos(bar, i){
+  const step = (S.h - 2*BUS_Y0) / BUS_TAPS;
+  const bi = BUS.findIndex(b => b.id === bar.id);
+  const stagger = bi * Math.max(6, Math.round(step*0.15));
+  return { x: bar.x + BUS_W, y: BUS_Y0 + step*(i+0.5) + stagger, side:'right' };
+}
+function getTermPos(elId, term){
+  if (elId && elId[0]==='B'){
+    const bar = BUS.find(b=>b.id===elId); if (!bar) return null;
+    if (/^tap\d+$/.test(term)) return busTapPos(bar, parseInt(term.slice(3),10));
+    return null;
+  }
+  const e = S.elements.find(x=>x.id===elId); if (!e) return null;
+  const c = CATALOG[e.type]; if (!c) return null;
+  const t = c.terms[term]; if (!t) return null;
+  const cx = c.w/2, cy = c.h/2;
+  const p = rotPt(t.x, t.y, cx, cy, e.rot||0);
+  const dx = p.x-cx, dy = p.y-cy;
+  const side = Math.abs(dx) >= Math.abs(dy) ? (dx>=0?'right':'left') : (dy>=0?'bottom':'top');
+  return { x: e.x + p.x, y: e.y + p.y, side };
+}
+function elemRect(e){ const c=CATALOG[e.type]; return {x:e.x, y:e.y, w:c.w, h:c.h}; }
+const MIN_GAP = 4; /* minimum spacing (mm) between components on din rail */
+function gapExpand(r){ return { x:r.x-MIN_GAP/2, y:r.y-MIN_GAP/2, w:r.w+MIN_GAP, h:r.h+MIN_GAP }; }
+function gapOverlap(a,b, g){ g = g || MIN_GAP;
+  return a.x < b.x+b.w+g-0.1 && a.x+a.w+g-0.1 > b.x && a.y < b.y+b.h+g-0.1 && a.y+a.h+g-0.1 > b.y; }
+function busbarZone(){
+  const x1 = BUS[0].x - 8, x2 = BUS[BUS.length-1].x + BUS_W + 8;
+  return { x:x1, w:x2-x1, y:0, h:S.h };
+}
+function gapConflict(rect){
+  for (const o of S.elements)
+    if (gapOverlap(rect, elemRect(o))) return o;
+  const bz = busbarZone();
+  if (rect.x < bz.x + bz.w && rect.x + rect.w > bz.x) return { zone:true };
+  return null;
+}
+function inPanel(r){ return r.x>=0 && r.y>=0 && r.x+r.w<=S.w && r.y+r.h<=S.h; }
+function snapRail(e){
+  /* snap element center-Y to nearest din rail if close */
+  const c = CATALOG[e.type]; let best=null, bd=10;
+  for (const r of S.rails){
+    if (e.x + c.w <= r.x || e.x >= r.x + r.len) continue;
+    const d = Math.abs((e.y + c.h/2) - r.y);
+    if (d < bd){ bd=d; best=r; }
+  }
+  if (best){ e.y = Math.round(best.y - c.h/2); e.rail = best.id; return true; }
+  e.rail = null; return false;
+}
+function snap(v){ return Math.round(v); }
+/* ===================== VIEW / COORDINATE ===================== */
+const svg = $('svg'), wrap = $('canvasWrap'), vp = $('viewport');
+function worldPos(ev){
+  const r = svg.getBoundingClientRect();
+  return { x:(ev.clientX - r.left - ui.view.x)/ui.view.k, y:(ev.clientY - r.top - ui.view.y)/ui.view.k };
+}
+function applyView(){
+  vp.setAttribute('transform', `translate(${ui.view.x} ${ui.view.y}) scale(${ui.view.k})`);
+  $('stZoom').textContent = 'Zoom ' + Math.round(ui.view.k*100) + '%';
+  $('zoomVal').value = Math.round(ui.view.k*100) + '%';
+}
+function fitView(){
+  const cw = wrap.clientWidth, ch = wrap.clientHeight;
+  const k = clamp(Math.min((cw-70)/S.w, (ch-70)/S.h), 0.1, 4);
+  ui.view.k = k;
+  ui.view.x = (cw - S.w*k)/2;
+  ui.view.y = (ch - S.h*k)/2;
+  applyView();
+}
+function setZoom(k2, cx, cy){
+  const r = svg.getBoundingClientRect();
+  if (cx === undefined){ cx = r.width/2; cy = r.height/2; }
+  k2 = clamp(k2, 0.1, 6);
+  const wx = (cx - ui.view.x)/ui.view.k, wy = (cy - ui.view.y)/ui.view.k;
+  ui.view.x = cx - wx*k2; ui.view.y = cy - wy*k2; ui.view.k = k2;
+  applyView();
+}
+/* ===================== VALIDATION ===================== */
+function validateWire(w){
+  const a = termClass(w.from.el, w.from.term);
+  const b = termClass(w.to.el, w.to.term);
+  if (a === b) return null;
+  const ga = classGroup(a), gb = classGroup(b);
+  if (ga === gb){
+    if (/^L\d$/.test(a) && /^L\d$/.test(b) && a !== b)
+      return { level:'warn', msg:`CROSS-PHASE: ${a} ↔ ${b}` };
+    return null;
+  }
+  const key = [ga,gb].sort().join('|');
+  if (key === 'L|N')  return { level:'error', msg:'PHASE-NEUTRAL SHORT — L terhubung ke N' };
+  if (key === 'L|PE') return { level:'error', msg:'PHASE-EARTH SHORT — L terhubung ke PE' };
+  if (key === 'N|PE') return { level:'error', msg:'NEUTRAL-EARTH SHORT — N terhubung ke PE' };
+  if (key === 'DC+|DC-') return { level:'error', msg:'DC SUPPLY SHORT — 24V+ terhubung ke 24V-' };
+  const pair = [ga,gb].sort().join('|');
+  if (pair === 'DC_IN|DC_OUT') return { level:'warn', msg:'PLC I/O CROSS — input X terhubung ke output Y' };
+  return { level:'warn', msg:`CLASS MISMATCH: ${a} ↔ ${b}` };
+}
+function validateAll(){
+  const out = [];
+  for (const w of S.wires){
+    const v = validateWire(w);
+    if (v) out.push({ wireId:w.id, level:v.level, msg:v.msg });
+  }
+  return out;
+}
+/* ===================== RENDER: GRID & PANEL ===================== */
+function renderGrid(){
+  const g = $('lyrGrid'); clearEl(g);
+  if (!ui.grid) return;
+  svgEl('rect', { x:-3000, y:-3000, width:9000, height:9000, fill:'url(#gridMajor)' }, g);
+}
+function renderPanel(){
+  const g = $('lyrPanel'); clearEl(g);
+  svgEl('rect', { x:0, y:0, width:S.w, height:S.h, fill:'#14171f', stroke:'#475569', 'stroke-width':1.4 }, g);
+  svgEl('rect', { x:6, y:6, width:S.w-12, height:S.h-12, fill:'none', stroke:'#252a38', 'stroke-width':.6, 'stroke-dasharray':'6 4' }, g);
+  if (!ui.dim) return;
+  svgEl('line', { x1:0, y1:-10, x2:S.w, y2:-10, stroke:'#64748b', 'stroke-width':.5 }, g);
+  const t1 = svgEl('text', { x:S.w/2, y:-13, class:'dim-text' }, g); t1.textContent = S.w + ' mm';
+  svgEl('line', { x1:-10, y1:0, x2:-10, y2:S.h, stroke:'#64748b', 'stroke-width':.5 }, g);
+  const t2 = svgEl('text', { x:-13, y:S.h/2, class:'dim-text', transform:`rotate(-90 -13 ${S.h/2})` }, g); t2.textContent = S.h + ' mm';
+}
+/* ===================== RENDER: BUSBARS (fixed) ===================== */
+function renderBus(){
+  const g = $('lyrBus'); clearEl(g);
+  const y0 = BUS_Y0, bh = S.h - 2*BUS_Y0;
+  for (const bar of BUS){
+    svgEl('rect', { x:bar.x, y:y0, width:BUS_W, height:bh, fill:bar.color, rx:1, opacity:.9 }, g);
+    const lb = svgEl('text', { x:bar.x+BUS_W/2, y:y0-4, class:'bus-label', fill:bar.color }, g);
+    lb.textContent = bar.label;
+  }
+}
+/* ===================== RENDER: RAILS & DUCTS ===================== */
+function renderRails(){
+  const g = $('lyrRail'); clearEl(g);
+  for (const r of S.rails){
+    const gr = svgEl('g', { class:'rail', 'data-id':r.id, style:'cursor:move' }, g);
+    svgEl('rect', { x:r.x, y:r.y-3.75, width:r.len, height:7.5, fill:'#94a3b8', stroke:'#64748b', 'stroke-width':.5, rx:1 }, gr);
+    svgEl('line', { x1:r.x+4, y1:r.y, x2:r.x+r.len-4, y2:r.y, stroke:'#475569', 'stroke-width':.5 }, gr);
+    for (let hx = r.x+8; hx < r.x+r.len-4; hx += 60)
+      svgEl('circle', { cx:hx, cy:r.y, r:1.2, fill:'#475569' }, gr);
+    if (ui.dim){
+      const t = svgEl('text', { x:r.x+r.len/2, y:r.y+9.5, class:'dim-text' }, gr);
+      t.textContent = r.len + ' mm';
+    }
+    if (ui.sel && ui.sel.kind==='rail' && ui.sel.id===r.id)
+      svgEl('rect', { x:r.x-3, y:r.y-7, width:r.len+6, height:14, class:'sel-outline' }, gr);
+  }
+}
+function renderDucts(){
+  const g = $('lyrDuct'); clearEl(g);
+  for (const d of S.ducts){
+    const gr = svgEl('g', { class:'duct', 'data-id':d.id, style:'cursor:move' }, g);
+    svgEl('rect', { x:d.x, y:d.y, width:d.w, height:d.h, fill:'#e2e8f0', stroke:'#94a3b8', 'stroke-width':.5, 'stroke-dasharray':'4 3', rx:2 }, gr);
+    for (let hx=d.x+14; hx<d.x+d.w-6; hx+=14)
+      svgEl('line', { x1:hx, y1:d.y+4, x2:hx-6, y2:d.y+d.h-4, stroke:'#cbd5e1', 'stroke-width':.8 }, gr);
+    if (ui.dim){
+      const t = svgEl('text', { x:d.x+d.w/2, y:d.y+d.h+6, class:'dim-text' }, gr);
+      t.textContent = d.w + '×' + d.h;
+    }
+    if (ui.sel && ui.sel.kind==='duct' && ui.sel.id===d.id)
+      svgEl('rect', { x:d.x-3, y:d.y-3, width:d.w+6, height:d.h+6, class:'sel-outline' }, gr);
+  }
+}
+/* ===================== RENDER: ELEMENTS ===================== */
+function renderElems(){
+  const g = $('lyrElem'); clearEl(g);
+  for (const e of S.elements){
+    const c = CATALOG[e.type];
+    const gr = svgEl('g', { class:'elem', 'data-id':e.id, style:'cursor:move',
+      transform:`translate(${e.x} ${e.y}) rotate(${e.rot||0} ${c.w/2} ${c.h/2})` }, g);
+    svgEl('rect', { x:0, y:0, width:c.w, height:c.h, rx:2.5,
+      fill:TYPE_FILL[e.type]||'#e2e8f0', stroke:TYPE_STROKE[e.type]||'#475569', 'stroke-width':.9, class:'el-body' }, gr);
+    const dark = e.type==='meter_1p' || e.type==='meter_3p' || e.type==='plc';
+    const rot = (e.rot||0) % 360;
+    const rotated = (rot % 180) === 90;
+    const effW = rotated ? c.h : c.w;
+    const effH = rotated ? c.w : c.h;
+    const tall = effH > effW;
+    const fs = clamp(tall ? effW/2.4 : effH/6, 4, 7.5);
+    const txtRot = tall ? (90 - rot) : (-rot);
+    const txtTr = (x,y) => txtRot ? `rotate(${txtRot} ${x} ${y})` : '';
+    if (!e.noLabel){
+      const t1 = svgEl('text', { x:c.w/2, y:c.h/2, class:'el-name',
+        'font-size':fs, 'font-weight':'600', fill:dark?'#e2e8f0':'#0f172a',
+        dy: tall ? fs*0.35 : 0,
+        transform: txtTr(c.w/2, c.h/2) }, gr);
+      t1.textContent = e.name || c.label;
+    }
+    if (e.circuit){
+      const t3 = svgEl('text', { x:c.w/2, y:c.h-3, class:'el-sub', 'font-size':clamp(fs*.7,2.4,4.5),
+        fill:dark?'#fbbf24':'#b45309', transform: txtTr(c.w/2, c.h-3) }, gr);
+      t3.textContent = e.circuit;
+    }
+  }
+}
+function renderTerms(){
+  const g1 = $('lyrTerm'); clearEl(g1);
+  const addDot = (elId, tn, p, color) => {
+    svgEl('circle', { cx:p.x, cy:p.y, r:8, fill:'transparent',
+      class:'term-hit', 'data-el':elId, 'data-term':tn }, g1);
+    svgEl('circle', { cx:p.x, cy:p.y, r:2.3, fill:'#0f1115',
+      stroke:color, 'stroke-width':1.2, class:'term-dot',
+      'data-el':elId, 'data-term':tn }, g1);
+  };
+  for (const e of S.elements){
+    const c = CATALOG[e.type];
+    for (const tn in c.terms){
+      const t = c.terms[tn];
+      const p = rotPt(t.x, t.y, c.w/2, c.h/2, e.rot||0);
+      const cls = termClass(e.id, tn);
+      addDot(e.id, tn, { x:p.x + e.x, y:p.y + e.y }, CLASS_COLOR[cls]||'#94a3b8');
+    }
+  }
+  for (const bar of BUS){
+    for (let i=0; i<BUS_TAPS; i++){
+      addDot(bar.id, 'tap'+i, busTapPos(bar, i), bar.color);
+    }
+  }
+}
+/* ===================== RENDER: WIRES ===================== */
+function wirePointsStr(pts){ return pts.map(p=>p.x+','+p.y).join(' '); }
+function wireColor(w){
+  const cls = termClass(w.from.el, w.from.term);
+  return w.color || CLASS_COLOR[cls] || '#94a3b8';
+}
+function renderWires(){
+  const g = $('lyrWire'); clearEl(g);
+  const issues = validateAll();
+  const errSet = new Set(issues.filter(i=>i.level==='error').map(i=>i.wireId));
+  for (const w of S.wires){
+    const gr = svgEl('g', { 'data-id':w.id }, g);
+    const err = errSet.has(w.id);
+    const sel = ui.sel && ui.sel.kind==='wire' && ui.sel.id===w.id;
+    const col = err ? '#ef4444' : wireColor(w);
+    const wd = clamp(w.gauge*0.7, 1.6, 5);
+    svgEl('polyline', { points:wirePointsStr(w.pts), class:'wire-hit', 'stroke-width':8/ui.view.k + 4, 'data-id':w.id }, gr);
+    svgEl('polyline', { points:wirePointsStr(w.pts), class:'wire', stroke:col, 'stroke-width':wd,
+      'stroke-dasharray': err ? '5 3' : '', 'data-id':w.id }, gr);
+    if (sel) svgEl('polyline', { points:wirePointsStr(w.pts), fill:'none', stroke:'#3b82f6',
+      'stroke-width':wd+3, opacity:.45, 'pointer-events':'none' }, gr);
+    if (w.pts.length >= 2){
+      const mid = w.pts[Math.floor(w.pts.length/2)];
+      const lab = w.label || (err ? '⚠ ' : '') + termClass(w.from.el, w.from.term);
+      const t = svgEl('text', { x:mid.x, y:mid.y-2.4, class:'el-sub', 'font-size':3.6, fill:col,
+        stroke:'#0c0e13', 'stroke-width':1.1, 'paint-order':'stroke', 'pointer-events':'none' }, gr);
+      t.textContent = lab;
+    }
+  }
+}
+/* ===================== RENDER: LABELS ===================== */
+function renderLabels(){
+  const g = $('lyrLabel'); clearEl(g);
+  for (const l of S.labels){
+    const t = svgEl('text', { x:l.x, y:l.y, class:'lbl', 'data-id':l.id, 'font-size':7,
+      fill:'#e2e8f0', style:'cursor:move', stroke:'#0c0e13', 'stroke-width':1.4, 'paint-order':'stroke' }, g);
+    t.textContent = l.text;
+    if (ui.sel && ui.sel.kind==='label' && ui.sel.id===l.id){
+      const bb = { w:(l.text||'').length*4.4+6, h:10 };
+      svgEl('rect', { x:l.x-4, y:l.y-8, width:bb.w, height:bb.h, class:'sel-outline' }, g);
+    }
+  }
+}
+/* ===================== RENDER: OVERLAY (sel, preview, ghost) ===================== */
+function renderOverlay(){
+  const g = $('lyrOver'); clearEl(g);
+  /* selection */
+  if (ui.sel){
+    if (ui.sel.kind==='element'){
+      const e = S.elements.find(x=>x.id===ui.sel.id);
+      if (e){ const c = CATALOG[e.type];
+        svgEl('rect', { x:e.x-4, y:e.y-4, width:c.w+8, height:c.h+8, class:'sel-outline' }, g);
+        for (const tn in c.terms){
+          const p = getTermPos(e.id, tn);
+          const cls = termClass(e.id, tn);
+          svgEl('circle', { cx:p.x, cy:p.y, r:4.4, fill:'none', stroke:CLASS_COLOR[cls]||'#94a3b8',
+            'stroke-width':.9, opacity:.7, 'pointer-events':'none' }, g);
+        }
+      }
+    } else if (ui.sel.kind==='label'){
+      const l = S.labels.find(x=>x.id===ui.sel.id);
+      if (l) svgEl('rect', { x:l.x-4, y:l.y-8, width:(l.text||'').length*4.4+6, height:10, class:'sel-outline' }, g);
+    }
+  }
+  /* wire drawing preview */
+  if (ui.drawing && ui.drawing.cursor){
+    const pts = orthoPreview(ui.drawing.pts, ui.drawing.cursor);
+    svgEl('polyline', { points:wirePointsStr(pts), fill:'none', stroke:'#3b82f6',
+      'stroke-width':1.6, 'stroke-dasharray':'5 3', 'pointer-events':'none' }, g);
+    const a = ui.drawing.pts[0];
+    svgEl('circle', { cx:a.x, cy:a.y, r:4, fill:'none', stroke:'#3b82f6', 'stroke-width':1.4, 'pointer-events':'none' }, g);
+  }
+  /* ghost (library drag) */
+  if (ui.ghost){
+    const gh = ui.ghost;
+    const col = gh.ok ? '#22c55e' : '#ef4444';
+    if (gh.kind==='elem'){
+      const c = CATALOG[gh.type];
+      const vertical = c.h > c.w;
+      const fs = clamp(vertical ? c.w/2.4 : c.h/6, 4, 7.5);
+      svgEl('g', { class:'ghost', transform:`translate(${gh.x} ${gh.y})` }, g).innerHTML =
+        `<rect x="0" y="0" width="${c.w}" height="${c.h}" rx="2.5" fill="${col}" opacity=".35" stroke="${col}" stroke-width="1.2"/>` +
+        `<text x="${c.w/2}" y="${c.h/2}" class="el-name" font-size="${fs}" dy="${vertical?fs*0.35:0}" fill="#fff" transform="${vertical?`rotate(90 ${c.w/2} ${c.h/2})`:''}">${c.label}</text>`;
+      if (gh.railY !== undefined)
+        svgEl('line', { x1:gh.x-6, y1:gh.railY, x2:gh.x+c.w+6, y2:gh.railY, stroke:'#3b82f6',
+          'stroke-width':.8, 'stroke-dasharray':'3 2', 'pointer-events':'none' }, g);
+    } else if (gh.kind==='rail'){
+      svgEl('rect', { x:gh.x, y:gh.y-3.75, width:STRUCT.rail.len, height:7.5, fill:col, opacity:.4,
+        stroke:col, 'stroke-width':1, class:'ghost' }, g);
+    } else if (gh.kind==='duct'){
+      svgEl('rect', { x:gh.x, y:gh.y, width:STRUCT.duct.w, height:STRUCT.duct.h, fill:col, opacity:.4,
+        stroke:col, 'stroke-width':1, class:'ghost' }, g);
+    }
+    if (!gh.ok && gh.msg){
+      const t = svgEl('text', { x:gh.x, y:gh.y-6, class:'ghost', 'font-size':5, fill:'#ef4444',
+        stroke:'#0c0e13', 'stroke-width':1.2, 'paint-order':'stroke' }, g);
+      t.textContent = gh.msg;
+    }
+  }
+}
+function renderAll(){
+  renderGrid(); renderPanel(); renderBus(); renderRails(); renderDucts();
+  renderElems(); renderTerms(); renderWires(); renderLabels(); renderOverlay();
+  renderProps(); renderIssues();
+}
+/* ===================== WIRE ORTHOGONAL PATH ===================== */
+function orthoPreview(pts, cur){
+  const out = pts.slice();
+  const last = out[out.length-1];
+  if (out.length === 1){
+    /* first segment direction depends on terminal exit side */
+    const d = ui.drawing;
+    const tp = d && d.from ? getTermPos(d.from.el, d.from.term) : null;
+    const side = tp ? tp.side : 'bottom';
+    if (side==='top' || side==='bottom') out.push({ x:last.x, y:cur.y });
+    else out.push({ x:cur.x, y:last.y });
+  } else {
+    const prev = out[out.length-2];
+    const horiz = Math.abs(last.y - prev.y) < 0.01;
+    if (horiz) out.push({ x:last.x, y:cur.y });
+    else out.push({ x:cur.x, y:last.y });
+  }
+  out.push({ x:cur.x, y:cur.y });
+  return out;
+}
+/* ===================== MULTI-WIRE PER TERMINAL HOLE ===================== */
+function rebuildWire(w){
+  const sPt = getTermPos(w.from.el, w.from.term);
+  const ePt = getTermPos(w.to.el, w.to.term);
+  if (!sPt || !ePt){ w.pts = (w.rawPts || w.pts || []).slice(); return w; }
+  if (!w.rawPts || !w.rawPts.length) w.rawPts = (w.pts && w.pts.length) ? w.pts.slice() : [sPt, ePt];
+  w.rawPts[0] = sPt;
+  w.rawPts[w.rawPts.length-1] = ePt;
+  /* same-signal wires share one hole: keep path merged (no fan-out) */
+  w.pts = w.rawPts.slice();
+  return w;
+}
+function rebuildAllWires(){ S.wires.forEach(rebuildWire); }
+/* ===================== HISTORY ===================== */
+function snapshot(){
+  ui.hist.push(JSON.stringify(S));
+  if (ui.hist.length > 50) ui.hist.shift();
+  ui.future.length = 0;
+}
+function undo(){
+  if (!ui.hist.length) return;
+  ui.future.push(JSON.stringify(S));
+  S = JSON.parse(ui.hist.pop());
+  ui.sel = null; ui.drawing = null;
+  renderAll(); markDirty();
+}
+function redo(){
+  if (!ui.future.length) return;
+  ui.hist.push(JSON.stringify(S));
+  S = JSON.parse(ui.future.pop());
+  ui.sel = null; ui.drawing = null;
+  renderAll(); markDirty();
+}
+/* ===================== POINTER INTERACTION ===================== */
+function findTarget(ev){
+  const el = document.elementFromPoint(ev.clientX, ev.clientY);
+  if (!el || !svg.contains(el)) return null;
+  return el;
+}
+function hitWire(ev){
+  const el = findTarget(ev);
+  if (el && (el.classList.contains('wire') || el.classList.contains('wire-hit'))) return el.getAttribute('data-id');
+  /* fallback: distance to polyline */
+  const p = worldPos(ev);
+  let best = null, bd = 6/ui.view.k;
+  for (const w of S.wires){
+    for (let i=0;i<w.pts.length-1;i++){
+      const d = distSeg(p, w.pts[i], w.pts[i+1]);
+      if (d < bd){ bd=d; best=w.id; }
+    }
+  }
+  return best;
+}
+function distSeg(p, a, b){
+  const dx = b.x-a.x, dy = b.y-a.y;
+  const L2 = dx*dx + dy*dy;
+  let t = L2 ? ((p.x-a.x)*dx + (p.y-a.y)*dy)/L2 : 0;
+  t = clamp(t, 0, 1);
+  const x = a.x + t*dx, y = a.y + t*dy;
+  return Math.hypot(p.x-x, p.y-y);
+}
+function findTerm(ev){
+  if (!(ev.target && ev.target.closest)) return null;
+  if (!ev.target.closest('.term-dot, .term-hit')) return null;
+  const r = svg.getBoundingClientRect();
+  const cx = (ev.clientX - r.left - ui.view.x)/ui.view.k;
+  const cy = (ev.clientY - r.top - ui.view.y)/ui.view.k;
+  let best = null, bd = 1e9;
+  for (const d of document.querySelectorAll('.term-hit')){
+    const p = getTermPos(d.getAttribute('data-el'), d.getAttribute('data-term'));
+    if (!p) continue;
+    const dist = Math.hypot(p.x-cx, p.y-cy);
+    if (dist < bd){ bd = dist; best = { el:d.getAttribute('data-el'), term:d.getAttribute('data-term') }; }
+  }
+  return best && bd <= 8 ? best : null;
+}
+svg.addEventListener('pointerdown', ev => {
+  if (ev.button === 2) return;
+  const wp = worldPos(ev);
+  /* pan: middle button, space+left, or left on empty background */
+  if (ev.button === 1 || ui.spaceDown){
+    ui.drag = { type:'pan', sx:ev.clientX, sy:ev.clientY, ox:ui.view.x, oy:ui.view.y, moved:false };
+    svg.setPointerCapture(ev.pointerId); return;
+  }
+  const termEl = findTerm(ev);
+
+  if (ui.mode === 'wire'){
+    if (termEl){
+      handleTermClick(termEl.el, termEl.term);
+    } else if (ui.drawing){
+      /* add bend point */
+      const prev = orthoPreview(ui.drawing.pts, wp);
+      ui.drawing.pts = prev.slice(0, -1);
+      ui.drawing.cursor = wp;
+      renderOverlay();
+    } else {
+      const wid = hitWire(ev);
+      if (wid){ select('wire', wid); } else select(null);
+    }
+    return;
+  }
+  if (ui.mode === 'label'){
+    const txt = prompt('Label text:');
+    if (txt && txt.trim()){
+      snapshot();
+      S.labels.push({ id:uid('l'), text:txt.trim(), x:snap(wp.x), y:snap(wp.y) });
+      markDirty();
+    }
+    renderAll(); return;
+  }
+  /* select mode */
+  if (termEl){ select(null); return; }
+  const elemG = ev.target.closest && ev.target.closest('.elem');
+  const railG = ev.target.closest && ev.target.closest('.rail');
+  const ductG = ev.target.closest && ev.target.closest('.duct');
+  const lblG  = ev.target.closest && ev.target.closest('.lbl');
+  if (elemG){
+    const id = elemG.getAttribute('data-id');
+    select('element', id);
+    const e = S.elements.find(x=>x.id===id);
+    ui.drag = { type:'move', kind:'element', id, dx:wp.x-e.x, dy:wp.y-e.y, sx:ev.clientX, sy:ev.clientY, moved:false };
+    svg.setPointerCapture(ev.pointerId);
+  } else if (railG){
+    const id = railG.getAttribute('data-id');
+    select('rail', id);
+    const r = S.rails.find(x=>x.id===id);
+    ui.drag = { type:'move', kind:'rail', id, dx:wp.x-r.x, dy:wp.y-r.y, sx:ev.clientX, sy:ev.clientY, moved:false };
+    svg.setPointerCapture(ev.pointerId);
+  } else if (ductG){
+    const id = ductG.getAttribute('data-id');
+    select('duct', id);
+    const d = S.ducts.find(x=>x.id===id);
+    ui.drag = { type:'move', kind:'duct', id, dx:wp.x-d.x, dy:wp.y-d.y, sx:ev.clientX, sy:ev.clientY, moved:false };
+    svg.setPointerCapture(ev.pointerId);
+  } else if (lblG){
+    select('label', lblG.getAttribute('data-id'));
+    const l = S.labels.find(x=>x.id===lblG.getAttribute('data-id'));
+    ui.drag = { type:'move', kind:'label', id:l.id, dx:wp.x-l.x, dy:wp.y-l.y, sx:ev.clientX, sy:ev.clientY, moved:false };
+    svg.setPointerCapture(ev.pointerId);
+  } else {
+    const wid = hitWire(ev);
+    if (wid){ select('wire', wid); return; }
+    /* empty: pan on drag, deselect on click */
+    ui.drag = { type:'pan', sx:ev.clientX, sy:ev.clientY, ox:ui.view.x, oy:ui.view.y, moved:false, deselect:true };
+    svg.setPointerCapture(ev.pointerId);
+  }
+});
+svg.addEventListener('pointermove', ev => {
+  const wp = worldPos(ev);
+  $('stCoord').textContent = `X: ${Math.round(wp.x)} Y: ${Math.round(wp.y)} mm`;
+  if (ui.drawing){
+    ui.drawing.cursor = wp;
+    renderOverlay();
+    return;
+  }
+  const d = ui.drag;
+  if (!d) return;
+  if (d.type === 'pan'){
+    ui.view.x = d.ox + (ev.clientX - d.sx);
+    ui.view.y = d.oy + (ev.clientY - d.sy);
+    if (Math.abs(ev.clientX-d.sx) + Math.abs(ev.clientY-d.sy) > 4) d.moved = true;
+    applyView();
+    return;
+  }
+  if (d.type === 'move'){
+    if (!d.moved && Math.hypot(ev.clientX-d.sx, ev.clientY-d.sy) < 3) return;
+    if (!d.moved){ snapshot(); d.moved = true; }
+    const nx = snap(wp.x - d.dx), ny = snap(wp.y - d.dy);
+    if (d.kind === 'element'){
+      const e = S.elements.find(x=>x.id===d.id);
+      const ox = e.x, oy = e.y;
+      const c = CATALOG[e.type];
+      let nx2 = clamp(nx, 0, S.w - c.w);
+      let ny2 = e.y;
+      /* vertical: only moves when near a din rail — element stays mounted on rail */
+      let best=null, bd=Math.max(4, Math.min(20, c.h/4));
+      for (const r of S.rails){
+        if (nx2 + c.w <= r.x || nx2 >= r.x + r.len) continue;
+        const dd = Math.abs((ny + c.h/2) - r.y);
+        if (dd < bd){ bd=dd; best=r; }
+      }
+      if (best) ny2 = Math.round(best.y - c.h/2);
+      ny2 = clamp(ny2, 0, S.h - c.h);
+      /* enforce min spacing with other components / busbar zone */
+      const cand = { x:nx2, y:ny2, w:c.w, h:c.h };
+      if (!gapConflict(cand) || (nx2 === ox && ny2 === oy)){
+        e.x = nx2; e.y = ny2;
+        if (best) e.rail = best.id;
+      }
+      const ddx = e.x - ox, ddy = e.y - oy;
+      if (ddx || ddy){
+        for (const w of S.wires)
+          if (w.from.el === e.id || w.to.el === e.id) rebuildWire(w);
+      }
+      renderElems(); renderTerms(); renderWires(); renderOverlay();
+    } else if (d.kind === 'rail'){
+      const r = S.rails.find(x=>x.id===d.id);
+      r.x = clamp(nx, 0, S.w - r.len); r.y = clamp(ny, 10, S.h - 10);
+      renderRails();
+    } else if (d.kind === 'duct'){
+      const dd = S.ducts.find(x=>x.id===d.id);
+      dd.x = clamp(nx, 0, S.w - dd.w); dd.y = clamp(ny, 0, S.h - dd.h);
+      renderDucts();
+    } else if (d.kind === 'label'){
+      const l = S.labels.find(x=>x.id===d.id);
+      l.x = nx; l.y = ny;
+      renderLabels(); renderOverlay();
+    }
+    renderProps();
+  }
+});
+svg.addEventListener('pointerup', ev => {
+  const d = ui.drag;
+  if (d && d.type==='pan' && !d.moved && d.deselect) select(null);
+  if (d && d.type==='move' && d.moved) markDirty();
+  ui.drag = null;
+  try { svg.releasePointerCapture(ev.pointerId); } catch(e){}
+});
+svg.addEventListener('wheel', ev => {
+  ev.preventDefault();
+  const r = svg.getBoundingClientRect();
+  const f = Math.exp(-ev.deltaY * 0.0013);
+  setZoom(ui.view.k * f, ev.clientX - r.left, ev.clientY - r.top);
+}, { passive:false });
+svg.addEventListener('contextmenu', ev => {
+  if (ui.drawing){ ui.drawing = null; renderOverlay(); ev.preventDefault(); }
+});
+/* ---- wire start / finish ---- */
+function handleTermClick(elId, term){
+  if (!ui.drawing){
+    const p = getTermPos(elId, term);
+    if (!p) return;
+    ui.drawing = { from:{ el:elId, term:term }, pts:[p], cursor:p };
+    renderOverlay();
+    setStatus('Wire: klik terminal tujuan (Esc untuk batal)');
+    return;
+  }
+  const d = ui.drawing;
+  if (d.from.el === elId && d.from.term === term){ ui.drawing = null; renderOverlay(); return; }
+  const target = getTermPos(elId, term);
+  if (!target) return;
+  const pts = orthoPreview(d.pts, target);
+  pts[pts.length-1] = target;
+  const w = { id:uid('w'), from:d.from, to:{ el:elId, term:term }, pts:pts,
+    gauge:2.5, label:'', color:'' };
+  w.rawPts = pts.slice();
+  ui.drawing = null;
+  const v = validateWire(w);
+  if (v && v.level === 'error'){
+    if (!confirm(v.msg + '\n\nTetap buat kabel ini?')){ renderOverlay(); return; }
+  }
+  snapshot();
+  S.wires.push(w);
+  rebuildAllWires();
+  markDirty();
+  renderAll();
+  if (v) setStatus('⚠ ' + v.msg); else setStatus('Kabel dibuat: ' + termClass(w.from.el, w.from.term));
+}
+/* ===================== LIBRARY (drag & drop) ===================== */
+function buildLibrary(){
+  const box = $('libList'); clearEl(box);
+  for (const grp of LIB){
+    const h = document.createElement('div');
+    h.className = 'lib-cat'; h.textContent = grp.cat; box.appendChild(h);
+    for (const key of grp.items){
+      const it = document.createElement('div');
+      it.className = 'lib-item'; it.draggable = true;
+      it.setAttribute('data-part', key);
+      if (key === 'rail' || key === 'duct'){
+        it.innerHTML = `<span>${STRUCT[key].label}</span><span class="dim">${STRUCT[key].dim}</span>`;
+      } else {
+        const c = CATALOG[key];
+        it.innerHTML = `<span>${c.label}</span><span class="dim">${c.w}×${c.h}</span>`;
+      }
+      box.appendChild(it);
+    }
+  }
+}
+$('libSearch').addEventListener('input', ev => {
+  const q = ev.target.value.toLowerCase();
+  document.querySelectorAll('.lib-item').forEach(it => {
+    it.style.display = it.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+document.addEventListener('dragstart', ev => {
+  const it = ev.target.closest && ev.target.closest('.lib-item');
+  if (!it) return;
+  if (ui.mode !== 'select'){ ev.preventDefault(); return; }
+  const part = it.getAttribute('data-part');
+  ui._dragPart = part;
+  ev.dataTransfer.setData('text/plain', part);
+  ev.dataTransfer.effectAllowed = 'copy';
+});
+document.addEventListener('dragend', () => {
+  ui._dragPart = null;
+  if (ui.ghost){ ui.ghost = null; renderOverlay(); }
+});
+svg.addEventListener('dragover', ev => {
+  ev.preventDefault();
+  ev.dataTransfer.dropEffect = 'copy';
+  if (!ui._dragPart) return;
+  const wp = worldPos(ev);
+  ui.ghost = makeGhost(ui._dragPart, wp);
+  renderOverlay();
+});
+svg.addEventListener('dragenter', ev => { ev.preventDefault(); });
+svg.addEventListener('dragleave', ev => {
+  if (!svg.contains(ev.relatedTarget)){ ui.ghost = null; renderOverlay(); }
+});
+svg.addEventListener('drop', ev => {
+  ev.preventDefault();
+  if (ui.mode !== 'select'){ ui._dragPart = null; ui.ghost = null; renderOverlay(); return; }
+  const part = ev.dataTransfer.getData('text/plain') || ui._dragPart;
+  ui._dragPart = null;
+  ui.ghost = null;
+  if (!part){ renderOverlay(); return; }
+  const wp = worldPos(ev);
+  const g = makeGhost(part, wp);
+  renderOverlay();
+  if (!g.ok){ setStatus('❌ ' + (g.msg||'Posisi tidak valid')); return; }
+  snapshot();
+  if (part === 'rail'){
+    S.rails.push({ id:uid('r'), x:g.x, y:g.y, len:STRUCT.rail.len });
+  } else if (part === 'duct'){
+    S.ducts.push({ id:uid('d'), x:g.x, y:g.y, w:STRUCT.duct.w, h:STRUCT.duct.h });
+  } else if (CATALOG[part]){
+    const c = CATALOG[part];
+    const e = { id:uid('e'), type:part, x:g.x, y:g.y, rot:0, circuit:'', rating:c.rating, name:'' };
+    snapRail(e);
+    S.elements.push(e);
+    select('element', e.id);
+  }
+  markDirty();
+  renderAll();
+  setStatus('Ditambahkan: ' + part);
+});
+function makeGhost(part, wp){
+  if (part === 'rail'){
+    const x = snap(wp.x - STRUCT.rail.len/2), y = snap(wp.y);
+    return { kind:'rail', x, y, ok: x>=0 && x+STRUCT.rail.len<=S.w && y>=10 && y<=S.h-10,
+      msg:'Din rail di luar panel' };
+  }
+  if (part === 'duct'){
+    const x = snap(wp.x - STRUCT.duct.w/2), y = snap(wp.y - STRUCT.duct.h/2);
+    return { kind:'duct', x, y, ok: x>=0 && y>=0 && x+STRUCT.duct.w<=S.w && y+STRUCT.duct.h<=S.h,
+      msg:'Ducting di luar panel' };
+  }
+  const c = CATALOG[part];
+  if (!c) return null;
+  let x = snap(wp.x - c.w/2), y = snap(wp.y - c.h/2);
+  x = clamp(x, 0, S.w - c.w); y = clamp(y, 0, S.h - c.h);
+  const rect = { x, y, w:c.w, h:c.h };
+  let ok = inPanel(rect), msg = ok ? '' : 'Di luar panel';
+  let railY;
+  /* rail snap preview */
+  let best = null, bd = Math.max(4, Math.min(20, c.h/4));
+  for (const r of S.rails){
+    if (x + c.w <= r.x || x >= r.x + r.len) continue;
+    const dd = Math.abs((y + c.h/2) - r.y);
+    if (dd < bd){ bd = dd; best = r; }
+  }
+  if (best){ y = Math.round(best.y - c.h/2); rect.y = y; railY = best.y; }
+  else { ok = false; msg = 'Elemen harus berada di atas din rail'; }
+  const conflicts = gapConflict(rect);
+  if (conflicts){
+    ok = false;
+    msg = conflicts.zone
+      ? 'Terlalu dekat dengan area busbar'
+      : 'Terlalu dekat dengan ' + (conflicts.name || CATALOG[conflicts.type].label) + ' (min ' + MIN_GAP + 'mm)';
+  }
+  return { kind:'elem', type:part, x, y, ok, msg, railY };
+}
+/* ===================== SELECTION ===================== */
+function select(kind, id){
+  ui.sel = kind ? { kind, id } : null;
+  renderAll();
+}
+function deleteSelected(){
+  if (!ui.sel) return;
+  snapshot();
+  const s = ui.sel;
+  if (s.kind === 'element'){
+    S.elements = S.elements.filter(e => e.id !== s.id);
+    S.wires = S.wires.filter(w => w.from.el !== s.id && w.to.el !== s.id);
+  } else if (s.kind === 'wire') S.wires = S.wires.filter(w => w.id !== s.id);
+  else if (s.kind === 'rail') S.rails = S.rails.filter(r => r.id !== s.id);
+  else if (s.kind === 'duct') S.ducts = S.ducts.filter(d => d.id !== s.id);
+  else if (s.kind === 'label') S.labels = S.labels.filter(l => l.id !== s.id);
+  ui.sel = null;
+  markDirty();
+  rebuildAllWires();
+  renderAll();
+  setStatus('Dihapus');
+}
+/* ===================== STATUS BAR ===================== */
+function setStatus(msg){ $('stMode').textContent = msg; }
+function updateStatus(){
+  $('stMode').textContent = 'Mode: ' + (ui.mode==='select'?'Select':ui.mode==='wire'?'Wire':'Label');
+}
+function markDirty(){ ui.dirty = true; }
+/* ===================== PROPERTIES PANEL ===================== */
+function renderProps(){
+  const t = $('rpTitle'), b = $('rpBody');
+  clearEl(b);
+  const s = ui.sel;
+  if (!s){
+    t.textContent = 'Panel — ' + S.name;
+    b.innerHTML =
+      row('Width', num('w', S.w)) + row('Height', num('h', S.h)) + row('Depth (mm)', num('d', S.d)) +
+      `<div class="rp-sec">Summary</div>` +
+      `<div class="conn-item">Elements: ${S.elements.length} · Wires: ${S.wires.length} · Rails: ${S.rails.length} · Ducts: ${S.ducts.length}</div>` +
+      `<div class="empty">Klik objek di kanvas untuk edit properti.<br>Mode <b>Wire</b> untuk menggambar kabel.</div>`;
+    b.querySelectorAll('input[data-f]').forEach(inp => {
+      inp.addEventListener('change', () => {
+        snapshot();
+        S[inp.getAttribute('data-f')] = parseFloat(inp.value) || 0;
+        markDirty(); renderAll();
+      });
+    });
+    return;
+  }
+  if (s.kind === 'element'){
+    const e = S.elements.find(x=>x.id===s.id); if (!e){ ui.sel=null; return renderProps(); }
+    const c = CATALOG[e.type];
+    t.textContent = c.label;
+    const conns = S.wires.filter(w => w.from.el===e.id || w.to.el===e.id)
+      .map(w => {
+        const a = w.from.el===e.id ? w.from : w.to;
+        const o = w.from.el===e.id ? w.to : w.from;
+        const oc = getTermLabel(o);
+        return `<div class="conn-item"><b>${a.term}</b> → ${oc} <span style="color:${wireColor(w)}">●</span> ${w.gauge}mm²</div>`;
+      }).join('');
+    b.innerHTML =
+      row('Name', txt('name', e.name || '')) +
+      row('Catalog', `<input value="${c.catalog}" disabled style="opacity:.5">`) +
+      row('Rating', txt('rating', e.rating || '')) +
+      row('Circuit ID', txt('circuit', e.circuit || '')) +
+      row('Tampilkan label', chk('noLabel', !e.noLabel)) +
+      row('Position X', num('x', e.x)) + row('Position Y', num('y', e.y)) +
+      row('Rotation', `<select data-f="rot">${[0,90,180,270].map(v=>`<option ${((e.rot||0)===v)?'selected':''}>${v}</option>`).join('')}</select>`) +
+      `<div class="rp-sec">Rail mount</div>` +
+      row('Din Rail', `<select data-f="rail"><option value="">— none —</option>${S.rails.map(r=>`<option value="${r.id}" ${e.rail===r.id?'selected':''}>${r.id} @ y${r.y}</option>`).join('')}</select>`) +
+      `<div class="rp-sec">Terminals</div>` +
+      Object.keys(c.terms).map(tn => `<div class="conn-item"><span style="color:${CLASS_COLOR[termClass(e.id,tn)]}">●</span> ${tn}</div>`).join('') +
+      `<div class="rp-sec">Connections (${S.wires.filter(w=>w.from.el===e.id||w.to.el===e.id).length})</div>` + (conns || '<div class="empty">Belum ada kabel</div>') +
+      `<button class="rp-btn danger" data-act="del">Delete Element</button>`;
+    bindPropInputs(e, 'element');
+  } else if (s.kind === 'wire'){
+    const w = S.wires.find(x=>x.id===s.id); if (!w){ ui.sel=null; return renderProps(); }
+    const cls = termClass(w.from.el, w.from.term);
+    const v = validateWire(w);
+    t.textContent = 'Wire — ' + cls;
+    b.innerHTML =
+      row('From', `<input value="${getTermLabel(w.from)}" disabled style="opacity:.5">`) +
+      row('To', `<input value="${getTermLabel(w.to)}" disabled style="opacity:.5">`) +
+      row('Class', `<input value="${cls}" disabled style="opacity:.5">`) +
+      row('Gauge (mm²)', num('gauge', w.gauge)) +
+      row('Label', txt('label', w.label || '')) +
+      row('Color', `<input type="color" data-f="color" value="${wireColor(w)}">`) +
+      (v ? `<div class="issue ${v.level==='error'?'error':'warn'}">${v.msg}</div>` : '<div class="conn-item" style="color:#4ade80">✓ Valid connection</div>') +
+      `<button class="rp-btn" data-act="resetColor">Reset to standard color</button>` +
+      `<button class="rp-btn danger" data-act="del">Delete Wire</button>`;
+    bindPropInputs(w, 'wire');
+  } else if (s.kind === 'rail'){
+    const r = S.rails.find(x=>x.id===s.id); if (!r){ ui.sel=null; return renderProps(); }
+    t.textContent = 'Din Rail';
+    b.innerHTML = row('X', num('x', r.x)) + row('Y', num('y', r.y)) + row('Length', num('len', r.len)) +
+      `<button class="rp-btn danger" data-act="del">Delete Rail</button>`;
+    bindPropInputs(r, 'rail');
+  } else if (s.kind === 'duct'){
+    const d = S.ducts.find(x=>x.id===s.id); if (!d){ ui.sel=null; return renderProps(); }
+    t.textContent = 'Ducting';
+    b.innerHTML = row('X', num('x', d.x)) + row('Y', num('y', d.y)) + row('Width', num('w', d.w)) + row('Height', num('h', d.h)) +
+      `<button class="rp-btn danger" data-act="del">Delete Duct</button>`;
+    bindPropInputs(d, 'duct');
+  } else if (s.kind === 'label'){
+    const l = S.labels.find(x=>x.id===s.id); if (!l){ ui.sel=null; return renderProps(); }
+    t.textContent = 'Label';
+    b.innerHTML = row('Text', txt('text', l.text)) + row('X', num('x', l.x)) + row('Y', num('y', l.y)) +
+      `<button class="rp-btn danger" data-act="del">Delete Label</button>`;
+    bindPropInputs(l, 'label');
+  }
+  b.querySelectorAll('button[data-act]').forEach(btn => btn.addEventListener('click', () => {
+    const act = btn.getAttribute('data-act');
+    if (act === 'del') deleteSelected();
+    else if (act === 'resetColor'){
+      snapshot();
+      const w = S.wires.find(x=>x.id===ui.sel.id); w.color = '';
+      markDirty(); renderAll();
+    }
+  }));
+}
+function getTermLabel(ref){
+  if (ref.el[0]==='B'){ const b=BUS.find(x=>x.id===ref.el); return (b?b.label:ref.el)+'.'+ref.term; }
+  const e = S.elements.find(x=>x.id===ref.el);
+  return (e ? (e.name || CATALOG[e.type].label) : '?') + '.' + ref.term;
+}
+function row(label, ctrl){ return `<div class="rp-row"><label>${label}</label>${ctrl}</div>`; }
+function num(f, v){ return `<input type="number" data-f="${f}" value="${v}">`; }
+function txt(f, v){ return `<input type="text" data-f="${f}" value="${String(v).replace(/"/g,'&quot;')}">`; }
+function chk(f, checked){ return `<input type="checkbox" data-f="${f}" ${checked?'checked':''}>`; }
+function bindPropInputs(obj, kind){
+  $('rpBody').querySelectorAll('input[data-f],select[data-f]').forEach(inp => {
+    inp.addEventListener('change', () => {
+      snapshot();
+      const f = inp.getAttribute('data-f');
+      let v = inp.type === 'checkbox' ? inp.checked : inp.value;
+      if (['x','y','w','h','len','gauge','rot'].includes(f)) v = parseFloat(v) || 0;
+      if (f === 'rail') v = v || null;
+      obj[f] = v;
+      if (kind === 'element'){
+        const c = CATALOG[obj.type];
+        obj.x = clamp(obj.x, 0, S.w - c.w); obj.y = clamp(obj.y, 0, S.h - c.h);
+        for (const w of S.wires)
+          if (w.from.el === obj.id || w.to.el === obj.id) rebuildWire(w);
+      }
+      markDirty(); renderAll();
+    });
+  });
+}
+/* ===================== VALIDATION PANEL ===================== */
+function renderIssues(){
+  const box = $('rpIssues');
+  const issues = validateAll();
+  clearEl(box);
+  $('stIssues').textContent = 'Issues: ' + issues.length;
+  $('stIssues').className = issues.length ? 'err' : 'ok';
+  if (!issues.length){
+    box.innerHTML = '<div class="conn-item" style="color:#4ade80">✓ Semua kabel valid</div>';
+    return;
+  }
+  for (const is of issues){
+    const w = S.wires.find(x=>x.id===is.wireId);
+    const div = document.createElement('div');
+    div.className = 'issue ' + (is.level==='error' ? 'error' : 'warn');
+    div.textContent = (is.level==='error' ? '✖ ' : '⚠ ') + is.msg + (w ? ' (' + getTermLabel(w.from) + ' → ' + getTermLabel(w.to) + ')' : '');
+    if (is.wireId) div.addEventListener('click', () => select('wire', is.wireId));
+    box.appendChild(div);
+  }
+}
+/* ===================== TOOLBAR EVENTS ===================== */
+function setMode(m){
+  ui.mode = m;
+  ui.drawing = null;
+  if (m !== 'select' && ui.drag && ui.drag.type === 'move'){
+    ui.drag = null;
+    try { svg.releasePointerCapture(svg.pointerCaptureId); } catch(e){}
+  }
+  document.querySelectorAll('[data-mode]').forEach(b => b.classList.toggle('active', b.getAttribute('data-mode') === m));
+  svg.style.cursor = m==='select' ? 'default' : 'crosshair';
+  svg.setAttribute('data-mode', m);
+  updateStatus();
+  renderOverlay();
+}
+document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => setMode(b.getAttribute('data-mode'))));
+$('btnDelete').addEventListener('click', deleteSelected);
+$('btnUndo').addEventListener('click', undo);
+$('btnRedo').addEventListener('click', redo);
+$('btnZoomIn').addEventListener('click', () => setZoom(ui.view.k * 1.25));
+$('btnZoomOut').addEventListener('click', () => setZoom(ui.view.k / 1.25));
+$('btnFit').addEventListener('click', fitView);
+$('zoomVal').addEventListener('change', e => setZoom((parseFloat(e.target.value)||100)/100));
+$('btnGrid').addEventListener('click', e => { ui.grid = !ui.grid; e.target.classList.toggle('active', ui.grid); renderGrid(); });
+$('btnDim').addEventListener('click', e => { ui.dim = !ui.dim; e.target.classList.toggle('active', ui.dim); renderRails(); renderDucts(); renderPanel(); });
+$('btnNew').addEventListener('click', () => {
+  if (!confirm('Buat panel baru? Desain saat ini akan diganti.')) return;
+  snapshot();
+  S = defaultDesign();
+  ui.sel = null;
+  markDirty(); fitView(); renderAll();
+});
+/* keyboard */
+document.addEventListener('keydown', ev => {
+  if (ev.target.tagName === 'INPUT' || ev.target.tagName === 'SELECT' || ev.target.tagName === 'TEXTAREA') return;
+  if (ev.code === 'Space'){ ui.spaceDown = true; svg.style.cursor = 'grab'; ev.preventDefault(); }
+  if (ev.key === 'Escape'){ ui.drawing = null; renderOverlay(); }
+  if (ev.key === 'Delete' || ev.key === 'Backspace'){ deleteSelected(); ev.preventDefault(); }
+  if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === 'z' && !ev.shiftKey){ undo(); ev.preventDefault(); }
+  if ((ev.ctrlKey || ev.metaKey) && (ev.key.toLowerCase() === 'y' || (ev.key.toLowerCase()==='z' && ev.shiftKey))){ redo(); ev.preventDefault(); }
+  if (ev.key.toLowerCase() === 'v') setMode('select');
+  if (ev.key.toLowerCase() === 'w') setMode('wire');
+  if (ev.key.toLowerCase() === 'l') setMode('label');
+});
+document.addEventListener('keyup', ev => {
+  if (ev.code === 'Space'){ ui.spaceDown = false; svg.style.cursor = ui.mode==='select' ? 'default' : 'crosshair'; }
+});
+/* ===================== PANEL SETTINGS MODAL ===================== */
+$('btnPanelSettings').addEventListener('click', () => openPanelSettings());
+$('modalBg').addEventListener('click', ev => { if (ev.target.id === 'modalBg') $('modalBg').classList.remove('open'); });
+function openPanelSettings(pending){
+  if (!pending) pending = { rails:clone(S.rails), ducts:clone(S.ducts),
+    name:S.name, w:S.w, h:S.h, d:S.d };
+  const m = $('modal');
+  m.innerHTML =
+    `<h3>Panel Settings</h3><div class="mbody">` +
+    `<div class="mrow"><label>Name</label><input id="ms_name" value="${pending.name.replace(/"/g,'&quot;')}" style="width:220px"></div>` +
+    `<div class="mrow"><label>Width (mm)</label><input id="ms_w" type="number" value="${pending.w}"></div>` +
+    `<div class="mrow"><label>Height (mm)</label><input id="ms_h" type="number" value="${pending.h}"></div>` +
+    `<div class="mrow"><label>Depth (mm)</label><input id="ms_d" type="number" value="${pending.d}"></div>` +
+    `<div class="rp-sec">Din Rails <button class="tb-btn" id="ms_addRail" style="float:right;padding:2px 8px">+ Add</button></div>` +
+    `<table class="mtable"><tr><th>X</th><th>Y</th><th>Length</th><th></th></tr>` +
+      pending.rails.map((r,i)=>`<tr><td><input data-t="rail" data-i="${i}" data-f="x" value="${r.x}"></td><td><input data-t="rail" data-i="${i}" data-f="y" value="${r.y}"></td><td><input data-t="rail" data-i="${i}" data-f="len" value="${r.len}"></td><td><button class="del" data-del="rail" data-i="${i}">✕</button></td></tr>`).join('') +
+    `</table>` +
+    `<div class="rp-sec">Ducting Segments <button class="tb-btn" id="ms_addDuct" style="float:right;padding:2px 8px">+ Add</button></div>` +
+    `<table class="mtable"><tr><th>X</th><th>Y</th><th>W</th><th>H</th><th></th></tr>` +
+      pending.ducts.map((d,i)=>`<tr><td><input data-t="duct" data-i="${i}" data-f="x" value="${d.x}"></td><td><input data-t="duct" data-i="${i}" data-f="y" value="${d.y}"></td><td><input data-t="duct" data-i="${i}" data-f="w" value="${d.w}"></td><td><input data-t="duct" data-i="${i}" data-f="h" value="${d.h}"></td><td><button class="del" data-del="duct" data-i="${i}">✕</button></td></tr>`).join('') +
+    `</table>` +
+    `<div class="empty" style="text-align:left">Busbar (L1/L2/L3/PE) fixed di sisi kiri panel, tidak dapat dipindah.</div>` +
+    `</div><div class="mfoot"><button class="rp-btn" id="ms_cancel" style="width:auto;margin:0">Cancel</button><button class="rp-btn" id="ms_apply" style="width:auto;margin:0;background:#2563eb;border-color:#3b82f6;color:#fff">Apply</button></div>`;
+  $('modalBg').classList.add('open');
+  const sync = () => {
+    document.querySelectorAll('#modal input[data-t]').forEach(inp => {
+      const t = inp.getAttribute('data-t'), i = +inp.getAttribute('data-i'), f = inp.getAttribute('data-f');
+      const obj = t==='rail' ? pending.rails[i] : pending.ducts[i];
+      if (obj) obj[f] = parseFloat(inp.value) || 0;
+    });
+    pending.name = $('ms_name').value;
+    pending.w = parseFloat($('ms_w').value) || pending.w;
+    pending.h = parseFloat($('ms_h').value) || pending.h;
+    pending.d = parseFloat($('ms_d').value) || pending.d;
+  };
+  $('ms_addRail').addEventListener('click', () => { sync(); pending.rails.push({ id:uid('r'), x:150, y:200, len:600 }); openPanelSettings(pending); });
+  $('ms_addDuct').addEventListener('click', () => { sync(); pending.ducts.push({ id:uid('d'), x:150, y:200, w:600, h:35 }); openPanelSettings(pending); });
+  m.querySelectorAll('.del').forEach(btn => btn.addEventListener('click', () => {
+    sync();
+    const t = btn.getAttribute('data-del'), i = +btn.getAttribute('data-i');
+    if (t==='rail') pending.rails.splice(i,1); else pending.ducts.splice(i,1);
+    openPanelSettings(pending);
+  }));
+  $('ms_cancel').addEventListener('click', () => $('modalBg').classList.remove('open'));
+  $('ms_apply').addEventListener('click', () => {
+    sync();
+    snapshot();
+    S.name = pending.name || S.name;
+    S.w = pending.w; S.h = pending.h; S.d = pending.d;
+    S.rails = pending.rails; S.ducts = pending.ducts;
+    for (const e of S.elements){
+      const c = CATALOG[e.type];
+      e.x = clamp(e.x, 0, S.w - c.w); e.y = clamp(e.y, 0, S.h - c.h);
+      e.rail = S.rails.some(r=>r.id===e.rail) ? e.rail : null;
+    }
+    S.wires = S.wires.filter(w => getTermPos(w.from.el, w.from.term) && getTermPos(w.to.el, w.to.term));
+    $('modalBg').classList.remove('open');
+    markDirty(); fitView(); renderAll();
+  });
+}
+/* ===================== STORAGE: save / load / export / import ===================== */
+const LS_KEY = 'paneldesigner.v1';
+function saveLS(){
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(S));
+    const t = new Date().toLocaleTimeString('id-ID');
+    $('stSave').textContent = 'Auto-save: ' + t;
+    $('stSave').className = 'ok';
+    ui.dirty = false;
+  } catch(e){
+    $('stSave').textContent = 'Auto-save: FAILED';
+    $('stSave').className = 'err';
+  }
+}
+function loadLS(){
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return false;
+    const d = JSON.parse(raw);
+    if (!d || typeof d.w !== 'number') return false;
+    S = d;
+    S.labels = S.labels || []; S.wires = S.wires || []; S.elements = S.elements || [];
+    S.rails = S.rails || []; S.ducts = S.ducts || [];
+    S.wires.forEach(w => { if (!w.rawPts) w.rawPts = (w.pts && w.pts.length) ? w.pts.slice() : []; });
+    rebuildAllWires();
+    return true;
+  } catch(e){ return false; }
+}
+setInterval(() => { if (ui.dirty) saveLS(); }, 5000);
+$('btnExport').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify(S, null, 2)], { type:'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (S.name || 'panel').replace(/[^\w\- ]+/g,'').replace(/\s+/g,'_').toLowerCase() + '.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  setStatus('Export JSON ✓');
+});
+$('btnImport').addEventListener('click', () => $('fileImport').click());
+$('fileImport').addEventListener('change', ev => {
+  const f = ev.target.files[0];
+  if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    try {
+      const d = JSON.parse(rd.result);
+      if (!d || typeof d.w !== 'number') throw new Error('invalid');
+      snapshot();
+      S = d;
+      S.labels = S.labels || []; S.wires = S.wires || []; S.elements = S.elements || [];
+      S.rails = S.rails || []; S.ducts = S.ducts || [];
+      ui.sel = null;
+      markDirty(); fitView(); renderAll();
+      setStatus('Import ✓ ' + f.name);
+    } catch(e){ alert('File JSON tidak valid: ' + f.name); }
+  };
+  rd.readAsText(f);
+  ev.target.value = '';
+});
+/* ===================== INIT ===================== */
+function init(){
+  if (!loadLS()) S = defaultDesign();
+  buildLibrary();
+  applyView();
+  fitView();
+  renderAll();
+  updateStatus();
+  $('stSave').textContent = 'Auto-save: setiap 5 detik';
+  window.addEventListener('resize', () => { /* keep view */ });
+}
+init();
+</script>
+</body>
+</html>
