@@ -166,9 +166,10 @@ const CATALOG = {
   mccb_3p: { label:'MCCB 3P', catalog:'Schneider NSX250N 3P', rating:'250A', w:100, h:138, poles:3,
     terms:{ 'L1-in':{x:20,y:0,side:'top'}, 'L2-in':{x:50,y:0,side:'top'}, 'L3-in':{x:80,y:0,side:'top'},
             'L1-out':{x:20,y:138,side:'bottom'}, 'L2-out':{x:50,y:138,side:'bottom'}, 'L3-out':{x:80,y:138,side:'bottom'} } },
-  meter_1p: { label:'Meter 1P', catalog:'Schneider IEM2050 1P', rating:'', w:96, h:48, poles:1,
-    terms:{ 'L-in':{x:24,y:0,side:'top'}, 'N-in':{x:72,y:0,side:'top'},
-            'L-out':{x:24,y:48,side:'bottom'}, 'N-out':{x:72,y:48,side:'bottom'} } },
+  meter_1p: { label:'Meter 1P', catalog:'Schneider Acti9 IEM2050 1P', rating:'', w:17.5, h:90, poles:1, termLabel:1,
+    terms:{ 'N-in':{x:4,y:0,side:'top'}, 'N-out':{x:13.5,y:0,side:'top'},
+            'L-in':{x:4,y:90,side:'bottom'}, 'L-out':{x:13.5,y:90,side:'bottom'},
+            'RS485A':{x:4,y:72,side:'bottom'}, 'RS485B':{x:13.5,y:72,side:'bottom'} } },
   meter_3p: { label:'Meter 3P', catalog:'Schneider IEM355 3P', rating:'', w:96, h:48, poles:3,
     terms:{ 'L1-in':{x:12,y:0,side:'top'}, 'L2-in':{x:36,y:0,side:'top'}, 'L3-in':{x:60,y:0,side:'top'}, 'N-in':{x:84,y:0,side:'top'},
             'L1-out':{x:12,y:48,side:'bottom'}, 'L2-out':{x:36,y:48,side:'bottom'}, 'L3-out':{x:60,y:48,side:'bottom'}, 'N-out':{x:84,y:48,side:'bottom'} } },
@@ -195,7 +196,8 @@ const BUS = [
   { id:'B_L1', label:'L1', cls:'L1', x:36, color:'#ef4444' },
   { id:'B_L2', label:'L2', cls:'L2', x:54, color:'#f97316' },
   { id:'B_L3', label:'L3', cls:'L3', x:72, color:'#eab308' },
-  { id:'B_PE', label:'PE', cls:'PE', x:90, color:'#22c55e' }
+  { id:'B_N', label:'N', cls:'N', x:90, color:'#3b82f6' },
+  { id:'B_PE', label:'PE', cls:'PE', x:108, color:'#22c55e' }
 ];
 const BUS_TAPS = 8, BUS_W = 6, BUS_Y0 = 40;
 const CLASS_COLOR = { L1:'#ef4444', L2:'#f97316', L3:'#eab308', L:'#dc2626', N:'#3b82f6', PE:'#16a34a',
@@ -217,10 +219,12 @@ const ui = {
 };
 function defaultDesign(){
   return {
-    name:'Panel Utama', w:800, h:600, d:250,
-    rails:[ {id:'r1',x:150,y:150,len:600}, {id:'r2',x:150,y:300,len:600}, {id:'r3',x:150,y:450,len:600} ],
-    ducts:[ {id:'d1',x:150,y:90,w:600,h:35}, {id:'d2',x:150,y:225,w:600,h:35},
-            {id:'d3',x:150,y:375,w:600,h:35}, {id:'d4',x:150,y:525,w:600,h:35} ],
+    name:'Panel Utama', w:600, h:800, d:250,
+    rails:[ {id:'r1',x:125,y:160,len:460}, {id:'r2',x:125,y:330,len:460},
+            {id:'r3',x:125,y:500,len:460}, {id:'r4',x:125,y:670,len:460} ],
+    ducts:[ {id:'d1',x:125,y:95,w:460,h:35}, {id:'d2',x:125,y:250,w:460,h:35},
+            {id:'d3',x:125,y:420,w:460,h:35}, {id:'d4',x:125,y:590,w:460,h:35},
+            {id:'d5',x:125,y:745,w:460,h:35} ],
     elements:[], wires:[], labels:[]
   };
 }
@@ -452,7 +456,14 @@ function renderElems(){
 }
 function renderTerms(){
   const g1 = $('lyrTerm'); clearEl(g1);
-  const addDot = (elId, tn, p, color) => {
+  const addDot = (elId, tn, p, color, lab) => {
+    if (lab){
+const termNames = { RS485A:'A', RS485B:'B' };
+    const lt = svgEl('text', { x:p.x, y:p.y-5, 'font-size':4.2, fill:'#e2e8f0',
+      'text-anchor':'middle', 'pointer-events':'none', style:'paint-order:stroke',
+      stroke:'#0f172a', 'stroke-width':.5 }, g1);
+    lt.textContent = termNames[tn] || tn;
+    }
     svgEl('circle', { cx:p.x, cy:p.y, r:8, fill:'transparent',
       class:'term-hit', 'data-el':elId, 'data-term':tn }, g1);
     svgEl('circle', { cx:p.x, cy:p.y, r:2.3, fill:'#0f1115',
@@ -461,11 +472,12 @@ function renderTerms(){
   };
   for (const e of S.elements){
     const c = CATALOG[e.type];
+    const lab = !!c.termLabel;
     for (const tn in c.terms){
       const t = c.terms[tn];
       const p = rotPt(t.x, t.y, c.w/2, c.h/2, e.rot||0);
       const cls = termClass(e.id, tn);
-      addDot(e.id, tn, { x:p.x + e.x, y:p.y + e.y }, CLASS_COLOR[cls]||'#94a3b8');
+      addDot(e.id, tn, { x:p.x + e.x, y:p.y + e.y }, CLASS_COLOR[cls]||'#94a3b8', lab);
     }
   }
   for (const bar of BUS){
@@ -612,6 +624,57 @@ function rebuildWire(w){
   return w;
 }
 function rebuildAllWires(){ S.wires.forEach(rebuildWire); }
+function shiftRailChildren(r, dx, dy){
+  const moved = S.elements.filter(e => e.rail === r.id);
+  if (!moved.length) return true;
+  const cands = moved.map(e => ({ e, rc:{ x:e.x+dx, y:e.y+dy, w:CATALOG[e.type].w, h:CATALOG[e.type].h } }));
+  for (const { rc } of cands){
+    for (const o of S.elements){
+      if (moved.indexOf(o) >= 0) continue;
+      if (gapOverlap(rc, elemRect(o))) return false;
+    }
+    const bz = busbarZone();
+    if (rc.x < bz.x + bz.w && rc.x + rc.w > bz.x) return false;
+  }
+  for (const { e } of cands){
+    e.x += dx; e.y += dy;
+    for (const w of S.wires)
+      if (w.from.el === e.id || w.to.el === e.id) rebuildWire(w);
+  }
+  renderElems(); renderTerms(); renderWires(); renderOverlay();
+  return true;
+}
+/* ===================== NETWORK COLOR (shared node = one color) ===================== */
+function sharesAnyHole(w1, w2){
+  return (w1.from.el === w2.from.el && w1.from.term === w2.from.term) ||
+         (w1.from.el === w2.to.el   && w1.from.term === w2.to.term) ||
+         (w1.to.el   === w2.from.el && w1.to.term   === w2.from.term) ||
+         (w1.to.el   === w2.to.el   && w1.to.term   === w2.to.term);
+}
+function wireNetwork(id){
+  const comp = [];
+  const seen = new Set([id]);
+  let stack = [];
+  const root = S.wires.find(w => w.id === id);
+  if (root) stack.push(root);
+  while (stack.length){
+    const w = stack.pop();
+    if (!w) continue;
+    comp.push(w);
+    for (const w2 of S.wires){
+      if (seen.has(w2.id)) continue;
+      if (sharesAnyHole(w, w2)){ seen.add(w2.id); stack.push(w2); }
+    }
+  }
+  return comp;
+}
+function networkColorFix(id){
+  const comp = wireNetwork(id);
+  let c = '';
+  for (const w of comp) if (w.color){ c = w.color; break; }
+  if (c) for (const w of comp) w.color = c;
+  return { comp, color:c };
+}
 /* ===================== HISTORY ===================== */
 function snapshot(){
   ui.hist.push(JSON.stringify(S));
@@ -796,8 +859,17 @@ svg.addEventListener('pointermove', ev => {
       renderElems(); renderTerms(); renderWires(); renderOverlay();
     } else if (d.kind === 'rail'){
       const r = S.rails.find(x=>x.id===d.id);
-      r.x = clamp(nx, 0, S.w - r.len); r.y = clamp(ny, 10, S.h - 10);
-      renderRails();
+      const ox = r.x, oy = r.y;
+      const nxx = clamp(nx, 0, S.w - r.len), nyy = clamp(ny, 10, S.h - 10);
+      const dx = nxx - ox, dy = nyy - oy;
+      if (dx || dy){
+        if (!shiftRailChildren(r, dx, dy)){
+          renderRails();
+          return;
+        }
+        r.x = nxx; r.y = nyy;
+      }
+      renderRails(); renderProps();
     } else if (d.kind === 'duct'){
       const dd = S.ducts.find(x=>x.id===d.id);
       dd.x = clamp(nx, 0, S.w - dd.w); dd.y = clamp(ny, 0, S.h - dd.h);
@@ -852,6 +924,7 @@ function handleTermClick(elId, term){
   }
   snapshot();
   S.wires.push(w);
+  networkColorFix(w.id);
   rebuildAllWires();
   markDirty();
   renderAll();
@@ -1057,7 +1130,7 @@ function renderProps(){
       row('Class', `<input value="${cls}" disabled style="opacity:.5">`) +
       row('Gauge (mm²)', num('gauge', w.gauge)) +
       row('Label', txt('label', w.label || '')) +
-      row('Color', `<input type="color" data-f="color" value="${wireColor(w)}">`) +
+      row('Color', `<input type="color" data-f="color" value="${wireColor(w)}" style="width:38px;vertical-align:middle"><input type="text" data-f="color" value="${wireColor(w)}" style="width:84px;font-family:Consolas,monospace;margin-left:6px;vertical-align:middle" placeholder="#RRGGBB" title="Masukkan hex, contoh #ff0000">`) +
       (v ? `<div class="issue ${v.level==='error'?'error':'warn'}">${v.msg}</div>` : '<div class="conn-item" style="color:#4ade80">✓ Valid connection</div>') +
       `<button class="rp-btn" data-act="resetColor">Reset to standard color</button>` +
       `<button class="rp-btn danger" data-act="del">Delete Wire</button>`;
@@ -1086,7 +1159,8 @@ function renderProps(){
     if (act === 'del') deleteSelected();
     else if (act === 'resetColor'){
       snapshot();
-      const w = S.wires.find(x=>x.id===ui.sel.id); w.color = '';
+      const w = S.wires.find(x=>x.id===ui.sel.id);
+      for (const cw of wireNetwork(w.id)) cw.color = '';
       markDirty(); renderAll();
     }
   }));
@@ -1105,10 +1179,24 @@ function bindPropInputs(obj, kind){
     inp.addEventListener('change', () => {
       snapshot();
       const f = inp.getAttribute('data-f');
+      const prev = obj[f];
       let v = inp.type === 'checkbox' ? inp.checked : inp.value;
+      if (f === 'color' && inp.type === 'text'){
+        const m = String(v).trim().match(/^#?([0-9a-fA-F]{6})$/);
+        if (!m) return;
+        v = '#' + m[1].toLowerCase();
+      }
       if (['x','y','w','h','len','gauge','rot'].includes(f)) v = parseFloat(v) || 0;
       if (f === 'rail') v = v || null;
       obj[f] = v;
+      if (kind === 'rail' && (f === 'x' || f === 'y')){
+        const dx = f === 'x' ? (parseFloat(obj.x) - parseFloat(prev)) : 0;
+        const dy = f === 'y' ? (parseFloat(obj.y) - parseFloat(prev)) : 0;
+        if (dx || dy) shiftRailChildren(obj, dx, dy);
+      }
+      if (kind === 'wire' && f === 'color'){
+        for (const cw of wireNetwork(obj.id)) cw.color = v;
+      }
       if (kind === 'element'){
         const c = CATALOG[obj.type];
         obj.x = clamp(obj.x, 0, S.w - c.w); obj.y = clamp(obj.y, 0, S.h - c.h);
