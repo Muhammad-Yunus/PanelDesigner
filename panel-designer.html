@@ -54,6 +54,12 @@ input.tb-num{background:#222632;border:1px solid #323847;color:#c6cbd6;border-ra
 .modal h3{padding:13px 16px;font-size:14px;border-bottom:1px solid #2a2e38;color:#fff}
 .modal .mbody{padding:14px 16px;overflow-y:auto}
 .modal .mfoot{padding:10px 16px;border-top:1px solid #2a2e38;display:flex;justify-content:flex-end;gap:8px}
+.welcome-cards{display:flex;gap:14px;flex-wrap:wrap}
+.welcome-card{flex:1;min-width:190px;background:#1f2330;border:1px solid #2c3244;border-radius:8px;padding:14px;cursor:pointer;text-align:left;transition:border-color .12s,background .12s}
+.welcome-card:hover{border-color:#3b82f6;background:#242a3a}
+.welcome-card b{color:#fff;font-size:13px;display:block;margin-bottom:6px}
+.welcome-card span{color:#8a92a6;font-size:11px;line-height:1.5;display:block}
+.welcome-card .wrow{display:flex;gap:6px;margin-top:10px;align-items:center;font-size:10px;color:#6b7386}
 .mtable{width:100%;border-collapse:collapse;font-size:12px;margin-top:4px}
 .mtable th{color:#7c8496;font-size:10px;text-transform:uppercase;letter-spacing:.6px;text-align:left;padding:4px 5px;border-bottom:1px solid #2a2e38}
 .mtable td{padding:4px 5px;border-bottom:1px solid #1f2330}
@@ -1689,14 +1695,111 @@ $('fileImport').addEventListener('change', ev => {
   ev.target.value = '';
 });
 /* ===================== INIT ===================== */
+function buildExampleBas(){
+  const ex = {
+    name:'Panel BAS', w:600, h:800, d:250,
+    rails:[ {id:'r1',x:125,y:230,len:460}, {id:'r2',x:125,y:400,len:460},
+            {id:'r3',x:125,y:570,len:460}, {id:'r4',x:125,y:740,len:460} ],
+    ducts:[ {id:'d1',x:125,y:120,w:460,h:35}, {id:'d2',x:125,y:310,w:460,h:35},
+            {id:'d3',x:125,y:480,w:460,h:35}, {id:'d4',x:125,y:645,w:460,h:35} ],
+    elements:[], wires:[], labels:[]
+  };
+  const ids = {};
+  const mount = (railId, type, x, key) => {
+    const r = ex.rails.find(r=>r.id===railId);
+    ids[key] = uid('e');
+    ex.elements.push({ id:ids[key], type, x, y:Math.round(r.y - CATALOG[type].h/2),
+      rot:0, circuit:'', rating:CATALOG[type].rating, name:'', rail:railId });
+  };
+  mount('r1','psu',125,'psu');
+  mount('r1','mgate',194,'mg');
+  mount('r2','plc',125,'plc');
+  mount('r3','contactor',125,'c1');
+  mount('r3','contactor',147,'c2');
+  mount('r4','meter_3p',125,'mt');
+  const prevS = S;
+  S = ex; /* supaya getTermPos bisa membaca posisi terminal */
+  const W = (fa, fb, ta, tb) => {
+    const w = { id:uid('w'), from:{el:fa,term:fb}, to:{el:ta,term:tb}, pts:[],
+      gauge:2.5, label:'', color:'', twist:isTwistPair({el:fa,term:fb},{el:ta,term:tb}) };
+    rerouteWire(w); /* jalur orthogonal terpendek */
+    return w;
+  };
+  ex.wires = [
+    W('B_L1','tap1', ids.c1,'1'),
+    W('B_N','tap1',  ids.c1,'R1'),
+    W(ids.plc,'Y0',  ids.c1,'A1'),
+    W(ids.c1,'A2',   'B_N','tap2'),
+    W('B_L1','tap2', ids.c2,'1'),
+    W('B_N','tap3',  ids.c2,'R1'),
+    W(ids.plc,'Y1',  ids.c2,'A1'),
+    W(ids.c2,'A2',   'B_N','tap4'),
+    W(ids.psu,'V+1', ids.plc,'24V1'),
+    W(ids.psu,'V-1', ids.plc,'0V1'),
+    W(ids.psu,'V+2', ids.mg,'V+'),
+    W(ids.psu,'V-2', ids.mg,'V-'),
+    W(ids.plc,'RS485A', ids.mg,'RS485A'),
+    W(ids.plc,'RS485B', ids.mg,'RS485B'),
+    W(ids.plc,'RS485A', ids.mt,'RS485A'),
+    W(ids.plc,'RS485B', ids.mt,'RS485B'),
+    W('B_L1','tap4', ids.mt,'V1'),
+    W('B_L2','tap1', ids.mt,'V2'),
+    W('B_L3','tap1', ids.mt,'V3'),
+    W('B_N','tap5',  ids.mt,'Vn')
+  ];
+  ex.wires.forEach(w => { w.rawPts = w.pts.map(p=>({ x:p.x, y:p.y })); });
+  S = prevS;
+  return ex;
+}
+function showWelcome(){
+  const m = $('modal');
+  m.innerHTML =
+    `<h3>Selamat Datang di PanelDesigner</h3>
+     <div class="mbody">
+       <p style="color:#8a92a6;font-size:12px;margin-bottom:12px">Belum ada desain tersimpan di perangkat ini. Pilih cara memulai:</p>
+       <div class="welcome-cards">
+         <div class="welcome-card" data-opt="bas">
+           <b>Panel BAS</b>
+           <span>Contoh lengkap bangunan otomatis: PSU 24V, PLC FX3U-64MR, gateway MODBUS MGate MB3170, 2x kontaktor NCH8 & meter 3P — sudah tersambung kabel ke busbar L1/L2/L3/N.</span>
+           <div class="wrow">● 6 komponen  ● 20 kabel</div>
+         </div>
+         <div class="welcome-card" data-opt="empty">
+           <b>Empty Panel</b>
+           <span>Mulai dari nol: hanya ducting, din rail dan busbar — tanpa kabel maupun komponen.</span>
+           <div class="wrow">● 0 komponen  ● 0 kabel</div>
+         </div>
+       </div>
+     </div>
+     <div class="mfoot"><button class="rp-btn" id="ms_cancel" style="width:auto;margin:0">Batal</button></div>`;
+  $('modalBg').classList.add('open');
+  m.querySelectorAll('.welcome-card').forEach(card => card.addEventListener('click', () => {
+    const bas = card.getAttribute('data-opt') === 'bas';
+    snapshot();
+    S = bas ? buildExampleBas() : defaultDesign();
+    ui.sel = null; ui.drawing = null;
+    markDirty();
+    saveLS();
+    renderAll();
+    $('modalBg').classList.remove('open');
+    setStatus(bas ? 'Membuka contoh Panel BAS' : 'Panel kosong dibuat');
+  }));
+  $('ms_cancel').addEventListener('click', () => {
+    snapshot();
+    saveLS();
+    $('modalBg').classList.remove('open');
+    setStatus('Panel kosong dibuat (ubah lewat tombol New)');
+  });
+}
 function init(){
-  if (!loadLS()) S = defaultDesign();
+  const fresh = !loadLS();
+  if (fresh) S = defaultDesign();
   buildLibrary();
   applyView();
   fitView();
   renderAll();
   updateStatus();
   $('stSave').textContent = 'Auto-save: setiap 5 detik';
+  if (fresh) showWelcome();
   window.addEventListener('resize', () => { /* keep view */ });
 }
 init();
