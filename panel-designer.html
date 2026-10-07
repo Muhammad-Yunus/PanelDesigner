@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Panel Designer — Electrical Panel Layout</title>
+<title>Panel Designer â€” Electrical Panel Layout</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,-apple-system,sans-serif}
 html,body{height:100%;overflow:hidden;background:#0f1115;color:#d8dbe2}
@@ -101,7 +101,7 @@ svg text{user-select:none}
       <button class="tb-btn" id="btnStraight" title="Luruskan seluruh kabel yang tidak tegak/lurus">Straighten</button>
     </div>
     <div class="tb-group">
-      <button class="tb-btn" id="btnZoomOut" title="Zoom out">−</button>
+      <button class="tb-btn" id="btnZoomOut" title="Zoom out">âˆ’</button>
       <input class="tb-num" id="zoomVal" value="100%">
       <button class="tb-btn" id="btnZoomIn" title="Zoom in">+</button>
       <button class="tb-btn" id="btnFit">Fit</button>
@@ -109,12 +109,12 @@ svg text{user-select:none}
       <button class="tb-btn" id="btnDim">Dimensions</button>
     </div>
     <div class="tb-group">
-      <button class="tb-btn" id="btnPanelSettings">Panel Settings…</button>
+      <button class="tb-btn" id="btnPanelSettings">Panel Settingsâ€¦</button>
     </div>
   </div>
   <div id="main">
     <aside id="left">
-      <input id="libSearch" placeholder="Search part…" autocomplete="off">
+      <input id="libSearch" placeholder="Search partâ€¦" autocomplete="off">
       <div id="libList"></div>
     </aside>
     <div id="canvasWrap">
@@ -153,7 +153,7 @@ svg text{user-select:none}
     <span id="stMode">Mode: Select</span>
     <span id="stCoord">X: 0 Y: 0 mm</span>
     <span id="stZoom">Zoom 100%</span>
-    <span id="stSave">Auto-save: —</span>
+    <span id="stSave">Auto-save: â€”</span>
     <span id="stIssues">Issues: 0</span>
   </div>
 </div>
@@ -229,10 +229,10 @@ const LIB = [
   { cat:'Structure', items:['rail','duct'] }
 ];
 const STRUCT = {
-  rail: { label:'Din Rail TS35', dim:'600×35 mm', len:600 },
-  duct: { label:'Ducting 3.5cm', dim:'600×35 mm', w:600, h:35 }
+  rail: { label:'Din Rail TS35', dim:'600Ã—35 mm', len:600 },
+  duct: { label:'Ducting 3.5cm', dim:'600Ã—35 mm', w:600, h:35 }
 };
-/* Fixed 4-busbar (L1/L2/L3/PE) — left side, not draggable */
+/* Fixed 4-busbar (L1/L2/L3/PE) â€” left side, not draggable */
 const BUS = [
   { id:'B_L1', label:'L1', cls:'L1', x:36, color:'#ef4444' },
   { id:'B_L2', label:'L2', cls:'L2', x:54, color:'#f97316' },
@@ -389,7 +389,7 @@ function setZoom(k2, cx, cy){
 /* ===================== VALIDATION ===================== */
 function validateWire(w){
   if ((w.from && w.from.term === 'NC') || (w.to && w.to.term === 'NC'))
-    return { level:'error', msg:'NO CONNECT — terminal NC tidak dapat dihubungkan' };
+    return { level:'error', msg:'NO CONNECT â€” terminal NC tidak dapat dihubungkan' };
   const a = termClass(w.from.el, w.from.term);
   const b = termClass(w.to.el, w.to.term);
   if (a === b) return null;
@@ -397,18 +397,18 @@ function validateWire(w){
   const ga = classGroup(a), gb = classGroup(b);
   if (ga === gb){
     if (/^L\d$/.test(a) && /^L\d$/.test(b) && a !== b)
-      return { level:'warn', msg:`CROSS-PHASE: ${a} ↔ ${b}` };
+      return { level:'warn', msg:`CROSS-PHASE: ${a} â†” ${b}` };
     return null;
   }
   const key = [ga,gb].sort().join('|');
   const OK_PAIR = { 'COIL|N':1, 'COIL|L':1, 'COIL|DC_OUT':1, 'COM|L':1 };
   if (OK_PAIR[key]) return null;
-  if (key === 'L|N')  return { level:'error', msg:'PHASE-NEUTRAL SHORT — L terhubung ke N' };
-  if (key === 'L|PE') return { level:'error', msg:'PHASE-EARTH SHORT — L terhubung ke PE' };
-  if (key === 'N|PE') return { level:'error', msg:'NEUTRAL-EARTH SHORT — N terhubung ke PE' };
-  if (key === 'DC+|DC-') return { level:'error', msg:'DC SUPPLY SHORT — 24V+ terhubung ke 24V-' };
-  if (key === 'DC_IN|DC_OUT') return { level:'warn', msg:'PLC I/O CROSS — input X terhubung ke output Y' };
-  return { level:'warn', msg:`CLASS MISMATCH: ${a} ↔ ${b}` };
+  if (key === 'L|N')  return { level:'error', msg:'PHASE-NEUTRAL SHORT â€” L terhubung ke N' };
+  if (key === 'L|PE') return { level:'error', msg:'PHASE-EARTH SHORT â€” L terhubung ke PE' };
+  if (key === 'N|PE') return { level:'error', msg:'NEUTRAL-EARTH SHORT â€” N terhubung ke PE' };
+  if (key === 'DC+|DC-') return { level:'error', msg:'DC SUPPLY SHORT â€” 24V+ terhubung ke 24V-' };
+  if (key === 'DC_IN|DC_OUT') return { level:'warn', msg:'PLC I/O CROSS â€” input X terhubung ke output Y' };
+  return { level:'warn', msg:`CLASS MISMATCH: ${a} â†” ${b}` };
 }
 function validateAll(){
   const out = [];
@@ -470,7 +470,7 @@ function renderDucts(){
       svgEl('line', { x1:hx, y1:d.y+4, x2:hx-6, y2:d.y+d.h-4, stroke:'#cbd5e1', 'stroke-width':.8 }, gr);
     if (ui.dim){
       const t = svgEl('text', { x:d.x+d.w/2, y:d.y+d.h+6, class:'dim-text' }, gr);
-      t.textContent = d.w + '×' + d.h;
+      t.textContent = d.w + 'Ã—' + d.h;
     }
     if (ui.sel && ui.sel.kind==='duct' && ui.sel.id===d.id)
       svgEl('rect', { x:d.x-3, y:d.y-3, width:d.w+6, height:d.h+6, class:'sel-outline' }, gr);
@@ -635,7 +635,7 @@ function renderWires(){
       'stroke-width':wd+3, opacity:.45, 'pointer-events':'none' }, gr);
     if (w.pts.length >= 2){
       const mid = w.pts[Math.floor(w.pts.length/2)];
-      const lab = w.label || (err ? '⚠ ' : '') + wireClsName(w);
+      const lab = w.label || (err ? 'âš  ' : '') + wireClsName(w);
       const t = svgEl('text', { x:mid.x, y:mid.y-2.4, class:'el-sub', 'font-size':3.6, fill:col,
         stroke:'#0c0e13', 'stroke-width':1.1, 'paint-order':'stroke', 'pointer-events':'none' }, gr);
       t.textContent = lab;
@@ -826,7 +826,7 @@ function networkColorFix(id){
 function straightenPts(pts){
   const p = pts.map(q => ({ x:q.x, y:q.y }));
   if (p.length < 2) return p;
-  /* pass 1: relaksasi sumbu-dominan — rapikan titik yang meleset kolom/baris
+  /* pass 1: relaksasi sumbu-dominan â€” rapikan titik yang meleset kolom/baris
      (mis. setelah din rail digeser) jadi garis lurus, bukan lipatan sepatu */
   let changed = true, guard = 0;
   while (changed && guard++ < p.length*2 + 4){
@@ -1135,7 +1135,7 @@ svg.addEventListener('pointermove', ev => {
       const c = CATALOG[e.type];
       let nx2 = clamp(nx, 0, S.w - c.w);
       let ny2 = e.y;
-      /* vertical: only moves when near a din rail — element stays mounted on rail */
+      /* vertical: only moves when near a din rail â€” element stays mounted on rail */
       let best=null, bd=Math.max(4, Math.min(20, c.h/4));
       for (const r of S.rails){
         if (nx2 + c.w <= r.x || nx2 >= r.x + r.len) continue;
@@ -1228,7 +1228,7 @@ function handleTermClick(elId, term){
   rebuildAllWires();
   markDirty();
   renderAll();
-  if (v) setStatus('⚠ ' + v.msg); else setStatus('Kabel dibuat: ' + wireClsName(w));
+  if (v) setStatus('âš  ' + v.msg); else setStatus('Kabel dibuat: ' + wireClsName(w));
 }
 /* ===================== LIBRARY (drag & drop) ===================== */
 function buildLibrary(){
@@ -1244,7 +1244,7 @@ function buildLibrary(){
         it.innerHTML = `<span>${STRUCT[key].label}</span><span class="dim">${STRUCT[key].dim}</span>`;
       } else {
         const c = CATALOG[key];
-        it.innerHTML = `<span>${c.label}</span><span class="dim">${c.w}×${c.h}</span>`;
+        it.innerHTML = `<span>${c.label}</span><span class="dim">${c.w}Ã—${c.h}</span>`;
       }
       box.appendChild(it);
     }
@@ -1291,7 +1291,7 @@ svg.addEventListener('drop', ev => {
   const wp = worldPos(ev);
   const g = makeGhost(part, wp);
   renderOverlay();
-  if (!g.ok){ setStatus('❌ ' + (g.msg||'Posisi tidak valid')); return; }
+  if (!g.ok){ setStatus('âŒ ' + (g.msg||'Posisi tidak valid')); return; }
   snapshot();
   if (part === 'rail'){
     S.rails.push({ id:uid('r'), x:g.x, y:g.y, len:STRUCT.rail.len });
@@ -1378,11 +1378,11 @@ function renderProps(){
   clearEl(b);
   const s = ui.sel;
   if (!s){
-    t.textContent = 'Panel — ' + S.name;
+    t.textContent = 'Panel â€” ' + S.name;
     b.innerHTML =
       row('Width', num('w', S.w)) + row('Height', num('h', S.h)) + row('Depth (mm)', num('d', S.d)) +
       `<div class="rp-sec">Summary</div>` +
-      `<div class="conn-item">Elements: ${S.elements.length} · Wires: ${S.wires.length} · Rails: ${S.rails.length} · Ducts: ${S.ducts.length}</div>` +
+      `<div class="conn-item">Elements: ${S.elements.length} Â· Wires: ${S.wires.length} Â· Rails: ${S.rails.length} Â· Ducts: ${S.ducts.length}</div>` +
       `<div class="empty">Klik objek di kanvas untuk edit properti.<br>Mode <b>Wire</b> untuk menggambar kabel.</div>`;
     b.querySelectorAll('input[data-f]').forEach(inp => {
       inp.addEventListener('change', () => {
@@ -1402,7 +1402,7 @@ function renderProps(){
         const a = w.from.el===e.id ? w.from : w.to;
         const o = w.from.el===e.id ? w.to : w.from;
         const oc = getTermLabel(o);
-        return `<div class="conn-item"><b>${a.term}</b> → ${oc} <span style="color:${wireColor(w)}">●</span> ${w.gauge}mm²</div>`;
+        return `<div class="conn-item"><b>${a.term}</b> â†’ ${oc} <span style="color:${wireColor(w)}">â—</span> ${w.gauge}mmÂ²</div>`;
       }).join('');
     b.innerHTML =
       row('Name', txt('name', e.name || '')) +
@@ -1413,9 +1413,9 @@ function renderProps(){
       row('Position X', num('x', e.x)) + row('Position Y', num('y', e.y)) +
       row('Rotation', `<select data-f="rot">${[0,90,180,270].map(v=>`<option ${((e.rot||0)===v)?'selected':''}>${v}</option>`).join('')}</select>`) +
       `<div class="rp-sec">Rail mount</div>` +
-      row('Din Rail', `<select data-f="rail"><option value="">— none —</option>${S.rails.map(r=>`<option value="${r.id}" ${e.rail===r.id?'selected':''}>${r.id} @ y${r.y}</option>`).join('')}</select>`) +
+      row('Din Rail', `<select data-f="rail"><option value="">â€” none â€”</option>${S.rails.map(r=>`<option value="${r.id}" ${e.rail===r.id?'selected':''}>${r.id} @ y${r.y}</option>`).join('')}</select>`) +
       `<div class="rp-sec">Terminals</div>` +
-      Object.keys(c.terms).map(tn => `<div class="conn-item"><span style="color:${CLASS_COLOR[termClass(e.id,tn)]}">●</span> ${tn}</div>`).join('') +
+      Object.keys(c.terms).map(tn => `<div class="conn-item"><span style="color:${CLASS_COLOR[termClass(e.id,tn)]}">â—</span> ${tn}</div>`).join('') +
       `<div class="rp-sec">Connections (${S.wires.filter(w=>w.from.el===e.id||w.to.el===e.id).length})</div>` + (conns || '<div class="empty">Belum ada kabel</div>') +
       `<button class="rp-btn danger" data-act="del">Delete Element</button>`;
     bindPropInputs(e, 'element');
@@ -1423,16 +1423,16 @@ function renderProps(){
     const w = S.wires.find(x=>x.id===s.id); if (!w){ ui.sel=null; return renderProps(); }
     const cls = wireClsName(w);
     const v = validateWire(w);
-    t.textContent = 'Wire — ' + cls;
+    t.textContent = 'Wire â€” ' + cls;
     b.innerHTML =
       row('From', `<input value="${getTermLabel(w.from)}" disabled style="opacity:.5">`) +
       row('To', `<input value="${getTermLabel(w.to)}" disabled style="opacity:.5">`) +
       row('Class', `<input value="${cls}" disabled style="opacity:.5">`) +
-      row('Gauge (mm²)', num('gauge', w.gauge)) +
+      row('Gauge (mmÂ²)', num('gauge', w.gauge)) +
       row('Twisted pair', chk('twist', !!w.twist)) +
       row('Label', txt('label', w.label || '')) +
       row('Color', `<input type="color" data-f="color" value="${wireColor(w)}" style="width:38px;vertical-align:middle"><input type="text" data-f="color" value="${wireColor(w)}" style="width:84px;font-family:Consolas,monospace;margin-left:6px;vertical-align:middle" placeholder="#RRGGBB" title="Masukkan hex, contoh #ff0000">`) +
-      (v ? `<div class="issue ${v.level==='error'?'error':'warn'}">${v.msg}</div>` : '<div class="conn-item" style="color:#4ade80">✓ Valid connection</div>') +
+      (v ? `<div class="issue ${v.level==='error'?'error':'warn'}">${v.msg}</div>` : '<div class="conn-item" style="color:#4ade80">âœ“ Valid connection</div>') +
       `<button class="rp-btn" data-act="resetColor">Reset to standard color</button>` +
       `<button class="rp-btn danger" data-act="del">Delete Wire</button>`;
     bindPropInputs(w, 'wire');
@@ -1516,14 +1516,14 @@ function renderIssues(){
   $('stIssues').textContent = 'Issues: ' + issues.length;
   $('stIssues').className = issues.length ? 'err' : 'ok';
   if (!issues.length){
-    box.innerHTML = '<div class="conn-item" style="color:#4ade80">✓ Semua kabel valid</div>';
+    box.innerHTML = '<div class="conn-item" style="color:#4ade80">âœ“ Semua kabel valid</div>';
     return;
   }
   for (const is of issues){
     const w = S.wires.find(x=>x.id===is.wireId);
     const div = document.createElement('div');
     div.className = 'issue ' + (is.level==='error' ? 'error' : 'warn');
-    div.textContent = (is.level==='error' ? '✖ ' : '⚠ ') + is.msg + (w ? ' (' + getTermLabel(w.from) + ' → ' + getTermLabel(w.to) + ')' : '');
+    div.textContent = (is.level==='error' ? 'âœ– ' : 'âš  ') + is.msg + (w ? ' (' + getTermLabel(w.from) + ' â†’ ' + getTermLabel(w.to) + ')' : '');
     if (is.wireId) div.addEventListener('click', () => select('wire', is.wireId));
     box.appendChild(div);
   }
@@ -1584,11 +1584,11 @@ function openPanelSettings(pending){
     `<div class="mrow"><label>Depth (mm)</label><input id="ms_d" type="number" value="${pending.d}"></div>` +
     `<div class="rp-sec">Din Rails <button class="tb-btn" id="ms_addRail" style="float:right;padding:2px 8px">+ Add</button></div>` +
     `<table class="mtable"><tr><th>X</th><th>Y</th><th>Length</th><th></th></tr>` +
-      pending.rails.map((r,i)=>`<tr><td><input data-t="rail" data-i="${i}" data-f="x" value="${r.x}"></td><td><input data-t="rail" data-i="${i}" data-f="y" value="${r.y}"></td><td><input data-t="rail" data-i="${i}" data-f="len" value="${r.len}"></td><td><button class="del" data-del="rail" data-i="${i}">✕</button></td></tr>`).join('') +
+      pending.rails.map((r,i)=>`<tr><td><input data-t="rail" data-i="${i}" data-f="x" value="${r.x}"></td><td><input data-t="rail" data-i="${i}" data-f="y" value="${r.y}"></td><td><input data-t="rail" data-i="${i}" data-f="len" value="${r.len}"></td><td><button class="del" data-del="rail" data-i="${i}">âœ•</button></td></tr>`).join('') +
     `</table>` +
     `<div class="rp-sec">Ducting Segments <button class="tb-btn" id="ms_addDuct" style="float:right;padding:2px 8px">+ Add</button></div>` +
     `<table class="mtable"><tr><th>X</th><th>Y</th><th>W</th><th>H</th><th></th></tr>` +
-      pending.ducts.map((d,i)=>`<tr><td><input data-t="duct" data-i="${i}" data-f="x" value="${d.x}"></td><td><input data-t="duct" data-i="${i}" data-f="y" value="${d.y}"></td><td><input data-t="duct" data-i="${i}" data-f="w" value="${d.w}"></td><td><input data-t="duct" data-i="${i}" data-f="h" value="${d.h}"></td><td><button class="del" data-del="duct" data-i="${i}">✕</button></td></tr>`).join('') +
+      pending.ducts.map((d,i)=>`<tr><td><input data-t="duct" data-i="${i}" data-f="x" value="${d.x}"></td><td><input data-t="duct" data-i="${i}" data-f="y" value="${d.y}"></td><td><input data-t="duct" data-i="${i}" data-f="w" value="${d.w}"></td><td><input data-t="duct" data-i="${i}" data-f="h" value="${d.h}"></td><td><button class="del" data-del="duct" data-i="${i}">âœ•</button></td></tr>`).join('') +
     `</table>` +
     `<div class="empty" style="text-align:left">Busbar (L1/L2/L3/PE) fixed di sisi kiri panel, tidak dapat dipindah.</div>` +
     `</div><div class="mfoot"><button class="rp-btn" id="ms_cancel" style="width:auto;margin:0">Cancel</button><button class="rp-btn" id="ms_apply" style="width:auto;margin:0;background:#2563eb;border-color:#3b82f6;color:#fff">Apply</button></div>`;
@@ -1665,7 +1665,7 @@ $('btnExport').addEventListener('click', () => {
   a.download = (S.name || 'panel').replace(/[^\w\- ]+/g,'').replace(/\s+/g,'_').toLowerCase() + '.json';
   a.click();
   URL.revokeObjectURL(a.href);
-  setStatus('Export JSON ✓');
+  setStatus('Export JSON âœ“');
 });
 $('btnImport').addEventListener('click', () => $('fileImport').click());
 $('fileImport').addEventListener('change', ev => {
@@ -1682,69 +1682,3185 @@ $('fileImport').addEventListener('change', ev => {
       S.rails = S.rails || []; S.ducts = S.ducts || [];
       ui.sel = null;
       markDirty(); fitView(); renderAll();
-      setStatus('Import ✓ ' + f.name);
+      setStatus('Import âœ“ ' + f.name);
     } catch(e){ alert('File JSON tidak valid: ' + f.name); }
   };
   rd.readAsText(f);
   ev.target.value = '';
 });
 /* ===================== INIT ===================== */
-function buildExampleBas(){
-  const ex = {
-    name:'Panel BAS', w:600, h:800, d:250,
-    rails:[ {id:'r1',x:125,y:230,len:460}, {id:'r2',x:125,y:400,len:460},
-            {id:'r3',x:125,y:570,len:460}, {id:'r4',x:125,y:740,len:460} ],
-    ducts:[ {id:'d1',x:125,y:120,w:460,h:35}, {id:'d2',x:125,y:310,w:460,h:35},
-            {id:'d3',x:125,y:480,w:460,h:35}, {id:'d4',x:125,y:645,w:460,h:35} ],
-    elements:[], wires:[], labels:[]
-  };
-  const ids = {};
-  const mount = (railId, type, x, key) => {
-    const r = ex.rails.find(r=>r.id===railId);
-    ids[key] = uid('e');
-    ex.elements.push({ id:ids[key], type, x, y:Math.round(r.y - CATALOG[type].h/2),
-      rot:0, circuit:'', rating:CATALOG[type].rating, name:'', rail:railId });
-  };
-  mount('r1','psu',125,'psu');
-  mount('r1','mgate',194,'mg');
-  mount('r2','plc',125,'plc');
-  mount('r3','contactor',125,'c1');
-  mount('r3','contactor',147,'c2');
-  mount('r4','meter_3p',125,'mt');
-  const prevS = S;
-  S = ex; /* supaya getTermPos bisa membaca posisi terminal */
-  const W = (fa, fb, ta, tb) => {
-    const w = { id:uid('w'), from:{el:fa,term:fb}, to:{el:ta,term:tb}, pts:[],
-      gauge:2.5, label:'', color:'', twist:isTwistPair({el:fa,term:fb},{el:ta,term:tb}) };
-    rerouteWire(w); /* jalur orthogonal terpendek */
-    return w;
-  };
-  ex.wires = [
-    W('B_L1','tap1', ids.c1,'1'),
-    W('B_N','tap1',  ids.c1,'R1'),
-    W(ids.plc,'Y0',  ids.c1,'A1'),
-    W(ids.c1,'A2',   'B_N','tap2'),
-    W('B_L1','tap2', ids.c2,'1'),
-    W('B_N','tap3',  ids.c2,'R1'),
-    W(ids.plc,'Y1',  ids.c2,'A1'),
-    W(ids.c2,'A2',   'B_N','tap4'),
-    W(ids.psu,'V+1', ids.plc,'24V1'),
-    W(ids.psu,'V-1', ids.plc,'0V1'),
-    W(ids.psu,'V+2', ids.mg,'V+'),
-    W(ids.psu,'V-2', ids.mg,'V-'),
-    W(ids.plc,'RS485A', ids.mg,'RS485A'),
-    W(ids.plc,'RS485B', ids.mg,'RS485B'),
-    W(ids.plc,'RS485A', ids.mt,'RS485A'),
-    W(ids.plc,'RS485B', ids.mt,'RS485B'),
-    W('B_L1','tap4', ids.mt,'V1'),
-    W('B_L2','tap1', ids.mt,'V2'),
-    W('B_L3','tap1', ids.mt,'V3'),
-    W('B_N','tap5',  ids.mt,'Vn')
-  ];
-  ex.wires.forEach(w => { w.rawPts = w.pts.map(p=>({ x:p.x, y:p.y })); });
-  S = prevS;
-  return ex;
-}
+/* Contoh Panel BAS lengkap (salinan example_panel_bas.json agar tetap jalan offline) */
+const EXAMPLE_BAS =
+{
+  "name": "Panel Utama",
+  "w": 600,
+  "h": 800,
+  "d": 250,
+  "rails": [
+    {
+      "id": "r1",
+      "x": 125,
+      "y": 154,
+      "len": 475
+    },
+    {
+      "id": "r2",
+      "x": 125,
+      "y": 353,
+      "len": 475
+    },
+    {
+      "id": "r3",
+      "x": 125,
+      "y": 618,
+      "len": 475
+    }
+  ],
+  "ducts": [
+    {
+      "id": "d1",
+      "x": 125,
+      "y": 43,
+      "w": 475,
+      "h": 35
+    },
+    {
+      "id": "d2",
+      "x": 125,
+      "y": 243,
+      "w": 475,
+      "h": 35
+    },
+    {
+      "id": "d3",
+      "x": 125,
+      "y": 473,
+      "w": 475,
+      "h": 35
+    },
+    {
+      "id": "d4",
+      "x": 125,
+      "y": 722,
+      "w": 475,
+      "h": 35
+    }
+  ],
+  "elements": [
+    {
+      "id": "e1_iucz",
+      "type": "mcb_1p",
+      "x": 142,
+      "y": 111,
+      "rot": 0,
+      "circuit": "",
+      "rating": "C16A",
+      "name": "",
+      "rail": "r1"
+    },
+    {
+      "id": "e2_j0y4",
+      "type": "mcb_1p",
+      "x": 165,
+      "y": 111,
+      "rot": 0,
+      "circuit": "",
+      "rating": "C16A",
+      "name": "",
+      "rail": "r1"
+    },
+    {
+      "id": "e3_j4ea",
+      "type": "mcb_1p",
+      "x": 189,
+      "y": 111,
+      "rot": 0,
+      "circuit": "",
+      "rating": "C16A",
+      "name": "",
+      "rail": "r1"
+    },
+    {
+      "id": "e1_g6do",
+      "type": "meter_1p",
+      "x": 144,
+      "y": 308,
+      "rot": 0,
+      "circuit": "",
+      "rating": "",
+      "name": "",
+      "rail": "r2"
+    },
+    {
+      "id": "e1_4w38",
+      "type": "meter_1p",
+      "x": 170,
+      "y": 308,
+      "rot": 0,
+      "circuit": "",
+      "rating": "",
+      "name": "",
+      "rail": "r2"
+    },
+    {
+      "id": "e4_6dot",
+      "type": "meter_1p",
+      "x": 194,
+      "y": 308,
+      "rot": 0,
+      "circuit": "",
+      "rating": "",
+      "name": "",
+      "rail": "r2"
+    },
+    {
+      "id": "e1_zkwc",
+      "type": "meter_3p",
+      "x": 293,
+      "y": 305,
+      "rot": 0,
+      "circuit": "",
+      "rating": "",
+      "name": "",
+      "rail": "r2"
+    },
+    {
+      "id": "e1_ppce",
+      "type": "contactor",
+      "x": 141,
+      "y": 576,
+      "rot": 0,
+      "circuit": "",
+      "rating": "8A",
+      "name": "",
+      "rail": "r3"
+    },
+    {
+      "id": "e2_pxi2",
+      "type": "contactor",
+      "x": 165,
+      "y": 576,
+      "rot": 0,
+      "circuit": "",
+      "rating": "8A",
+      "name": "",
+      "rail": "r3"
+    },
+    {
+      "id": "e3_pzt7",
+      "type": "contactor",
+      "x": 190,
+      "y": 576,
+      "rot": 0,
+      "circuit": "",
+      "rating": "8A",
+      "name": "",
+      "rail": "r3"
+    },
+    {
+      "id": "e1_kaju",
+      "type": "plc",
+      "x": 240,
+      "y": 573,
+      "rot": 0,
+      "circuit": "",
+      "rating": "32DI/32DO",
+      "name": "",
+      "rail": "r3"
+    },
+    {
+      "id": "e1_l31u",
+      "type": "mcb_1p",
+      "x": 568,
+      "y": 576,
+      "rot": 0,
+      "circuit": "",
+      "rating": "C16A",
+      "name": "",
+      "rail": "r3"
+    },
+    {
+      "id": "e2_l8d1",
+      "type": "psu",
+      "x": 499,
+      "y": 555,
+      "rot": 0,
+      "circuit": "",
+      "rating": "24V / 10A",
+      "name": "",
+      "rail": "r3"
+    },
+    {
+      "id": "e3_lc66",
+      "type": "mgate",
+      "x": 466,
+      "y": 559,
+      "rot": 0,
+      "circuit": "",
+      "rating": "Modbus RTU/TCP",
+      "name": "",
+      "rail": "r3"
+    }
+  ],
+  "wires": [
+    {
+      "id": "w3_w6u3",
+      "from": {
+        "el": "e1_iucz",
+        "term": "L-out"
+      },
+      "to": {
+        "el": "e1_g6do",
+        "term": "L-in"
+      },
+      "pts": [
+        {
+          "x": 151,
+          "y": 196,
+          "side": "bottom"
+        },
+        {
+          "x": 151,
+          "y": 196
+        },
+        {
+          "x": 151,
+          "y": 246.3942311767905
+        },
+        {
+          "x": 594.9198392396562,
+          "y": 246.3942311767905
+        },
+        {
+          "x": 594.9198392396562,
+          "y": 483.1498650925498
+        },
+        {
+          "x": 178,
+          "y": 483.1498650925498
+        },
+        {
+          "x": 148,
+          "y": 483.1498650925498
+        },
+        {
+          "x": 148,
+          "y": 398,
+          "side": "bottom"
+        }
+      ],
+      "gauge": 2.5,
+      "label": "",
+      "color": "",
+      "rawPts": [
+        {
+          "x": 151,
+          "y": 196,
+          "side": "bottom"
+        },
+        {
+          "x": 151,
+          "y": 196
+        },
+        {
+          "x": 151,
+          "y": 246.3942311767905
+        },
+        {
+          "x": 594.9198392396562,
+          "y": 246.3942311767905
+        },
+        {
+          "x": 594.9198392396562,
+          "y": 483.1498650925498
+        },
+        {
+          "x": 178,
+          "y": 483.1498650925498
+        },
+        {
+          "x": 148,
+          "y": 483.1498650925498
+        },
+        {
+          "x": 148,
+          "y": 398,
+          "side": "bottom"
+        }
+      ]
+    },
+    {
+      "id": "w9_86wj",
+      "from": {
+        "el": "e2_j0y4",
+        "term": "L-out"
+      },
+      "to": {
+        "el": "e1_4w38",
+        "term": "L-in"
+      },
+      "pts": [
+        {
+          "x": 174,
+          "y": 196,
+          "side": "bottom"
+        },
+        {
+          "x": 174,
+          "y": 196
+        },
+        {
+          "x": 174,
+          "y": 250.981570479131
+        },
+        {
+          "x": 591.4024211152173,
+          "y": 250.981570479131
+        },
+        {
+          "x": 591.4024211152173,
+          "y": 480.674014085375
+        },
+        {
+          "x": 204,
+          "y": 480.674014085375
+        },
+        {
+          "x": 174,
+          "y": 480.674014085375
+        },
+        {
+          "x": 174,
+          "y": 398,
+          "side": "bottom"
+        }
+      ],
+      "gauge": 2.5,
+      "label": "",
+      "color": "#f97316",
+      "rawPts": [
+        {
+          "x": 174,
+          "y": 196,
+          "side": "bottom"
+        },
+        {
+          "x": 174,
+          "y": 196
+        },
+        {
+          "x": 174,
+          "y": 250.981570479131
+        },
+        {
+          "x": 591.4024211152173,
+          "y": 250.981570479131
+        },
+        {
+          "x": 591.4024211152173,
+          "y": 480.674014085375
+        },
+        {
+          "x": 204,
+          "y": 480.674014085375
+        },
+        {
+          "x": 174,
+          "y": 480.674014085375
+        },
+        {
+          "x": 174,
+          "y": 398,
+          "side": "bottom"
+        }
+      ]
+    },
+    {
+      "id": "w10_8rlk",
+      "from": {
+        "el": "e3_j4ea",
+        "term": "L-out"
+      },
+      "to": {
+        "el": "e4_6dot",
+        "term": "L-in"
+      },
+      "pts": [
+        {
+          "x": 198,
+          "y": 196,
+          "side": "bottom"
+        },
+        {
+          "x": 198,
+          "y": 196
+        },
+        {
+          "x": 198,
+          "y": 254.6921414505265
+        },
+        {
+          "x": 587.4906320388181,
+          "y": 254.6921414505265
+        },
+        {
+          "x": 587.4906320388181,
+          "y": 478.3075706854105
+        },
+        {
+          "x": 228,
+          "y": 478.3075706854105
+        },
+        {
+          "x": 198,
+          "y": 478.3075706854105
+        },
+        {
+          "x": 198,
+          "y": 398,
+          "side": "bottom"
+        }
+      ],
+      "gauge": 2.5,
+      "label": "",
+      "color": "#eab308",
+      "rawPts": [
+        {
+          "x": 198,
+          "y": 196,
+          "side": "bottom"
+        },
+        {
+          "x": 198,
+          "y": 196
+        },
+        {
+          "x": 198,
+          "y": 254.6921414505265
+        },
+        {
+          "x": 587.4906320388181,
+          "y": 254.6921414505265
+        },
+        {
+          "x": 587.4906320388181,
+          "y": 478.3075706854105
+        },
+        {
+          "x": 228,
+          "y": 478.3075706854105
+        },
+        {
+          "x": 198,
+          "y": 478.3075706854105
+        },
+        {
+          "x": 198,
+          "y": 398,
+          "side": "bottom"
+        }
+      ]
+    },
+    {
+      "id": "w1_nz9u",
+      "from": {
+        "el": "e1_g6do",
+        "term": "RS485A"
+      },
+      "to": {
+        "el": "e1_4w38",
+        "term": "RS485A"
+      },
+      "pts": [
+        {
+          "x": 144.5,
+          "y": 380,
+          "side": "bottom"
+        },
+        {
+          "x": 143.5,
+          "y": 380
+        },
+        {
+          "x": 143.5,
+          "y": 474.82733881240404
+        },
+        {
+          "x": 200.5,
+          "y": 474.82733881240404
+        },
+        {
+          "x": 170.5,
+          "y": 474.82733881240404
+        },
+        {
+          "x": 170.5,
+          "y": 380,
+          "side": "bottom"
+        }
+      ],
+      "gauge": 2.5,
+      "label": "",
+      "color": "",
+      "twist": true,
+      "rawPts": [
+        {
+          "x": 144.5,
+          "y": 380,
+          "side": "bottom"
+        },
+        {
+          "x": 143.5,
+          "y": 380
+        },
+        {
+          "x": 143.5,
+          "y": 474.82733881240404
+        },
+        {
+          "x": 200.5,
+          "y": 474.82733881240404
+        },
+        {
+          "x": 170.5,
+          "y": 474.82733881240404
+        },
+        {
+          "x": 170.5,
+          "y": 380,
+          "side": "bottom"
+        }
+      ]
+    },
+    {
+      "id": "w2_o71g",
+      "from": {
+        "el": "e1_4w38",
+        "term": "RS485A"
+      },
+      "to": {
+        "el": "e4_6dot",
+        "term": "RS485A"
+      },
+      "pts": [
+        {
+          "x": 170.5,
+          "y": 380,
+          "side": "bottom"
+        },
+        {
+          "x": 170.5,
+          "y": 380
+        },
+        {
+          "x": 170.5,
+          "y": 475.82733881240404
+        },
+        {
+          "x": 224.5,
+          "y": 475.82733881240404
+        },
+        {
+          "x": 194.5,
+          "y": 475.82733881240404
+        },
+        {
+          "x": 194.5,
+          "y": 380,
+          "side": "bottom"
+        }
+      ],
+      "gauge": 2.5,
+      "label": "",
+      "color": "",
+      "twist": true,
+      "rawPts": [
+        {
+          "x": 170.5,
+          "y": 380,
+          "side": "bottom"
+        },
+        {
+          "x": 170.5,
+          "y": 380
+        },
+        {
+          "x": 170.5,
+          "y": 475.82733881240404
+        },
+        {
+          "x": 224.5,
+          "y": 475.82733881240404
+        },
+        {
+          "x": 194.5,
+          "y": 475.82733881240404
+        },
+        {
+          "x": 194.5,
+          "y": 380,
+          "side": "bottom"
+        }
+      ]
+    },
+    {
+      "id": "w5_p8v8",
+      "from": {
+        "el": "e1_g6do",
+        "term": "RS485B"
+      },
+      "to": {
+        "el": "e1_4w38",
+        "term": "RS485B"
+      },
+      "pts": [
+        {
+          "x": 153.5,
+          "y": 380,
+          "side": "bottom"
+        },
+        {
+          "x": 153.5,
+          "y": 380
+        },
+        {
+          "x": 153.5,
+          "y": 475.30338814413807
+        },
+        {
+          "x": 209.5,
+          "y": 475.30338814413807
+        },
+        {
+          "x": 179.5,
+          "y": 475.30338814413807
+        },
+        {
+          "x": 179.5,
+          "y": 380,
+          "side": "bottom"
+        }
+      ],
+      "gauge": 2.5,
+      "label": "",
+      "color": "",
+      "twist": true,
+      "rawPts": [
+        {
+          "x": 153.5,
+          "y": 380,
+          "side": "bottom"
+        },
+        {
+          "x": 153.5,
+          "y": 380
+        },
+        {
+          "x": 153.5,
+          "y": 475.30338814413807
+        },
+        {
+          "x": 209.5,
+          "y": 475.30338814413807
+        },
+        {
+          "x": 179.5,
+          "y": 475.30338814413807
+        },
+        {
+          "x": 179.5,
+          "y": 380,
+          "side": "bottom"
+        }
+      ]
+    },
+    {
+      "id": "w6_pd75",
+      "from": {
+        "el": "e1_4w38",
+        "term": "RS485B"
+      },
+      "to": {
+        "el": "e4_6dot",
+        "term": "RS485B"
+      },
+      "pts": [
+        {
+          "x": 179.5,
+          "y": 380,
+          "side": "bottom"
+        },
+        {
+          "x": 179.5,
+          "y": 380
+        },
+        {
+          "x": 179.5,
+          "y": 475.30338814413807
+        },
+        {
+          "x": 233.5,
+          "y": 475.30338814413807
+        },
+        {
+          "x": 203.5,
+          "y": 475.30338814413807
+        },
+        {
+          "x": 203.5,
+          "y": 380,
+          "side": "bottom"
+        }
+      ],
+      "gauge": 2.5,
+      "label": "",
+      "color": "",
+      "twist": true,
+      "rawPts": [
+        {
+          "x": 179.5,
+          "y": 380,
+          "side": "bottom"
+        },
+        {
+          "x": 179.5,
+          "y": 380
+        },
+        {
+          "x": 179.5,
+          "y": 475.30338814413807
+        },
+        {
+          "x": 233.5,
+          "y": 475.30338814413807
+        },
+        {
+          "x": 203.5,
+          "y": 475.30338814413807
+        },
+        {
+          "x": 203.5,
+          "y": 380,
+          "side": "bottom"
+        }
+      ]
+    },
+    {
+      "id": "w1_gepe",
+      "from": {
+        "el": "e1_kaju",
+        "term": "L"
+      },
+      "to": {
+        "el": "B_L1",
+        "term": "tap5"
+      },
+      "pts": [
+        {
+          "x": 246,
+          "y": 599,
+          "side": "left"
+        },
+        {
+          "x": 245.90061470055662,
+          "y": 599
+        },
+        {
+          "x": 245.90061470055662,
+          "y": 505.7902233978225
+        },
+        {
+          "x": 118.93913131884835,
+          "y": 505.7902233978225
+        },
+        {
+          "x": 118.93913131884835,
+          "y": 535
+        },
+        {
+          "x": 42,
+          "y": 535,
+          "side": "right"
+        }
+      ],
+      "gauge": 2.5,
+      "label": "",
+      "color": "",
+      "twist": false,
+      "rawPts": [
+        {
+          "x": 246,
+          "y": 599,
+          "side": "left"
+        },
+        {
+          "x": 245.90061470055662,
+          "y": 599
+        },
+        {
+          "x": 245.90061470055662,
+          "y": 505.7902233978225
+        },
+        {
+          "x": 118.93913131884835,
+          "y": 505.7902233978225
+        },
+        {
+          "x": 118.93913131884835,
+          "y": 535
+        },
+        {
+          "x": 42,
+          "y": 535,
+          "side": "right"
+        }
+      ]
+    },
+    {
+      "id": "w1_6m7x",
+      "from": {
+        "el": "e4_6dot",
+        "term": "RS485A"
+      },
+      "to": {
+        "el": "e1_zkwc",
+        "term": "RS485A"
+      },
+      "pts": [
+        {
+          "x": 194.5,
+          "y": 380,
+          "side": "bottom"
+        },
+        {
+          "x": 194.5,
+          "y": 380
+        },
+        {
+          "x": 194.5,
+          "y": 475.3179369370069
+        },
+        {
+          "x": 584.600626134008,
+          "y": 475.3179369370069
+        },
+        {
+          "x": 584.600626134008,
+          "y": 275.9515387920255
+        },
+        {
+          "x": 380,
+          "y": 275.9515387920255
+        },
+        {
+          "x": 350,
+          "y": 275.9515387920255
+        },
+        {
+          "x": 350,
+          "y": 305,
+          "side": "top"
+        }
+      ],
+      "gauge": 2.5,
+      "label": "",
+      "color": "",
+      "twist": true,
+      "rawPts": [
+        {
+          "x": 194.5,
+          "y": 380,
+          "side": "bottom"
+        },
+        {
+          "x": 194.5,
+          "y": 380
+        },
+        {
+          "x": 194.5,
+          "y": 475.3179369370069
+        },
+        {
+          "x": 584.600626134008,
+          "y": 475.3179369370069
+        },
+        {
+          "x": 584.600626134008,
+          "y": 275.9515387920255
+        },
+        {
+          "x": 380,
+          "y": 275.9515387920255
+        },
+        {
+          "x": 350,
+          "y": 275.9515387920255
+        },
+        {
+          "x": 350,
+          "y": 305,
+          "side": "top"
+        }
+      ]
+    },
+    {
+      "id": "w2_77h5",
+      "from": {
+        "el": "e4_6dot",
+        "term": "RS485B"
+      },
+      "to": {
+        "el": "e1_zkwc",
+        "term": "RS485B"
+      },
+      "pts": [
+        {
+          "x": 203.5,
+          "y": 380,
+          "side": "bottom"
+        },
+        {
+          "x": 203.5,
+          "y": 380
+        },
+        {
+          "x": 203.5,
+          "y": 475.571623663894
+        },
+        {
+          "x": 584.4032143505123,
+          "y": 475.571623663894
+        },
+        {
+          "x": 584.4032143505123,
+          "y": 275.9879337727546
+        },
+        {
+          "x": 398,
+          "y": 275.9879337727546
+        },
+        {
+          "x": 368,
+          "y": 275.9879337727546
+        },
+        {
+          "x": 368,
+          "y": 305,
+          "side": "top"
+        }
+      ],
+      "gauge": 2.5,
+      "label": "",
+      "color": "",
+      "twist": true,
+      "rawPts": [
+        {
+          "x": 203.5,
+          "y": 380,
+          "side": "bottom"
+        },
+        {
+          "x": 203.5,
+          "y": 380
+        },
+        {
+          "x": 203.5,
+          "y": 475.571623663894
+        },
+        {
+          "x": 584.4032143505123,
+          "y": 475.571623663894
+        },
+        {
+          "x": 584.4032143505123,
+          "y": 275.9879337727546
+        },
+        {
+          "x": 398,
+          "y": 275.9879337727546
+        },
+        {
+          "x": 368,
+          "y": 275.9879337727546
+        },
+        {
+          "x": 368,
+          "y": 305,
+          "side": "top"
+        }
+      ]
+    },
+    {
+      "id": "w1_b9cb",
+      "from": {
+        "el": "e1_kaju",
+        "term": "RS485A"
+      },
+      "to": {
+        "el": "e1_zkwc",
+        "term": "RS485A"
+      },
+      "pts": [
+        {
+          "x": 266,
+          "y": 618,
+          "side": "left"
+        },
+        {
+          "x": 265.4351570511535,
+          "y": 618
+        },
+        {
+          "x": 265.4351570511535,
+          "y": 627.7194216170033
+        },
+        {
+          "x": 241.80114191154564,
+          "y": 627.7194216170033
+        },
+        {
+          "x": 241.80114191154564,
+          "y": 745.4237509055474
+        },
+        {
+          "x": 584.1368610349837,
+          "y": 745.4237509055474
+        },
+        {
+          "x": 584.1368610349837,
+          "y": 275.8808708800892
+        },
+        {
+          "x": 380,
+          "y": 275.8808708800892
+        },
+        {
+          "x": 350,
+          "y": 275.8808708800892
+        },
+        {
+          "x": 350,
+          "y": 305,
+          "side": "top"
+        }
+      ],
+      "gauge": 2.5,
+      "label": "",
+      "color": "",
+      "twist": true,
+      "rawPts": [
+        {
+          "x": 266,
+          "y": 618,
+          "side": "left"
+        },
+        {
+          "x": 265.4351570511535,
+          "y": 618
+        },
+        {
+          "x": 265.4351570511535,
+          "y": 627.7194216170033
+        },
+        {
+          "x": 241.80114191154564,
+          "y": 627.7194216170033
+        },
+        {
+          "x": 241.80114191154564,
+          "y": 745.4237509055474
+        },
+        {
+          "x": 584.1368610349837,
+          "y": 745.4237509055474
+        },
+        {
+          "x": 584.1368610349837,
+          "y": 275.8808708800892
+        },
+        {
+          "x": 380,
+          "y": 275.8808708800892
+        },
+        {
+          "x": 350,
+          "y": 275.8808708800892
+        },
+        {
+          "x": 350,
+          "y": 305,
+          "side": "top"
+        }
+      ]
+    },
+    {
+      "id": "w2_bx1k",
+      "from": {
+        "el": "e1_kaju",
+        "term": "RS485B"
+      },
+      "to": {
+        "el": "e1_zkwc",
+        "term": "RS485B"
+      },
+      "pts": [
+        {
+          "x": 280,
+          "y": 618,
+          "side": "left"
+        },
+        {
+          "x": 280,
+          "y": 618
+        },
+        {
+          "x": 280,
+          "y": 627.7023773461123
+        },
+        {
+          "x": 241.96851173601203,
+          "y": 627.7023773461123
+        },
+        {
+          "x": 241.96851173601203,
+          "y": 745.5585265562315
+        },
+        {
+          "x": 583.8203950102686,
+          "y": 745.5585265562315
+        },
+        {
+          "x": 583.8203950102686,
+          "y": 275.8256072768295
+        },
+        {
+          "x": 398,
+          "y": 275.8256072768295
+        },
+        {
+          "x": 368,
+          "y": 275.8256072768295
+        },
+        {
+          "x": 368,
+          "y": 305,
+          "side": "top"
+        }
+      ],
+      "gauge": 2.5,
+      "label": "",
+      "color": "",
+      "twist": true,
+      "rawPts": [
+        {
+          "x": 280,
+          "y": 618,
+          "side": "left"
+        },
+        {
+          "x": 280,
+          "y": 618
+        },
+        {
+          "x": 280,
+          "y": 627.7023773461123
+        },
+        {
+          "x": 241.96851173601203,
+          "y": 627.7023773461123
+        },
+        {
+          "x": 241.96851173601203,
+          "y": 745.5585265562315
+        },
+        {
+          "x": 583.8203950102686,
+          "y": 745.5585265562315
+        },
+        {
+          "x": 583.8203950102686,
+          "y": 275.8256072768295
+        },
+        {
+          "x": 398,
+          "y": 275.8256072768295
+        },
+        {
+          "x": 368,
+          "y": 275.8256072768295
+        },
+        {
+          "x": 368,
+          "y": 305,
+          "side": "top"
+        }
+      ]
+    },
+    {
+      "id": "w3_cjhj",
+      "from": {
+        "el": "e1_kaju",
+        "term": "0V"
+      },
+      "to": {
+        "el": "e1_zkwc",
+        "term": "0V"
+      },
+      "pts": [
+        {
+          "x": 252,
+          "y": 618,
+          "side": "left"
+        },
+        {
+          "x": 237.01658633789253,
+          "y": 618
+        },
+        {
+          "x": 237.01658633789253,
+          "y": 748.9350901082835
+        },
+        {
+          "x": 599,
+          "y": 748.9350901082835
+        },
+        {
+          "x": 599,
+          "y": 272.0822783611409
+        },
+        {
+          "x": 344,
+          "y": 272.0822783611409
+        },
+        {
+          "x": 314,
+          "y": 272.0822783611409
+        },
+        {
+          "x": 314,
+          "y": 305,
+          "side": "top"
+        }
+      ],
+      "gauge": 2.5,
+      "label": "",
+      "color": "#808080",
+      "twist": false,
+      "rawPts": [
+        {
+          "x": 252,
+          "y": 618,
+          "side": "left"
+        },
+        {
+          "x": 237.01658633789253,
+          "y": 618
+        },
+        {
+          "x": 237.01658633789253,
+          "y": 748.9350901082835
+        },
+        {
+          "x": 599,
+          "y": 748.9350901082835
+        },
+        {
+          "x": 599,
+          "y": 272.0822783611409
+        },
+        {
+          "x": 344,
+          "y": 272.0822783611409
+        },
+        {
+          "x": 314,
+          "y": 272.0822783611409
+        },
+        {
+          "x": 314,
+          "y": 305,
+          "side": "top"
+        }
+      ]
+    },
+    {
+      "id": "w10_w4nt",
+      "from": {
+        "el": "e1_ppce",
+        "term": "A2"
+      },
+      "to": {
+        "el": "B_N",
+        "term": "tap6"
+      },
+      "pts": [
+        {
+          "x": 150,
+          "y": 649,
+          "side": "bottom"
+        },
+        {
+          "x": 150,
+          "y": 649
+        },
+        {
+          "x": 150,
+          "y": 728.2477002784013
+        },
+        {
+          "x": 121.41283874863527,
+          "y": 728.2477002784013
+        },
+        {
+          "x": 121.41283874863527,
+          "y": 667
+        },
+        {
+          "x": 96,
+          "y": 667,
+          "side": "right"
+        }
+      ],
+      "gauge": 2.5,
+      "label": "",
+      "color": "#3b82f6",
+      "twist": false,
+      "rawPts": [
+        {
+          "x": 150,
+          "y": 649,
+          "side": "bottom"
+        },
+        {
+          "x": 150,
+          "y": 649
+        },
+        {
+          "x": 150,
+          "y": 728.2477002784013
+        },
+        {
+          "x": 121.41283874863527,
+          "y": 728.2477002784013
+        },
+        {
+          "x": 121.41283874863527,
+          "y": 667
+        },
+        {
+          "x": 96,
+          "y": 667,
+          "side": "right"
+        }
+      ]
+    },
+    {
+      "id": "w1_5y43",
+      "from": {
+        "el": "e1_kaju",
+        "term": "COM1"
+      },
+      "to": {
+        "el": "B_L1",
+        "term": "tap6"
+      },
+      "pts": [
+        {
+          "x": 246,
+          "y": 650,
+          "side": "left"
+        },
+        {
+          "x": 246.10935534122848,
+          "y": 650
+        },
+        {
+          "x": 246.10935534122848,
+          "y": 753.6025544787011
+        },
+        {
+          "x": 118.68639223871841,
+          "y": 753.6025544787011
+        },
+        {
+          "x": 118.68639223871841,
+          "y": 625
+        },
+        {
+          "x": 42,
+          "y": 625,
+          "side": "right"
+        }
+      ],
+      "gauge": 2.5,
+      "label": "",
+      "color": "#dc2626",
+      "twist": false,
+      "rawPts": [
+        {
+          "x": 246,
+          "y": 650,
+          "side": "left"
+        },
+        {
+          "x": 246.10935534122848,
+          "y": 650
+        },
+        {
+          "x": 246.10935534122848,
+          "y": 753.6025544787011
+        },
+        {
+          "x": 118.68639223871841,
+          "y": 753.6025544787011
+        },
+        {
+          "x": 118.68639223871841,
+          "y": 625
+        },
+        {
+          "x": 42,
+          "y": 625,
+          "side": "right"
+        }
+      ]
+    },
+    {
+      "id": "w1_fpyu",
+      "from": {
+        "el": "e1_kaju",
+        "term": "Y0"
+      },
+      "to": {
+        "el": "e1_ppce",
+        "term": "A1"
+      },
+      "pts": [
+        {
+          "x": 251.2,
+          "y": 637,
+          "side": "left"
+        },
+        {
+          "x": 251.18319153823347,
+          "y": 637
+        },
+        {
+          "x": 251.18319153823347,
+          "y": 730.9835557586968
+        },
+        {
+          "x": 586.6851516138519,
+          "y": 730.9835557586968
+        },
+        {
+          "x": 586.6851516138519,
+          "y": 503.4485604563309
+        },
+        {
+          "x": 180,
+          "y": 503.4485604563309
+        },
+        {
+          "x": 150,
+          "y": 503.4485604563309
+        },
+        {
+          "x": 150,
+          "y": 588,
+          "side": "top"
+        }
+      ],
+      "gauge": 2.5,
+      "label": "",
+      "color": "",
+      "twist": false,
+      "rawPts": [
+        {
+          "x": 251.2,
+          "y": 637,
+          "side": "left"
+        },
+        {
+          "x": 251.18319153823347,
+          "y": 637
+        },
+        {
+          "x": 251.18319153823347,
+          "y": 730.9835557586968
+        },
+        {
+          "x": 586.6851516138519,
+          "y": 730.9835557586968
+        },
+        {
+          "x": 586.6851516138519,
+          "y": 503.4485604563309
+        },
+        {
+          "x": 180,
+          "y": 503.4485604563309
+        },
+        {
+          "x": 150,
+          "y": 503.4485604563309
+        },
+        {
+          "x": 150,
+          "y": 588,
+          "side": "top"
+        }
+      ]
+    },
+    {
+      "id": "w3_h835",
+      "from": {
+        "el": "e1_kaju",
+        "term": "Y1"
+      },
+      "to": {
+        "el": "e2_pxi2",
+        "term": "A1"
+      },
+      "pts": [
+        {
+          "x": 256.4,
+          "y": 650,
+          "side": "left"
+        },
+        {
+          "x": 256.13372097426185,
+          "y": 650
+        },
+        {
+          "x": 256.13372097426185,
+          "y": 734.3386409561432
+        },
+        {
+          "x": 589.751989474174,
+          "y": 734.3386409561432
+        },
+        {
+          "x": 589.751989474174,
+          "y": 518.344701690808
+        },
+        {
+          "x": 589.9068550581813,
+          "y": 518.344701690808
+        },
+        {
+          "x": 589.9068550581813,
+          "y": 500.43373090058816
+        },
+        {
+          "x": 204,
+          "y": 500.43373090058816
+        },
+        {
+          "x": 174,
+          "y": 500.43373090058816
+        },
+        {
+          "x": 174,
+          "y": 588,
+          "side": "top"
+        }
+      ],
+      "gauge": 2.5,
+      "label": "",
+      "color": "",
+      "twist": false,
+      "rawPts": [
+        {
+          "x": 256.4,
+          "y": 650,
+          "side": "left"
+        },
+        {
+          "x": 256.13372097426185,
+          "y": 650
+        },
+        {
+          "x": 256.13372097426185,
+          "y": 734.3386409561432
+        },
+        {
+          "x": 589.751989474174,
+          "y": 734.3386409561432
+        },
+        {
+          "x": 589.751989474174,
+          "y": 518.344701690808
+        },
+        {
+          "x": 589.9068550581813,
+          "y": 518.344701690808
+        },
+        {
+          "x": 589.9068550581813,
+          "y": 500.43373090058816
+        },
+        {
+          "x": 204,
+          "y": 500.43373090058816
+        },
+        {
+          "x": 174,
+          "y": 500.43373090058816
+        },
+        {
+          "x": 174,
+          "y": 588,
+          "side": "top"
+        }
+      ]
+    },
+    {
+      "id": "w4_hveh",
+      "from": {
+        "el": "e1_kaju",
+        "term": "Y2"
+      },
+      "to": {
+        "el": "e3_pzt7",
+        "term": "A1"
+      },
+      "pts": [
+        {
+          "x": 261.6,
+          "y": 637,
+          "side": "left"
+        },
+        {
+          "x": 261.60642110365455,
+          "y": 637
+        },
+        {
+          "x": 261.60642110365455,
+          "y": 737.4026277735261
+        },
+        {
+          "x": 592.7327775989911,
+          "y": 737.4026277735261
+        },
+        {
+          "x": 592.7327775989911,
+          "y": 497.23324268810035
+        },
+        {
+          "x": 229,
+          "y": 497.23324268810035
+        },
+        {
+          "x": 199,
+          "y": 497.23324268810035
+        },
+        {
+          "x": 199,
+          "y": 588,
+          "side": "top"
+        }
+      ],
+      "gauge": 2.5,
+      "label": "",
+      "color": "",
+      "twist": false,
+      "rawPts": [
+        {
+          "x": 261.6,
+          "y": 637,
+          "side": "left"
+        },
+        {
+          "x": 261.60642110365455,
+          "y": 637
+        },
+        {
+          "x": 261.60642110365455,
+          "y": 737.4026277735261
+        },
+        {
+          "x": 592.7327775989911,
+          "y": 737.4026277735261
+        },
+        {
+          "x": 592.7327775989911,
+          "y": 497.23324268810035
+        },
+        {
+          "x": 229,
+          "y": 497.23324268810035
+        },
+        {
+          "x": 199,
+          "y": 497.23324268810035
+        },
+        {
+          "x": 199,
+          "y": 588,
+          "side": "top"
+        }
+      ]
+    },
+    {
+      "id": "w1_1mci",
+      "from": {
+        "el": "B_L1",
+        "term": "tap0"
+      },
+      "to": {
+        "el": "e1_iucz",
+        "term": "L-in"
+      },
+      "pts": [
+        {
+          "x": 42,
+          "y": 85,
+          "side": "right"
+        },
+        {
+          "x": 117.36680711378781,
+          "y": 85
+        },
+        {
+          "x": 117.36680711378781,
+          "y": 52.02811817574308
+        },
+        {
+          "x": 151,
+          "y": 52.02811817574308
+        },
+        {
+          "x": 151,
+          "y": 111,
+          "side": "top"
+        }
+      ],
+      "gauge": 2.5,
+      "label": "",
+      "color": "",
+      "twist": false,
+      "rawPts": [
+        {
+          "x": 42,
+          "y": 85,
+          "side": "right"
+        },
+        {
+          "x": 117.36680711378781,
+          "y": 85
+        },
+        {
+          "x": 117.36680711378781,
+          "y": 52.02811817574308
+        },
+        {
+          "x": 151,
+          "y": 52.02811817574308
+        },
+        {
+          "x": 151,
+          "y": 111,
+          "side": "top"
+        }
+      ]
+    },
+    {
+      "id": "w2_1s6r",
+      "from": {
+        "el": "B_L2",
+        "term": "tap0"
+      },
+      "to": {
+        "el": "e2_j0y4",
+        "term": "L-in"
+      },
+      "pts": [
+        {
+          "x": 60,
+          "y": 99,
+          "side": "right"
+        },
+        {
+          "x": 121.08275989538961,
+          "y": 99
+        },
+        {
+          "x": 121.08275989538961,
+          "y": 55.744064514047345
+        },
+        {
+          "x": 174,
+          "y": 55.744064514047345
+        },
+        {
+          "x": 174,
+          "y": 111,
+          "side": "top"
+        }
+      ],
+      "gauge": 2.5,
+      "label": "",
+      "color": "",
+      "twist": false,
+      "rawPts": [
+        {
+          "x": 60,
+          "y": 99,
+          "side": "right"
+        },
+        {
+          "x": 121.08275989538961,
+          "y": 99
+        },
+        {
+          "x": 121.08275989538961,
+          "y": 55.744064514047345
+        },
+        {
+          "x": 174,
+          "y": 55.744064514047345
+        },
+        {
+          "x": 174,
+          "y": 111,
+          "side": "top"
+        }
+      ]
+    },
+    {
+      "id": "w3_1xoj",
+      "from": {
+        "el": "B_L3",
+        "term": "tap0"
+      },
+      "to": {
+        "el": "e3_j4ea",
+        "term": "L-in"
+      },
+      "pts": [
+        {
+          "x": 78,
+          "y": 113,
+          "side": "right"
+        },
+        {
+          "x": 125.1365476533835,
+          "y": 113
+        },
+        {
+          "x": 125.1365476533835,
+          "y": 59.460023738946674
+        },
+        {
+          "x": 198,
+          "y": 59.460023738946674
+        },
+        {
+          "x": 198,
+          "y": 111,
+          "side": "top"
+        }
+      ],
+      "gauge": 2.5,
+      "label": "",
+      "color": "",
+      "twist": false,
+      "rawPts": [
+        {
+          "x": 78,
+          "y": 113,
+          "side": "right"
+        },
+        {
+          "x": 125.1365476533835,
+          "y": 113
+        },
+        {
+          "x": 125.1365476533835,
+          "y": 59.460023738946674
+        },
+        {
+          "x": 198,
+          "y": 59.460023738946674
+        },
+        {
+          "x": 198,
+          "y": 111,
+          "side": "top"
+        }
+      ]
+    },
+    {
+      "id": "w4_2kws",
+      "from": {
+        "el": "B_N",
+        "term": "tap2"
+      },
+      "to": {
+        "el": "e1_g6do",
+        "term": "N-in"
+      },
+      "pts": [
+        {
+          "x": 96,
+          "y": 307,
+          "side": "right"
+        },
+        {
+          "x": 118.34375460578453,
+          "y": 307
+        },
+        {
+          "x": 118.34375460578453,
+          "y": 274.7316733642615
+        },
+        {
+          "x": 148,
+          "y": 274.7316733642615
+        },
+        {
+          "x": 148,
+          "y": 308,
+          "side": "top"
+        }
+      ],
+      "gauge": 2.5,
+      "label": "",
+      "color": "",
+      "twist": false,
+      "rawPts": [
+        {
+          "x": 96,
+          "y": 307,
+          "side": "right"
+        },
+        {
+          "x": 118.34375460578453,
+          "y": 307
+        },
+        {
+          "x": 118.34375460578453,
+          "y": 274.7316733642615
+        },
+        {
+          "x": 148,
+          "y": 274.7316733642615
+        },
+        {
+          "x": 148,
+          "y": 308,
+          "side": "top"
+        }
+      ]
+    },
+    {
+      "id": "w5_2qku",
+      "from": {
+        "el": "e1_4w38",
+        "term": "N-in"
+      },
+      "to": {
+        "el": "e1_g6do",
+        "term": "N-in"
+      },
+      "pts": [
+        {
+          "x": 174,
+          "y": 308,
+          "side": "top"
+        },
+        {
+          "x": 174,
+          "y": 274.7316733642615
+        },
+        {
+          "x": 148,
+          "y": 274.7316733642615
+        },
+        {
+          "x": 148,
+          "y": 308,
+          "side": "top"
+        }
+      ],
+      "gauge": 2.5,
+      "label": "",
+      "color": "",
+      "twist": false,
+      "rawPts": [
+        {
+          "x": 174,
+          "y": 308,
+          "side": "top"
+        },
+        {
+          "x": 174,
+          "y": 274.7316733642615
+        },
+        {
+          "x": 148,
+          "y": 274.7316733642615
+        },
+        {
+          "x": 148,
+          "y": 308,
+          "side": "top"
+        }
+      ]
+    },
+    {
+      "id": "w6_2vsj",
+      "from": {
+        "el": "e4_6dot",
+        "term": "N-in"
+      },
+      "to": {
+        "el": "e1_4w38",
+        "term": "N-in"
+      },
+      "pts": [
+        {
+          "x": 198,
+          "y": 308,
+          "side": "top"
+        },
+        {
+          "x": 198,
+          "y": 274.7316733642615
+        },
+        {
+          "x": 174,
+          "y": 274.7316733642615
+        },
+        {
+          "x": 174,
+          "y": 308,
+          "side": "top"
+        }
+      ],
+      "gauge": 2.5,
+      "label": "",
+      "color": "",
+      "twist": false,
+      "rawPts": [
+        {
+          "x": 198,
+          "y": 308,
+          "side": "top"
+        },
+        {
+          "x": 198,
+          "y": 274.7316733642615
+        },
+        {
+          "x": 174,
+          "y": 274.7316733642615
+        },
+        {
+          "x": 174,
+          "y": 308,
+          "side": "top"
+        }
+      ]
+    },
+    {
+      "id": "w5_fgm3",
+      "from": {
+        "el": "e1_zkwc",
+        "term": "V1"
+      },
+      "to": {
+        "el": "B_L1",
+        "term": "tap4"
+      },
+      "pts": [
+        {
+          "x": 305,
+          "y": 401,
+          "side": "bottom"
+        },
+        {
+          "x": 305,
+          "y": 486.1900716483325
+        },
+        {
+          "x": 116.1899623134258,
+          "y": 486.1900716483325
+        },
+        {
+          "x": 116.1899623134258,
+          "y": 445
+        },
+        {
+          "x": 42,
+          "y": 445,
+          "side": "right"
+        }
+      ],
+      "gauge": 2.5,
+      "label": "",
+      "color": "",
+      "twist": false,
+      "rawPts": [
+        {
+          "x": 305,
+          "y": 401,
+          "side": "bottom"
+        },
+        {
+          "x": 305,
+          "y": 486.1900716483325
+        },
+        {
+          "x": 116.1899623134258,
+          "y": 486.1900716483325
+        },
+        {
+          "x": 116.1899623134258,
+          "y": 445
+        },
+        {
+          "x": 42,
+          "y": 445,
+          "side": "right"
+        }
+      ]
+    },
+    {
+      "id": "w6_fplt",
+      "from": {
+        "el": "e1_zkwc",
+        "term": "V2"
+      },
+      "to": {
+        "el": "B_L2",
+        "term": "tap4"
+      },
+      "pts": [
+        {
+          "x": 313,
+          "y": 401,
+          "side": "bottom"
+        },
+        {
+          "x": 313,
+          "y": 488.5547489573413
+        },
+        {
+          "x": 119.2302966886237,
+          "y": 488.5547489573413
+        },
+        {
+          "x": 119.2302966886237,
+          "y": 459
+        },
+        {
+          "x": 60,
+          "y": 459,
+          "side": "right"
+        }
+      ],
+      "gauge": 2.5,
+      "label": "",
+      "color": "",
+      "twist": false,
+      "rawPts": [
+        {
+          "x": 313,
+          "y": 401,
+          "side": "bottom"
+        },
+        {
+          "x": 313,
+          "y": 488.5547489573413
+        },
+        {
+          "x": 119.2302966886237,
+          "y": 488.5547489573413
+        },
+        {
+          "x": 119.2302966886237,
+          "y": 459
+        },
+        {
+          "x": 60,
+          "y": 459,
+          "side": "right"
+        }
+      ]
+    },
+    {
+      "id": "w7_g5t7",
+      "from": {
+        "el": "e1_zkwc",
+        "term": "V3"
+      },
+      "to": {
+        "el": "B_L3",
+        "term": "tap4"
+      },
+      "pts": [
+        {
+          "x": 321,
+          "y": 401,
+          "side": "bottom"
+        },
+        {
+          "x": 321,
+          "y": 490.959773528143
+        },
+        {
+          "x": 122.60844026702354,
+          "y": 490.959773528143
+        },
+        {
+          "x": 122.60844026702354,
+          "y": 473
+        },
+        {
+          "x": 78,
+          "y": 473,
+          "side": "right"
+        }
+      ],
+      "gauge": 2.5,
+      "label": "",
+      "color": "",
+      "twist": false,
+      "rawPts": [
+        {
+          "x": 321,
+          "y": 401,
+          "side": "bottom"
+        },
+        {
+          "x": 321,
+          "y": 490.959773528143
+        },
+        {
+          "x": 122.60844026702354,
+          "y": 490.959773528143
+        },
+        {
+          "x": 122.60844026702354,
+          "y": 473
+        },
+        {
+          "x": 78,
+          "y": 473,
+          "side": "right"
+        }
+      ]
+    },
+    {
+      "id": "w8_icq6",
+      "from": {
+        "el": "e1_kaju",
+        "term": "N"
+      },
+      "to": {
+        "el": "B_N",
+        "term": "tap5"
+      },
+      "pts": [
+        {
+          "x": 256.4,
+          "y": 599,
+          "side": "left"
+        },
+        {
+          "x": 256.89377281539186,
+          "y": 599
+        },
+        {
+          "x": 256.89377281539186,
+          "y": 503.6689607005618
+        },
+        {
+          "x": 121.76802967939764,
+          "y": 503.6689607005618
+        },
+        {
+          "x": 121.76802967939764,
+          "y": 577
+        },
+        {
+          "x": 96,
+          "y": 577,
+          "side": "right"
+        }
+      ],
+      "gauge": 2.5,
+      "label": "",
+      "color": "",
+      "twist": false,
+      "rawPts": [
+        {
+          "x": 256.4,
+          "y": 599,
+          "side": "left"
+        },
+        {
+          "x": 256.89377281539186,
+          "y": 599
+        },
+        {
+          "x": 256.89377281539186,
+          "y": 503.6689607005618
+        },
+        {
+          "x": 121.76802967939764,
+          "y": 503.6689607005618
+        },
+        {
+          "x": 121.76802967939764,
+          "y": 577
+        },
+        {
+          "x": 96,
+          "y": 577,
+          "side": "right"
+        }
+      ]
+    },
+    {
+      "id": "w9_j0k2",
+      "from": {
+        "el": "e1_g6do",
+        "term": "L-out"
+      },
+      "to": {
+        "el": "e1_ppce",
+        "term": "1"
+      },
+      "pts": [
+        {
+          "x": 157.5,
+          "y": 398,
+          "side": "bottom"
+        },
+        {
+          "x": 157.5,
+          "y": 494.100862701444
+        },
+        {
+          "x": 155,
+          "y": 494.100862701444
+        },
+        {
+          "x": 155,
+          "y": 576,
+          "side": "top"
+        }
+      ],
+      "gauge": 2.5,
+      "label": "",
+      "color": "#6c0404",
+      "twist": false,
+      "rawPts": [
+        {
+          "x": 157.5,
+          "y": 398,
+          "side": "bottom"
+        },
+        {
+          "x": 157.5,
+          "y": 494.100862701444
+        },
+        {
+          "x": 155,
+          "y": 494.100862701444
+        },
+        {
+          "x": 155,
+          "y": 576,
+          "side": "top"
+        }
+      ]
+    },
+    {
+      "id": "w10_j5h6",
+      "from": {
+        "el": "e1_4w38",
+        "term": "L-out"
+      },
+      "to": {
+        "el": "e2_pxi2",
+        "term": "1"
+      },
+      "pts": [
+        {
+          "x": 183.5,
+          "y": 398,
+          "side": "bottom"
+        },
+        {
+          "x": 183.5,
+          "y": 493.80422266792914
+        },
+        {
+          "x": 179,
+          "y": 493.80422266792914
+        },
+        {
+          "x": 179,
+          "y": 576,
+          "side": "top"
+        }
+      ],
+      "gauge": 2.5,
+      "label": "",
+      "color": "#6c0404",
+      "twist": false,
+      "rawPts": [
+        {
+          "x": 183.5,
+          "y": 398,
+          "side": "bottom"
+        },
+        {
+          "x": 183.5,
+          "y": 493.80422266792914
+        },
+        {
+          "x": 179,
+          "y": 493.80422266792914
+        },
+        {
+          "x": 179,
+          "y": 576,
+          "side": "top"
+        }
+      ]
+    },
+    {
+      "id": "w11_jbi6",
+      "from": {
+        "el": "e4_6dot",
+        "term": "L-out"
+      },
+      "to": {
+        "el": "e3_pzt7",
+        "term": "1"
+      },
+      "pts": [
+        {
+          "x": 207.5,
+          "y": 398,
+          "side": "bottom"
+        },
+        {
+          "x": 207.5,
+          "y": 493.54126150888806
+        },
+        {
+          "x": 204,
+          "y": 493.54126150888806
+        },
+        {
+          "x": 204,
+          "y": 576,
+          "side": "top"
+        }
+      ],
+      "gauge": 2.5,
+      "label": "",
+      "color": "#6c0404",
+      "twist": false,
+      "rawPts": [
+        {
+          "x": 207.5,
+          "y": 398,
+          "side": "bottom"
+        },
+        {
+          "x": 207.5,
+          "y": 493.54126150888806
+        },
+        {
+          "x": 204,
+          "y": 493.54126150888806
+        },
+        {
+          "x": 204,
+          "y": 576,
+          "side": "top"
+        }
+      ]
+    },
+    {
+      "id": "w4_lu4p",
+      "from": {
+        "el": "B_L1",
+        "term": "tap5"
+      },
+      "to": {
+        "el": "e1_l31u",
+        "term": "L-in"
+      },
+      "pts": [
+        {
+          "x": 42,
+          "y": 535,
+          "side": "right"
+        },
+        {
+          "x": 118.70849162596917,
+          "y": 535
+        },
+        {
+          "x": 118.70849162596917,
+          "y": 505.5888793344444
+        },
+        {
+          "x": 577,
+          "y": 505.5888793344444
+        },
+        {
+          "x": 577,
+          "y": 576,
+          "side": "top"
+        }
+      ],
+      "gauge": 2.5,
+      "label": "",
+      "color": "",
+      "twist": false,
+      "rawPts": [
+        {
+          "x": 42,
+          "y": 535,
+          "side": "right"
+        },
+        {
+          "x": 118.70849162596917,
+          "y": 535
+        },
+        {
+          "x": 118.70849162596917,
+          "y": 505.5888793344444
+        },
+        {
+          "x": 577,
+          "y": 505.5888793344444
+        },
+        {
+          "x": 577,
+          "y": 576,
+          "side": "top"
+        }
+      ]
+    },
+    {
+      "id": "w5_lyqy",
+      "from": {
+        "el": "e1_l31u",
+        "term": "L-out"
+      },
+      "to": {
+        "el": "e2_l8d1",
+        "term": "L"
+      },
+      "pts": [
+        {
+          "x": 577,
+          "y": 661,
+          "side": "bottom"
+        },
+        {
+          "x": 577,
+          "y": 724.4955421959942
+        },
+        {
+          "x": 550,
+          "y": 724.4955421959942
+        },
+        {
+          "x": 550,
+          "y": 680.2,
+          "side": "bottom"
+        }
+      ],
+      "gauge": 2.5,
+      "label": "",
+      "color": "",
+      "twist": false,
+      "rawPts": [
+        {
+          "x": 577,
+          "y": 661,
+          "side": "bottom"
+        },
+        {
+          "x": 577,
+          "y": 724.4955421959942
+        },
+        {
+          "x": 550,
+          "y": 724.4955421959942
+        },
+        {
+          "x": 550,
+          "y": 680.2,
+          "side": "bottom"
+        }
+      ]
+    },
+    {
+      "id": "w6_miht",
+      "from": {
+        "el": "e2_pxi2",
+        "term": "A2"
+      },
+      "to": {
+        "el": "e1_ppce",
+        "term": "A2"
+      },
+      "pts": [
+        {
+          "x": 174,
+          "y": 649,
+          "side": "bottom"
+        },
+        {
+          "x": 174,
+          "y": 728.0308825182108
+        },
+        {
+          "x": 150,
+          "y": 728.0308825182108
+        },
+        {
+          "x": 150,
+          "y": 649,
+          "side": "bottom"
+        }
+      ],
+      "gauge": 2.5,
+      "label": "",
+      "color": "#3b82f6",
+      "twist": false,
+      "rawPts": [
+        {
+          "x": 174,
+          "y": 649,
+          "side": "bottom"
+        },
+        {
+          "x": 174,
+          "y": 728.0308825182108
+        },
+        {
+          "x": 150,
+          "y": 728.0308825182108
+        },
+        {
+          "x": 150,
+          "y": 649,
+          "side": "bottom"
+        }
+      ]
+    },
+    {
+      "id": "w7_mmyz",
+      "from": {
+        "el": "e3_pzt7",
+        "term": "A2"
+      },
+      "to": {
+        "el": "e2_pxi2",
+        "term": "A2"
+      },
+      "pts": [
+        {
+          "x": 199,
+          "y": 649,
+          "side": "bottom"
+        },
+        {
+          "x": 199,
+          "y": 727.8021577499563
+        },
+        {
+          "x": 174,
+          "y": 727.8021577499563
+        },
+        {
+          "x": 174,
+          "y": 649,
+          "side": "bottom"
+        }
+      ],
+      "gauge": 2.5,
+      "label": "",
+      "color": "#3b82f6",
+      "twist": false,
+      "rawPts": [
+        {
+          "x": 199,
+          "y": 649,
+          "side": "bottom"
+        },
+        {
+          "x": 199,
+          "y": 727.8021577499563
+        },
+        {
+          "x": 174,
+          "y": 727.8021577499563
+        },
+        {
+          "x": 174,
+          "y": 649,
+          "side": "bottom"
+        }
+      ]
+    },
+    {
+      "id": "w10_nii4",
+      "from": {
+        "el": "e2_l8d1",
+        "term": "PE"
+      },
+      "to": {
+        "el": "B_PE",
+        "term": "tap6"
+      },
+      "pts": [
+        {
+          "x": 511,
+          "y": 680.2,
+          "side": "bottom"
+        },
+        {
+          "x": 511,
+          "y": 723.9227574113404
+        },
+        {
+          "x": 124.62702130138761,
+          "y": 723.9227574113404
+        },
+        {
+          "x": 124.62702130138761,
+          "y": 681
+        },
+        {
+          "x": 114,
+          "y": 681,
+          "side": "right"
+        }
+      ],
+      "gauge": 2.5,
+      "label": "",
+      "color": "",
+      "twist": false,
+      "rawPts": [
+        {
+          "x": 511,
+          "y": 680.2,
+          "side": "bottom"
+        },
+        {
+          "x": 511,
+          "y": 723.9227574113404
+        },
+        {
+          "x": 124.62702130138761,
+          "y": 723.9227574113404
+        },
+        {
+          "x": 124.62702130138761,
+          "y": 681
+        },
+        {
+          "x": 114,
+          "y": 681,
+          "side": "right"
+        }
+      ]
+    },
+    {
+      "id": "w11_ojnq",
+      "from": {
+        "el": "e2_l8d1",
+        "term": "V-1"
+      },
+      "to": {
+        "el": "e3_lc66",
+        "term": "V-"
+      },
+      "pts": [
+        {
+          "x": 509,
+          "y": 555,
+          "side": "top"
+        },
+        {
+          "x": 509,
+          "y": 491.2538046051946
+        },
+        {
+          "x": 473.5,
+          "y": 491.2538046051946
+        },
+        {
+          "x": 473.5,
+          "y": 559,
+          "side": "top"
+        }
+      ],
+      "gauge": 2.5,
+      "label": "",
+      "color": "#808080",
+      "twist": false,
+      "rawPts": [
+        {
+          "x": 509,
+          "y": 555,
+          "side": "top"
+        },
+        {
+          "x": 509,
+          "y": 491.2538046051946
+        },
+        {
+          "x": 473.5,
+          "y": 491.2538046051946
+        },
+        {
+          "x": 473.5,
+          "y": 559,
+          "side": "top"
+        }
+      ]
+    },
+    {
+      "id": "w12_opjb",
+      "from": {
+        "el": "e2_l8d1",
+        "term": "V+1"
+      },
+      "to": {
+        "el": "e3_lc66",
+        "term": "V+"
+      },
+      "pts": [
+        {
+          "x": 535,
+          "y": 555,
+          "side": "top"
+        },
+        {
+          "x": 535,
+          "y": 488.8807324286322
+        },
+        {
+          "x": 487.5,
+          "y": 488.8807324286322
+        },
+        {
+          "x": 487.5,
+          "y": 559,
+          "side": "top"
+        }
+      ],
+      "gauge": 2.5,
+      "label": "",
+      "color": "#8b4513",
+      "twist": false,
+      "rawPts": [
+        {
+          "x": 535,
+          "y": 555,
+          "side": "top"
+        },
+        {
+          "x": 535,
+          "y": 488.8807324286322
+        },
+        {
+          "x": 487.5,
+          "y": 488.8807324286322
+        },
+        {
+          "x": 487.5,
+          "y": 559,
+          "side": "top"
+        }
+      ]
+    },
+    {
+      "id": "w13_p5z5",
+      "from": {
+        "el": "e3_lc66",
+        "term": "RS485A"
+      },
+      "to": {
+        "el": "e1_kaju",
+        "term": "RS485A"
+      },
+      "pts": [
+        {
+          "x": 473.5,
+          "y": 677.5,
+          "side": "bottom"
+        },
+        {
+          "x": 473.5,
+          "y": 744.9937761517302
+        },
+        {
+          "x": 241.72178329748206,
+          "y": 744.9937761517302
+        },
+        {
+          "x": 241.72178329748206,
+          "y": 627.6872852151112
+        },
+        {
+          "x": 266,
+          "y": 627.6872852151112
+        },
+        {
+          "x": 266,
+          "y": 618,
+          "side": "left"
+        }
+      ],
+      "gauge": 2.5,
+      "label": "",
+      "color": "",
+      "twist": true,
+      "rawPts": [
+        {
+          "x": 473.5,
+          "y": 677.5,
+          "side": "bottom"
+        },
+        {
+          "x": 473.5,
+          "y": 744.9937761517302
+        },
+        {
+          "x": 241.72178329748206,
+          "y": 744.9937761517302
+        },
+        {
+          "x": 241.72178329748206,
+          "y": 627.6872852151112
+        },
+        {
+          "x": 266,
+          "y": 627.6872852151112
+        },
+        {
+          "x": 266,
+          "y": 618,
+          "side": "left"
+        }
+      ]
+    },
+    {
+      "id": "w14_pk2n",
+      "from": {
+        "el": "e3_lc66",
+        "term": "RS485B"
+      },
+      "to": {
+        "el": "e1_kaju",
+        "term": "RS485B"
+      },
+      "pts": [
+        {
+          "x": 487.5,
+          "y": 677.5,
+          "side": "bottom"
+        },
+        {
+          "x": 487.5,
+          "y": 745.4229291067279
+        },
+        {
+          "x": 241.82200456798898,
+          "y": 745.4229291067279
+        },
+        {
+          "x": 241.82200456798898,
+          "y": 627.7483299849805
+        },
+        {
+          "x": 280,
+          "y": 627.7483299849805
+        },
+        {
+          "x": 280,
+          "y": 618,
+          "side": "left"
+        }
+      ],
+      "gauge": 2.5,
+      "label": "",
+      "color": "",
+      "twist": true,
+      "rawPts": [
+        {
+          "x": 487.5,
+          "y": 677.5,
+          "side": "bottom"
+        },
+        {
+          "x": 487.5,
+          "y": 745.4229291067279
+        },
+        {
+          "x": 241.82200456798898,
+          "y": 745.4229291067279
+        },
+        {
+          "x": 241.82200456798898,
+          "y": 627.7483299849805
+        },
+        {
+          "x": 280,
+          "y": 627.7483299849805
+        },
+        {
+          "x": 280,
+          "y": 618,
+          "side": "left"
+        }
+      ]
+    },
+    {
+      "id": "w1_zrye",
+      "from": {
+        "el": "e3_lc66",
+        "term": "V-"
+      },
+      "to": {
+        "el": "e1_zkwc",
+        "term": "0V"
+      },
+      "pts": [
+        {
+          "x": 473.5,
+          "y": 559,
+          "side": "top"
+        },
+        {
+          "x": 473.5,
+          "y": 491.2041224660746
+        },
+        {
+          "x": 598.909853112609,
+          "y": 491.2041224660746
+        },
+        {
+          "x": 598.909853112609,
+          "y": 271.9541793272122
+        },
+        {
+          "x": 314,
+          "y": 271.9541793272122
+        },
+        {
+          "x": 314,
+          "y": 305,
+          "side": "top"
+        }
+      ],
+      "gauge": 2.5,
+      "label": "",
+      "color": "#808080",
+      "twist": false,
+      "rawPts": [
+        {
+          "x": 473.5,
+          "y": 559,
+          "side": "top"
+        },
+        {
+          "x": 473.5,
+          "y": 491.2041224660746
+        },
+        {
+          "x": 598.909853112609,
+          "y": 491.2041224660746
+        },
+        {
+          "x": 598.909853112609,
+          "y": 271.9541793272122
+        },
+        {
+          "x": 314,
+          "y": 271.9541793272122
+        },
+        {
+          "x": 314,
+          "y": 305,
+          "side": "top"
+        }
+      ]
+    },
+    {
+      "id": "w2_r9w4",
+      "from": {
+        "el": "e2_l8d1",
+        "term": "N"
+      },
+      "to": {
+        "el": "e3_pzt7",
+        "term": "A2"
+      },
+      "pts": [
+        {
+          "x": 530.5,
+          "y": 680.2,
+          "side": "bottom"
+        },
+        {
+          "x": 530.5,
+          "y": 727.7290578366437
+        },
+        {
+          "x": 199,
+          "y": 727.7290578366437
+        },
+        {
+          "x": 199,
+          "y": 649,
+          "side": "bottom"
+        }
+      ],
+      "gauge": 2.5,
+      "label": "",
+      "color": "#3b82f6",
+      "twist": false,
+      "rawPts": [
+        {
+          "x": 530.5,
+          "y": 680.2,
+          "side": "bottom"
+        },
+        {
+          "x": 530.5,
+          "y": 727.7290578366437
+        },
+        {
+          "x": 199,
+          "y": 727.7290578366437
+        },
+        {
+          "x": 199,
+          "y": 649,
+          "side": "bottom"
+        }
+      ]
+    }
+  ],
+  "labels": []
+};
 function applyBasDesign(d){
   d.labels = d.labels || []; d.wires = d.wires || []; d.elements = d.elements || [];
   d.rails = d.rails || []; d.ducts = d.ducts || [];
@@ -1762,7 +4878,7 @@ function loadBasFromJson(){
   fetch('example_panel_bas.json')
     .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
     .then(d => { if (!d || typeof d.w !== 'number') throw new Error('invalid'); applyBasDesign(d); })
-    .catch(() => applyBasDesign(buildExampleBas()));
+    .catch(() => applyBasDesign(JSON.parse(JSON.stringify(EXAMPLE_BAS))));
 }
 function showWelcome(){
   const m = $('modal');
@@ -1773,11 +4889,11 @@ function showWelcome(){
        <div class="welcome-cards">
          <div class="welcome-card" data-opt="bas">
            <b>Panel BAS</b>
-           <span>Contoh panel building automation: MCB, meter 1P & 3P, kontaktor NCH8, PLC FX3U-64MR, PSU 24V dan gateway MODBUS MGate MB3170 — sudah tersambung wiring.</span>
+           <span>Contoh panel building automation: MCB, meter 1P & 3P, kontaktor NCH8, PLC FX3U-64MR, PSU 24V dan gateway MODBUS MGate MB3170 â€” sudah tersambung wiring.</span>
          </div>
          <div class="welcome-card" data-opt="empty">
            <b>Empty Panel</b>
-           <span>Mulai dari nol: hanya ducting, din rail dan busbar — tanpa kabel maupun komponen.</span>
+           <span>Mulai dari nol: hanya ducting, din rail dan busbar â€” tanpa kabel maupun komponen.</span>
          </div>
        </div>
      </div>

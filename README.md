@@ -13,7 +13,7 @@ Untuk merancang panel distribusi & kontrol: MCB, meter, kontaktor, PLC, PSU hing
 ![SVG](https://img.shields.io/badge/Render-SVG-orange)
 ![Single File](https://img.shields.io/badge/Single%20file-yes-blue)
 ![No Build](https://img.shields.io/badge/No%20build%20tools-required-blue)
-![License](https://img.shields.io/badge/License-Proprietary-inactive)
+![License](https://img.shields.io/badge/License-MIT-blue)
 
 ## Banner
 
