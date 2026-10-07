@@ -382,12 +382,13 @@ function validateWire(w){
     return null;
   }
   const key = [ga,gb].sort().join('|');
+  const OK_PAIR = { 'COIL|N':1, 'COIL|L':1, 'COIL|DC_OUT':1, 'COM|L':1 };
+  if (OK_PAIR[key]) return null;
   if (key === 'L|N')  return { level:'error', msg:'PHASE-NEUTRAL SHORT — L terhubung ke N' };
   if (key === 'L|PE') return { level:'error', msg:'PHASE-EARTH SHORT — L terhubung ke PE' };
   if (key === 'N|PE') return { level:'error', msg:'NEUTRAL-EARTH SHORT — N terhubung ke PE' };
   if (key === 'DC+|DC-') return { level:'error', msg:'DC SUPPLY SHORT — 24V+ terhubung ke 24V-' };
-  const pair = [ga,gb].sort().join('|');
-  if (pair === 'DC_IN|DC_OUT') return { level:'warn', msg:'PLC I/O CROSS — input X terhubung ke output Y' };
+  if (key === 'DC_IN|DC_OUT') return { level:'warn', msg:'PLC I/O CROSS — input X terhubung ke output Y' };
   return { level:'warn', msg:`CLASS MISMATCH: ${a} ↔ ${b}` };
 }
 function validateAll(){
