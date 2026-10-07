@@ -743,6 +743,28 @@ function rebuildWire(w){
   return w;
 }
 function rebuildAllWires(){ S.wires.forEach(rebuildWire); }
+/* jalur tegak/lurus terpendek antar dua terminal (siku tunggal) */
+function routeOrtho(sPt, ePt){
+  const out = [ { x:sPt.x, y:sPt.y } ];
+  const sVert = (sPt.side === 'top' || sPt.side === 'bottom');
+  if (sVert) out.push({ x:sPt.x, y:ePt.y });
+  else out.push({ x:ePt.x, y:sPt.y });
+  out.push({ x:ePt.x, y:ePt.y });
+  return out;
+}
+/* saat elemen digeser: walau tanpa rebuildManual, wire sederhana (<=4 titik)
+   di-route ulang supaya garis tegak/lurusnya memendek mengikuti posisi baru;
+   route manual panjang (>4 titik) dipertahankan */
+function rerouteWire(w){
+  const sPt = getTermPos(w.from.el, w.from.term);
+  const ePt = getTermPos(w.to.el, w.to.term);
+  if (!sPt || !ePt){ rebuildWire(w); return w; }
+  if (w.pts && w.pts.length > 4){ rebuildWire(w); return w; }
+  const route = routeOrtho(sPt, ePt);
+  w.pts = route;
+  w.rawPts = route.map(p => ({ x:p.x, y:p.y }));
+  return w;
+}
 function shiftRailChildren(r, dx, dy){
   const moved = S.elements.filter(e => e.rail === r.id);
   if (!moved.length) return true;
@@ -758,7 +780,7 @@ function shiftRailChildren(r, dx, dy){
   for (const { e } of cands){
     e.x += dx; e.y += dy;
     for (const w of S.wires)
-      if (w.from.el === e.id || w.to.el === e.id) rebuildWire(w);
+      if (w.from.el === e.id || w.to.el === e.id) rerouteWire(w);
   }
   renderElems(); renderTerms(); renderWires(); renderOverlay();
   return true;
@@ -981,11 +1003,43 @@ svg.addEventListener('pointerdown', ev => {
       ui.drawing.cursor = wp;
       renderOverlay();
     } else {
-      const rr = findWireRoute(ev);
-      if (rr){ startRouteDrag(ev, rr); }
+      /* geser komponen/seksi langsung dari mode wire */
+      const elemG = ev.target.closest && ev.target.closest('.elem');
+      const railG = ev.target.closest && ev.target.closest('.rail');
+      const ductG = ev.target.closest && ev.target.closest('.duct');
+      const lblG  = ev.target.closest && ev.target.closest('.lbl');
+      if (elemG){
+        const id = elemG.getAttribute('data-id');
+        select('element', id);
+        const e = S.elements.find(x=>x.id===id);
+        ui.drag = { type:'move', kind:'element', id, dx:wp.x-e.x, dy:wp.y-e.y, sx:ev.clientX, sy:ev.clientY, moved:false };
+        svg.setPointerCapture(ev.pointerId);
+      } else if (railG){
+        const id = railG.getAttribute('data-id');
+        select('rail', id);
+        const r = S.rails.find(x=>x.id===id);
+        ui.drag = { type:'move', kind:'rail', id, dx:wp.x-r.x, dy:wp.y-r.y, sx:ev.clientX, sy:ev.clientY, moved:false };
+        svg.setPointerCapture(ev.pointerId);
+      } else if (ductG){
+        const id = ductG.getAttribute('data-id');
+        select('duct', id);
+        const dd = S.ducts.find(x=>x.id===id);
+        ui.drag = { type:'move', kind:'duct', id, dx:wp.x-dd.x, dy:wp.y-dd.y, sx:ev.clientX, sy:ev.clientY, moved:false };
+        svg.setPointerCapture(ev.pointerId);
+      } else if (lblG){
+        const id = lblG.getAttribute('data-id');
+        select('label', id);
+        const l = S.labels.find(x=>x.id===id);
+        ui.drag = { type:'move', kind:'label', id, dx:wp.x-l.x, dy:wp.y-l.y, sx:ev.clientX, sy:ev.clientY, moved:false };
+        svg.setPointerCapture(ev.pointerId);
+      }
       else {
-        const wid = hitWire(ev);
-        if (wid){ select('wire', wid); } else select(null);
+        const rr = findWireRoute(ev);
+        if (rr){ startRouteDrag(ev, rr); }
+        else {
+          const wid = hitWire(ev);
+          if (wid){ select('wire', wid); } else select(null);
+        }
       }
     }
     return;
@@ -1093,7 +1147,7 @@ svg.addEventListener('pointermove', ev => {
       const ddx = e.x - ox, ddy = e.y - oy;
       if (ddx || ddy){
         for (const w of S.wires)
-          if (w.from.el === e.id || w.to.el === e.id) rebuildWire(w);
+          if (w.from.el === e.id || w.to.el === e.id) rerouteWire(w);
       }
       renderElems(); renderTerms(); renderWires(); renderOverlay();
     } else if (d.kind === 'rail'){
@@ -1442,7 +1496,7 @@ function bindPropInputs(obj, kind){
         const c = CATALOG[obj.type];
         obj.x = clamp(obj.x, 0, S.w - c.w); obj.y = clamp(obj.y, 0, S.h - c.h);
         for (const w of S.wires)
-          if (w.from.el === obj.id || w.to.el === obj.id) rebuildWire(w);
+          if (w.from.el === obj.id || w.to.el === obj.id) rerouteWire(w);
       }
       markDirty(); renderAll();
     });
