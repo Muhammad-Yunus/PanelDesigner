@@ -180,9 +180,30 @@ const CATALOG = {
   contactor: { label:'Contactor NCH8', catalog:'CHINT NCH8 8A', rating:'8A', w:18, h:85, poles:1, termLabel:1, termFs:3.5,
     terms:{ 'R1':{x:4,y:0,side:'top'}, '1':{x:14,y:0,side:'top'}, 'A1':{x:9,y:12,side:'top'},
             'R2':{x:4,y:85,side:'bottom'}, '2':{x:14,y:85,side:'bottom'}, 'A2':{x:9,y:73,side:'bottom'} } },
-  plc: { label:'PLC FX5U', catalog:'Mitsubishi FX5U-64MR', rating:'32DI/32DO', w:92, h:114, poles:0,
-    terms:{ '24V+':{x:12,y:0,side:'top'}, '24V-':{x:32,y:0,side:'top'}, 'COM':{x:52,y:0,side:'top'},
-            'X0-X31':{x:26,y:114,side:'bottom'}, 'Y0-Y31':{x:70,y:114,side:'bottom'} } }
+  plc: { label:'PLC FX3U', catalog:'Mitsubishi FX3U-64MR-ES', rating:'32DI/32DO', w:220, h:90, poles:0, termLabel:1, termFs:3.2,
+    terms:{ /* Input block (atas) */
+      'G':{x:11.2,y:13,side:'top'}, 'SS':{x:21.6,y:13,side:'top'}, '0V1':{x:32,y:13,side:'top'}, '0V2':{x:42.4,y:13,side:'top'},
+      'X0':{x:52.8,y:13,side:'top'}, 'X2':{x:63.2,y:13,side:'top'}, 'X4':{x:73.6,y:13,side:'top'}, 'X6':{x:84,y:13,side:'top'},
+      'X10':{x:94.4,y:13,side:'top'}, 'X12':{x:104.8,y:13,side:'top'}, 'X14':{x:115.2,y:13,side:'top'}, 'X16':{x:125.6,y:13,side:'top'},
+      'X20':{x:136,y:13,side:'top'}, 'X22':{x:146.4,y:13,side:'top'}, 'X24':{x:156.8,y:13,side:'top'}, 'X26':{x:167.2,y:13,side:'top'},
+      'X30':{x:177.6,y:13,side:'top'}, 'X32':{x:188,y:13,side:'top'}, 'X34':{x:198.4,y:13,side:'top'}, 'X36':{x:208.8,y:13,side:'top'},
+      'L':{x:6,y:26,side:'top'}, 'N':{x:16.4,y:26,side:'top'}, '24V1':{x:37.2,y:26,side:'top'}, '24V2':{x:47.6,y:26,side:'top'},
+      'X1':{x:58,y:26,side:'top'}, 'X3':{x:68.4,y:26,side:'top'}, 'X5':{x:78.8,y:26,side:'top'}, 'X7':{x:89.2,y:26,side:'top'},
+      'X11':{x:99.6,y:26,side:'top'}, 'X13':{x:110,y:26,side:'top'}, 'X15':{x:120.4,y:26,side:'top'}, 'X17':{x:130.8,y:26,side:'top'},
+      'X21':{x:141.2,y:26,side:'top'}, 'X23':{x:151.6,y:26,side:'top'}, 'X25':{x:162,y:26,side:'top'}, 'X27':{x:172.4,y:26,side:'top'},
+      'X31':{x:182.8,y:26,side:'top'}, 'X33':{x:193.2,y:26,side:'top'}, 'X35':{x:203.6,y:26,side:'top'}, 'X37':{x:214,y:26,side:'top'},
+      /* Output block (bawah) */
+      'Y0':{x:11.2,y:64,side:'bottom'}, 'Y2':{x:21.6,y:64,side:'bottom'}, 'Y4':{x:42.4,y:64,side:'bottom'}, 'Y6':{x:52.8,y:64,side:'bottom'},
+      'Y10':{x:73.6,y:64,side:'bottom'}, 'Y12':{x:84,y:64,side:'bottom'}, 'Y14':{x:104.8,y:64,side:'bottom'}, 'Y16':{x:115.2,y:64,side:'bottom'},
+      'Y20':{x:136,y:64,side:'bottom'}, 'Y22':{x:146.4,y:64,side:'bottom'}, 'Y24':{x:156.8,y:64,side:'bottom'}, 'Y26':{x:167.2,y:64,side:'bottom'},
+      'Y30':{x:177.6,y:64,side:'bottom'}, 'Y32':{x:188,y:64,side:'bottom'}, 'Y34':{x:198.4,y:64,side:'bottom'}, 'Y36':{x:208.8,y:64,side:'bottom'},
+      'COM':{x:219.2,y:64,side:'bottom'},
+      'COM1':{x:6,y:77,side:'bottom'}, 'Y1':{x:16.4,y:77,side:'bottom'}, 'Y3':{x:26.8,y:77,side:'bottom'}, 'COM2':{x:37.2,y:77,side:'bottom'},
+      'Y5':{x:47.6,y:77,side:'bottom'}, 'Y7':{x:58,y:77,side:'bottom'}, 'COM3':{x:68.4,y:77,side:'bottom'}, 'Y11':{x:78.8,y:77,side:'bottom'},
+      'Y13':{x:89.2,y:77,side:'bottom'}, 'COM4':{x:99.6,y:77,side:'bottom'}, 'Y15':{x:110,y:77,side:'bottom'}, 'Y17':{x:120.4,y:77,side:'bottom'},
+      'COM5':{x:130.8,y:77,side:'bottom'}, 'Y21':{x:141.2,y:77,side:'bottom'}, 'Y23':{x:151.6,y:77,side:'bottom'}, 'Y25':{x:162,y:77,side:'bottom'},
+      'Y27':{x:172.4,y:77,side:'bottom'}, 'Y31':{x:182.8,y:77,side:'bottom'}, 'Y33':{x:193.2,y:77,side:'bottom'}, 'Y35':{x:203.6,y:77,side:'bottom'},
+      'Y37':{x:214,y:77,side:'bottom'} } }
 };
 const LIB = [
   { cat:'Breakers', items:['mcb_1p','mcb_2p','mcb_3p','mccb_3p'] },
@@ -204,7 +225,7 @@ const BUS = [
 ];
 const BUS_TAPS = 8, BUS_W = 6, BUS_Y0 = 40;
 const CLASS_COLOR = { L1:'#ef4444', L2:'#f97316', L3:'#eab308', L:'#dc2626', N:'#3b82f6', PE:'#16a34a',
-  'DC+':'#a855f7', 'DC-':'#15803d', COM:'#64748b', DC_IN:'#0ea5e9', DC_OUT:'#14b8a6', COIL:'#d946ef', OTHER:'#94a3b8' };
+  'DC+':'#a855f7', 'DC-':'#15803d', COM:'#64748b', DC_IN:'#0ea5e9', DC_OUT:'#14b8a6', COIL:'#d946ef', AC:'#f59e0b', OTHER:'#94a3b8' };
 const VR_MAP = { V1:'L1', V2:'L2', V3:'L3', Vn:'N', R1:'N', R2:'N', '1':'L', '2':'L' };
 function termColor(elId, tn){ return CLASS_COLOR[VR_MAP[tn] || termClass(elId, tn)] || '#94a3b8'; }
 const TYPE_FILL = { mcb_1p:'#f8fafc', mcb_2p:'#f8fafc', mcb_3p:'#f8fafc', mccb_3p:'#e2e8f0',
@@ -254,9 +275,12 @@ function termClass(elId, term){
   if (VR_MAP[term]) return VR_MAP[term];
   if (elId && elId[0]==='B'){ const b=BUS.find(x=>x.id===elId); return b?b.cls:'OTHER'; }
   if (term==='A1' || term==='A2') return 'COIL';
-  if (term==='24V+') return 'DC+';
-  if (term==='24V-') return 'DC-';
-  if (term==='COM') return 'COM';
+  if (term==='G') return 'PE';
+  if (/^0V/.test(term)) return 'DC-';
+  if (/^24V/.test(term)) return 'DC+';
+  if (/^SS$/.test(term)) return 'COM';
+  if (/^220/.test(term)) return 'AC';
+  if (term==='COM' || /^COM\d/.test(term)) return 'COM';
   if (/^X/.test(term)) return 'DC_IN';
   if (/^Y/.test(term)) return 'DC_OUT';
   if (/^PE/.test(term)) return 'PE';
@@ -350,6 +374,7 @@ function validateWire(w){
   const a = termClass(w.from.el, w.from.term);
   const b = termClass(w.to.el, w.to.term);
   if (a === b) return null;
+  if (a === 'AC' || b === 'AC') return null;
   const ga = classGroup(a), gb = classGroup(b);
   if (ga === gb){
     if (/^L\d$/.test(a) && /^L\d$/.test(b) && a !== b)
@@ -468,7 +493,7 @@ function renderTerms(){
 const addDot = (elId, tn, p, color, lab, fs) => {
     const inert = tn === 'NC';
     if (lab){
-      const termNames = { RS485A:'A', RS485B:'B' };
+      const termNames = { RS485A:'A', RS485B:'B', SS:'S/S', '0V1':'0V', '0V2':'0V', '24V1':'24V', '24V2':'24V' };
       const lt = svgEl('text', { x:p.x, y:p.y-5, 'font-size':fs || 4.2,
         fill: inert ? '#64748b' : '#e2e8f0',
         'text-anchor':'middle', 'pointer-events':'none', style:'paint-order:stroke',
