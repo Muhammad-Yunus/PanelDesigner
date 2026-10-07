@@ -1553,13 +1553,7 @@ $('btnFit').addEventListener('click', fitView);
 $('zoomVal').addEventListener('change', e => setZoom((parseFloat(e.target.value)||100)/100));
 $('btnGrid').addEventListener('click', e => { ui.grid = !ui.grid; e.target.classList.toggle('active', ui.grid); renderGrid(); });
 $('btnDim').addEventListener('click', e => { ui.dim = !ui.dim; e.target.classList.toggle('active', ui.dim); renderRails(); renderDucts(); renderPanel(); });
-$('btnNew').addEventListener('click', () => {
-  if (!confirm('Buat panel baru? Desain saat ini akan diganti.')) return;
-  snapshot();
-  S = defaultDesign();
-  ui.sel = null;
-  markDirty(); fitView(); renderAll();
-});
+$('btnNew').addEventListener('click', () => showWelcome());
 /* keyboard */
 document.addEventListener('keydown', ev => {
   if (ev.target.tagName === 'INPUT' || ev.target.tagName === 'SELECT' || ev.target.tagName === 'TEXTAREA') return;
@@ -1760,7 +1754,7 @@ function applyBasDesign(d){
   rebuildAllWires();
   markDirty();
   saveLS();
-  renderAll();
+  fitView(); renderAll();
   $('modalBg').classList.remove('open');
   setStatus('Membuka contoh Panel BAS');
 }
@@ -1797,15 +1791,12 @@ function showWelcome(){
     ui.sel = null; ui.drawing = null;
     markDirty();
     saveLS();
-    renderAll();
+    fitView(); renderAll();
     $('modalBg').classList.remove('open');
     setStatus('Panel kosong dibuat');
   }));
   $('ms_cancel').addEventListener('click', () => {
-    snapshot();
-    saveLS();
     $('modalBg').classList.remove('open');
-    setStatus('Panel kosong dibuat (ubah lewat tombol New)');
   });
 }
 function init(){
