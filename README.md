@@ -15,9 +15,9 @@ Untuk merancang panel distribusi & kontrol: MCB, meter, kontaktor, PLC, PSU hing
 ![No Build](https://img.shields.io/badge/No%20build%20tools-required-blue)
 ![License](https://img.shields.io/badge/License-MIT-blue)
 
-## Banner
+## Demo
 
-![Panel Designer](docs/banner.png)
+<video src="docs/demo.mp4" width="820" controls></video>
 
 [![Try it live](https://img.shields.io/badge/Try%20it%20live-%E2%9A%A1%20Panel%20Designer-2563eb?style=for-the-badge)](https://muhammad-yunus.github.io/PanelDesigner)
 
@@ -53,7 +53,7 @@ python -m http.server 8000
 ```
 panel-designer.html     # seluruh aplikasi (satu file)
 example_panel_bas.json  # contoh panel building automation
-docs/banner.png         # banner
+docs/demo.mp4       # video demo (tampil di README)
 index.html              # redirect untuk GitHub Pages
 ```
 
