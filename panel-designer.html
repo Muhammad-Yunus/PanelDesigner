@@ -1751,6 +1751,25 @@ function buildExampleBas(){
   S = prevS;
   return ex;
 }
+function applyBasDesign(d){
+  d.labels = d.labels || []; d.wires = d.wires || []; d.elements = d.elements || [];
+  d.rails = d.rails || []; d.ducts = d.ducts || [];
+  snapshot();
+  S = d;
+  ui.sel = null; ui.drawing = null;
+  rebuildAllWires();
+  markDirty();
+  saveLS();
+  renderAll();
+  $('modalBg').classList.remove('open');
+  setStatus('Membuka contoh Panel BAS');
+}
+function loadBasFromJson(){
+  fetch('example_panel_bas.json')
+    .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(d => { if (!d || typeof d.w !== 'number') throw new Error('invalid'); applyBasDesign(d); })
+    .catch(() => applyBasDesign(buildExampleBas()));
+}
 function showWelcome(){
   const m = $('modal');
   m.innerHTML =
@@ -1760,13 +1779,11 @@ function showWelcome(){
        <div class="welcome-cards">
          <div class="welcome-card" data-opt="bas">
            <b>Panel BAS</b>
-           <span>Contoh lengkap bangunan otomatis: PSU 24V, PLC FX3U-64MR, gateway MODBUS MGate MB3170, 2x kontaktor NCH8 & meter 3P — sudah tersambung kabel ke busbar L1/L2/L3/N.</span>
-           <div class="wrow">● 6 komponen  ● 20 kabel</div>
+           <span>Contoh panel building automation: MCB, meter 1P & 3P, kontaktor NCH8, PLC FX3U-64MR, PSU 24V dan gateway MODBUS MGate MB3170 — sudah tersambung wiring.</span>
          </div>
          <div class="welcome-card" data-opt="empty">
            <b>Empty Panel</b>
            <span>Mulai dari nol: hanya ducting, din rail dan busbar — tanpa kabel maupun komponen.</span>
-           <div class="wrow">● 0 komponen  ● 0 kabel</div>
          </div>
        </div>
      </div>
@@ -1774,14 +1791,15 @@ function showWelcome(){
   $('modalBg').classList.add('open');
   m.querySelectorAll('.welcome-card').forEach(card => card.addEventListener('click', () => {
     const bas = card.getAttribute('data-opt') === 'bas';
+    if (bas){ loadBasFromJson(); return; }
     snapshot();
-    S = bas ? buildExampleBas() : defaultDesign();
+    S = defaultDesign();
     ui.sel = null; ui.drawing = null;
     markDirty();
     saveLS();
     renderAll();
     $('modalBg').classList.remove('open');
-    setStatus(bas ? 'Membuka contoh Panel BAS' : 'Panel kosong dibuat');
+    setStatus('Panel kosong dibuat');
   }));
   $('ms_cancel').addEventListener('click', () => {
     snapshot();
