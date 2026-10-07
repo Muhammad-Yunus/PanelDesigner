@@ -92,6 +92,7 @@ svg text{user-select:none}
       <button class="tb-btn" id="btnDelete">Delete</button>
       <button class="tb-btn" id="btnUndo">Undo</button>
       <button class="tb-btn" id="btnRedo">Redo</button>
+      <button class="tb-btn" id="btnStraight" title="Luruskan seluruh kabel yang tidak tegak/lurus">Straighten</button>
     </div>
     <div class="tb-group">
       <button class="tb-btn" id="btnZoomOut" title="Zoom out">−</button>
@@ -205,12 +206,20 @@ const CATALOG = {
       'Y27':{x:172.4,y:77,side:'bottom'}, 'Y31':{x:182.8,y:77,side:'bottom'}, 'Y33':{x:193.2,y:77,side:'bottom'}, 'Y35':{x:203.6,y:77,side:'bottom'},
       'Y37':{x:214,y:77,side:'bottom'},
       /* RS485 (sisi kiri tengah, horizontal) */
-      '0V':{x:12,y:45,side:'left'}, 'RS485A':{x:26,y:45,side:'left'}, 'RS485B':{x:40,y:45,side:'left'} } }
+      '0V':{x:12,y:45,side:'left'}, 'RS485A':{x:26,y:45,side:'left'}, 'RS485B':{x:40,y:45,side:'left'} } },
+  psu: { label:'PSU 24V NDR-240', catalog:'MEANWELL NDR-240-24 240W', rating:'24V / 10A', w:63, h:125.2, poles:0, termLabel:1, termFs:3.5,
+    terms:{ 'V-1':{x:10,y:0,side:'top'}, 'V-2':{x:23,y:0,side:'top'}, 'V+1':{x:36,y:0,side:'top'}, 'V+2':{x:49,y:0,side:'top'},
+            'PE':{x:12,y:125.2,side:'bottom'}, 'N':{x:31.5,y:125.2,side:'bottom'}, 'L':{x:51,y:125.2,side:'bottom'} } },
+  mgate: { label:'MODBUS GATEWAY', catalog:'MOXA MGate MB3170', rating:'Modbus RTU/TCP', w:29, h:118.5, poles:0, termLabel:1, termFs:3.5,
+    terms:{ 'V-':{x:7.5,y:0,side:'top'}, 'V+':{x:21.5,y:0,side:'top'},
+            'RS485A':{x:7.5,y:118.5,side:'bottom'}, 'RS485B':{x:21.5,y:118.5,side:'bottom'} } }
 };
 const LIB = [
   { cat:'Breakers', items:['mcb_1p','mcb_2p','mcb_3p','mccb_3p'] },
   { cat:'Meters', items:['meter_1p','meter_3p'] },
   { cat:'Control', items:['contactor','plc'] },
+  { cat:'Power', items:['psu'] },
+  { cat:'Comms', items:['mgate'] },
   { cat:'Structure', items:['rail','duct'] }
 ];
 const STRUCT = {
@@ -231,9 +240,9 @@ const CLASS_COLOR = { L1:'#ef4444', L2:'#f97316', L3:'#eab308', L:'#dc2626', N:'
 const VR_MAP = { V1:'L1', V2:'L2', V3:'L3', Vn:'N', R1:'N', R2:'N', '1':'L', '2':'L' };
 function termColor(elId, tn){ return CLASS_COLOR[VR_MAP[tn] || termClass(elId, tn)] || '#94a3b8'; }
 const TYPE_FILL = { mcb_1p:'#f8fafc', mcb_2p:'#f8fafc', mcb_3p:'#f8fafc', mccb_3p:'#e2e8f0',
-  meter_1p:'#0f2740', meter_3p:'#0f2740', contactor:'#d6dbe5', plc:'#0b1220' };
+  meter_1p:'#0f2740', meter_3p:'#0f2740', contactor:'#d6dbe5', plc:'#0b1220', psu:'#0f2d26', mgate:'#101826' };
 const TYPE_STROKE = { mcb_1p:'#334155', mcb_2p:'#334155', mcb_3p:'#334155', mccb_3p:'#334155',
-  meter_1p:'#1d4ed8', meter_3p:'#1d4ed8', contactor:'#475569', plc:'#3b82f6' };
+  meter_1p:'#1d4ed8', meter_3p:'#1d4ed8', contactor:'#475569', plc:'#3b82f6', psu:'#10b981', mgate:'#38bdf8' };
 
 /* ===================== STATE ===================== */
 let S = null;            // design (serializable)
@@ -278,6 +287,8 @@ function termClass(elId, term){
   if (elId && elId[0]==='B'){ const b=BUS.find(x=>x.id===elId); return b?b.cls:'OTHER'; }
   if (term==='A1' || term==='A2') return 'COIL';
   if (term==='G') return 'PE';
+  if (/^V\+/.test(term)) return 'DC+';
+  if (/^V-/.test(term)) return 'DC-';
   if (/^0V/.test(term)) return 'DC-';
   if (/^24V/.test(term)) return 'DC+';
   if (/^SS$/.test(term)) return 'COM';
@@ -468,7 +479,7 @@ function renderElems(){
       transform:`translate(${e.x} ${e.y}) rotate(${e.rot||0} ${c.w/2} ${c.h/2})` }, g);
     svgEl('rect', { x:0, y:0, width:c.w, height:c.h, rx:2.5,
       fill:TYPE_FILL[e.type]||'#e2e8f0', stroke:TYPE_STROKE[e.type]||'#475569', 'stroke-width':.9, class:'el-body' }, gr);
-    const dark = e.type==='meter_1p' || e.type==='meter_3p' || e.type==='plc';
+    const dark = e.type==='meter_1p' || e.type==='meter_3p' || e.type==='plc' || e.type==='psu' || e.type==='mgate';
     const rot = (e.rot||0) % 360;
     const rotated = (rot % 180) === 90;
     const effW = rotated ? c.h : c.w;
@@ -782,6 +793,66 @@ function networkColorFix(id){
   for (const w of comp) if (w.color){ c = w.color; break; }
   if (c) for (const w of comp) w.color = c;
   return { comp, color:c };
+}
+/* ===================== AUTO STRAIGHTEN ===================== */
+function straightenPts(pts){
+  const p = pts.map(q => ({ x:q.x, y:q.y }));
+  if (p.length < 2) return p;
+  /* pass 1: relaksasi sumbu-dominan — rapikan titik yang meleset kolom/baris
+     (mis. setelah din rail digeser) jadi garis lurus, bukan lipatan sepatu */
+  let changed = true, guard = 0;
+  while (changed && guard++ < p.length*2 + 4){
+    changed = false;
+    for (let i=1; i<p.length-1; i++){
+      const a = p[i-1], b = p[i], c = p[i+1];
+      const v1 = Math.abs(b.x-a.x) < Math.abs(b.y-a.y);
+      const v2 = Math.abs(c.x-b.x) < Math.abs(c.y-b.y);
+      if (v1 && v2){
+        const t = Math.abs(b.x-a.x) <= Math.abs(c.x-b.x) ? a.x : c.x;
+        if (b.x !== t){ b.x = t; changed = true; }
+      } else if (!v1 && !v2){
+        const t = Math.abs(b.y-a.y) <= Math.abs(c.y-b.y) ? a.y : c.y;
+        if (b.y !== t){ b.y = t; changed = true; }
+      }
+    }
+  }
+  /* pass 2: rapikan jitter sub-mm */
+  for (let i=0; i<p.length-1; i++){
+    const dx = p[i+1].x - p[i].x, dy = p[i+1].y - p[i].y;
+    if (Math.abs(dx) < 0.05) p[i+1].x = p[i].x;
+    if (Math.abs(dy) < 0.05) p[i+1].y = p[i].y;
+  }
+  /* pass 3: sisa diagonal dipecah jadi siku L */
+  for (let i=0; i<p.length-1; i++){
+    const a = p[i], b = p[i+1];
+    if (a.x !== b.x && a.y !== b.y){
+      p.splice(i+1, 0, { x:b.x, y:a.y });
+      i++;
+    }
+  }
+  /* pass 4: bersihkan titik ganda */
+  for (let i=p.length-1; i>0; i--){
+    if (p[i].x === p[i-1].x && p[i].y === p[i-1].y) p.splice(i, 1);
+  }
+  return p;
+}
+function autoStraight(){
+  if (!S.wires.length){ setStatus('Tidak ada kabel untuk diluruskan'); return; }
+  const work = [];
+  for (const w of S.wires){
+    const np = straightenPts(w.pts || []);
+    if (np.length !== (w.pts||[]).length || np.some((q,i)=>q.x!==w.pts[i].x || q.y!==w.pts[i].y))
+      work.push([w, np]);
+  }
+  if (!work.length){ setStatus('Straighten: semua kabel sudah lurus'); return; }
+  snapshot();
+  for (const [w, np] of work){
+    w.pts = np;
+    w.rawPts = np.map(p=>({ x:p.x, y:p.y }));
+  }
+  renderWires(); renderOverlay();
+  markDirty();
+  setStatus('Straighten: ' + work.length + ' kabel diluruskan');
 }
 /* ===================== HISTORY ===================== */
 function snapshot(){
@@ -1414,6 +1485,7 @@ function setMode(m){
 document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => setMode(b.getAttribute('data-mode'))));
 $('btnDelete').addEventListener('click', deleteSelected);
 $('btnUndo').addEventListener('click', undo);
+  $('btnStraight').addEventListener('click', () => { if (ui.mode==='wire') return setStatus('Keluar dulu dari mode Wire'); autoStraight(); });
 $('btnRedo').addEventListener('click', redo);
 $('btnZoomIn').addEventListener('click', () => setZoom(ui.view.k * 1.25));
 $('btnZoomOut').addEventListener('click', () => setZoom(ui.view.k / 1.25));
