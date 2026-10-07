@@ -19,6 +19,8 @@ Untuk merancang panel distribusi & kontrol: MCB, meter, kontaktor, PLC, PSU hing
 
 ![Panel Designer](docs/banner.png)
 
+[![Try it live](https://img.shields.io/badge/Try%20it%20live-%E2%9A%A1%20Panel%20Designer-2563eb?style=for-the-badge)](https://muhammad-yunus.github.io/PanelDesigner)
+
 ## Fitur Utama
 
 - **Library komponen drag & drop** — MCB 1P/2P/3P, MCCB, meter IEM2050/IEM3255, kontaktor CHINT NCH8, PLC FX3U-64MR, PSU MEANWELL NDR-240-24, gateway MODBUS Moxa MGate MB3170, din rail & ducting.
@@ -36,7 +38,7 @@ Untuk merancang panel distribusi & kontrol: MCB, meter, kontaktor, PLC, PSU hing
 
 ### Mulai Cepat
 
-Buka [Panel Designer](https://muhammad-yunus.github.io/PanelMaker/) — tidak perlu instalasi apa pun.
+Buka [Panel Designer](https://muhammad-yunus.github.io/PanelDesigner) — tidak perlu instalasi apa pun.
 
 Atau jalankan secara lokal:
 
