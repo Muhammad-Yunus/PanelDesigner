@@ -804,6 +804,50 @@ function distSeg(p, a, b){
   const x = a.x + t*dx, y = a.y + t*dy;
   return Math.hypot(p.x-x, p.y-y);
 }
+function findWireRoute(ev){
+  const p = worldPos(ev);
+  let best = null, bd = 6/ui.view.k;
+  for (const w of S.wires){
+    for (let i=0;i<w.pts.length-1;i++){
+      if (i===0 || i===w.pts.length-2) continue;
+      const a = w.pts[i], b = w.pts[i+1];
+      const d = distSeg(p, a, b);
+      if (d < bd){ bd = d; best = { id:w.id, seg:i }; }
+    }
+  }
+  return best;
+}
+function routeDragMove(d, w, wp){
+  const t = snap(d.horiz ? wp.y - d.origY : wp.x - d.origX);
+  if (t === d.apply) return null;
+  d.apply = t;
+  for (let k=d.runStart;k<=d.runEnd;k++){
+    if (d.horiz) w.pts[k].y = clamp(d.origY + t, 0, S.h);
+    else w.pts[k].x = clamp(d.origX + t, 0, S.w);
+  }
+  w.rawPts = w.pts.map(p=>({ x:p.x, y:p.y }));
+  renderWires(); renderOverlay();
+  return t;
+}
+function startRouteDrag(ev, rr){
+  const w = S.wires.find(x=>x.id===rr.id); if (!w) return;
+  select('wire', rr.id);
+  const horiz = Math.abs(w.pts[rr.seg].x-w.pts[rr.seg+1].x) >= Math.abs(w.pts[rr.seg].y-w.pts[rr.seg+1].y);
+  let s = rr.seg, e = rr.seg+1;
+  if (horiz){
+    const y = w.pts[rr.seg].y;
+    while (s > 1 && w.pts[s-1].y === y) s--;
+    while (e < w.pts.length-2 && w.pts[e+1].y === y) e++;
+  } else {
+    const x = w.pts[rr.seg].x;
+    while (s > 1 && w.pts[s-1].x === x) s--;
+    while (e < w.pts.length-2 && w.pts[e+1].x === x) e++;
+  }
+  ui.drag = { type:'route', id:rr.id, horiz, runStart:s, runEnd:e,
+    origY:w.pts[s].y, origX:w.pts[s].x, sx:ev.clientX, sy:ev.clientY, moved:false, apply:null };
+  svg.setPointerCapture(ev.pointerId);
+  setStatus('Routing: geser untuk ubah jalur kabel');
+}
 function findTerm(ev){
   if (!(ev.target && ev.target.closest)) return null;
   if (!ev.target.closest('.term-dot, .term-hit')) return null;
@@ -839,8 +883,12 @@ svg.addEventListener('pointerdown', ev => {
       ui.drawing.cursor = wp;
       renderOverlay();
     } else {
-      const wid = hitWire(ev);
-      if (wid){ select('wire', wid); } else select(null);
+      const rr = findWireRoute(ev);
+      if (rr){ startRouteDrag(ev, rr); }
+      else {
+        const wid = hitWire(ev);
+        if (wid){ select('wire', wid); } else select(null);
+      }
     }
     return;
   }
@@ -883,6 +931,8 @@ svg.addEventListener('pointerdown', ev => {
     ui.drag = { type:'move', kind:'label', id:l.id, dx:wp.x-l.x, dy:wp.y-l.y, sx:ev.clientX, sy:ev.clientY, moved:false };
     svg.setPointerCapture(ev.pointerId);
   } else {
+    const rr = findWireRoute(ev);
+    if (rr){ startRouteDrag(ev, rr); return; }
     const wid = hitWire(ev);
     if (wid){ select('wire', wid); return; }
     /* empty: pan on drag, deselect on click */
@@ -893,6 +943,9 @@ svg.addEventListener('pointerdown', ev => {
 svg.addEventListener('pointermove', ev => {
   const wp = worldPos(ev);
   $('stCoord').textContent = `X: ${Math.round(wp.x)} Y: ${Math.round(wp.y)} mm`;
+  if (ui.mode === 'select' && !ui.drag && !ui.drawing){
+    svg.style.cursor = findWireRoute(ev) ? 'move' : '';
+  }
   if (ui.drawing){
     ui.drawing.cursor = wp;
     renderOverlay();
@@ -905,6 +958,13 @@ svg.addEventListener('pointermove', ev => {
     ui.view.y = d.oy + (ev.clientY - d.sy);
     if (Math.abs(ev.clientX-d.sx) + Math.abs(ev.clientY-d.sy) > 4) d.moved = true;
     applyView();
+    return;
+  }
+  if (d.type === 'route'){
+    if (!d.moved && Math.hypot(ev.clientX-d.sx, ev.clientY-d.sy) < 3) return;
+    if (!d.moved){ snapshot(); d.moved = true; }
+    const w = S.wires.find(x=>x.id===d.id); if (!w) return;
+    routeDragMove(d, w, wp);
     return;
   }
   if (d.type === 'move'){
@@ -966,7 +1026,8 @@ svg.addEventListener('pointermove', ev => {
 svg.addEventListener('pointerup', ev => {
   const d = ui.drag;
   if (d && d.type==='pan' && !d.moved && d.deselect) select(null);
-  if (d && d.type==='move' && d.moved) markDirty();
+  if (d && (d.type==='move' || d.type==='route') && d.moved) markDirty();
+  if (d && d.type==='route' && d.moved) setStatus('Routing kabel diperbarui');
   ui.drag = null;
   try { svg.releasePointerCapture(ev.pointerId); } catch(e){}
 });
