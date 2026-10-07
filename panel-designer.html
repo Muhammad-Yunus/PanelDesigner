@@ -177,10 +177,9 @@ const CATALOG = {
             'I1S1':{x:48,y:96,side:'bottom'}, 'I1S2':{x:56,y:96,side:'bottom'},
             'I2S1':{x:64,y:96,side:'bottom'}, 'I2S2':{x:72,y:96,side:'bottom'},
             'I3S1':{x:80,y:96,side:'bottom'}, 'I3S2':{x:88,y:96,side:'bottom'} } },
-  contactor: { label:'Contactor NCH8', catalog:'Schneider NCH8 8A', rating:'8A', w:85, h:105, poles:3,
-    terms:{ 'L1-in':{x:15,y:0,side:'top'}, 'L2-in':{x:32,y:0,side:'top'}, 'L3-in':{x:49,y:0,side:'top'},
-            'L1-out':{x:15,y:105,side:'bottom'}, 'L2-out':{x:32,y:105,side:'bottom'}, 'L3-out':{x:49,y:105,side:'bottom'},
-            'A1':{x:85,y:40,side:'right'}, 'A2':{x:85,y:70,side:'right'} } },
+  contactor: { label:'Contactor NCH8', catalog:'CHINT NCH8 8A', rating:'8A', w:18, h:85, poles:1, termLabel:1, termFs:3.5,
+    terms:{ 'R1':{x:4,y:0,side:'top'}, '1':{x:14,y:0,side:'top'}, 'A1':{x:9,y:12,side:'top'},
+            'R2':{x:4,y:85,side:'bottom'}, '2':{x:14,y:85,side:'bottom'}, 'A2':{x:9,y:73,side:'bottom'} } },
   plc: { label:'PLC FX5U', catalog:'Mitsubishi FX5U-64MR', rating:'32DI/32DO', w:92, h:114, poles:0,
     terms:{ '24V+':{x:12,y:0,side:'top'}, '24V-':{x:32,y:0,side:'top'}, 'COM':{x:52,y:0,side:'top'},
             'X0-X31':{x:26,y:114,side:'bottom'}, 'Y0-Y31':{x:70,y:114,side:'bottom'} } }
@@ -192,7 +191,7 @@ const LIB = [
   { cat:'Structure', items:['rail','duct'] }
 ];
 const STRUCT = {
-  rail: { label:'Din Rail TS35', dim:'600×7.5 mm', len:600 },
+  rail: { label:'Din Rail TS35', dim:'600×35 mm', len:600 },
   duct: { label:'Ducting 3.5cm', dim:'600×35 mm', w:600, h:35 }
 };
 /* Fixed 4-busbar (L1/L2/L3/PE) — left side, not draggable */
@@ -206,7 +205,7 @@ const BUS = [
 const BUS_TAPS = 8, BUS_W = 6, BUS_Y0 = 40;
 const CLASS_COLOR = { L1:'#ef4444', L2:'#f97316', L3:'#eab308', L:'#dc2626', N:'#3b82f6', PE:'#16a34a',
   'DC+':'#a855f7', 'DC-':'#15803d', COM:'#64748b', DC_IN:'#0ea5e9', DC_OUT:'#14b8a6', COIL:'#d946ef', OTHER:'#94a3b8' };
-const VR_MAP = { V1:'L1', V2:'L2', V3:'L3', Vn:'N' };
+const VR_MAP = { V1:'L1', V2:'L2', V3:'L3', Vn:'N', R1:'N', R2:'N', '1':'L', '2':'L' };
 function termColor(elId, tn){ return CLASS_COLOR[VR_MAP[tn] || termClass(elId, tn)] || '#94a3b8'; }
 const TYPE_FILL = { mcb_1p:'#f8fafc', mcb_2p:'#f8fafc', mcb_3p:'#f8fafc', mccb_3p:'#e2e8f0',
   meter_1p:'#0f2740', meter_3p:'#0f2740', contactor:'#d6dbe5', plc:'#0b1220' };
@@ -405,16 +404,16 @@ function renderRails(){
   const g = $('lyrRail'); clearEl(g);
   for (const r of S.rails){
     const gr = svgEl('g', { class:'rail', 'data-id':r.id, style:'cursor:move' }, g);
-    svgEl('rect', { x:r.x, y:r.y-3.75, width:r.len, height:7.5, fill:'#94a3b8', stroke:'#64748b', 'stroke-width':.5, rx:1 }, gr);
+    svgEl('rect', { x:r.x, y:r.y-17.5, width:r.len, height:35, fill:'#94a3b8', stroke:'#64748b', 'stroke-width':.5, rx:1 }, gr);
     svgEl('line', { x1:r.x+4, y1:r.y, x2:r.x+r.len-4, y2:r.y, stroke:'#475569', 'stroke-width':.5 }, gr);
     for (let hx = r.x+8; hx < r.x+r.len-4; hx += 60)
       svgEl('circle', { cx:hx, cy:r.y, r:1.2, fill:'#475569' }, gr);
     if (ui.dim){
-      const t = svgEl('text', { x:r.x+r.len/2, y:r.y+9.5, class:'dim-text' }, gr);
+      const t = svgEl('text', { x:r.x+r.len/2, y:r.y+22, class:'dim-text' }, gr);
       t.textContent = r.len + ' mm';
     }
     if (ui.sel && ui.sel.kind==='rail' && ui.sel.id===r.id)
-      svgEl('rect', { x:r.x-3, y:r.y-7, width:r.len+6, height:14, class:'sel-outline' }, gr);
+      svgEl('rect', { x:r.x-3, y:r.y-20, width:r.len+6, height:40, class:'sel-outline' }, gr);
   }
 }
 function renderDucts(){
@@ -654,7 +653,7 @@ function renderOverlay(){
         svgEl('line', { x1:gh.x-6, y1:gh.railY, x2:gh.x+c.w+6, y2:gh.railY, stroke:'#3b82f6',
           'stroke-width':.8, 'stroke-dasharray':'3 2', 'pointer-events':'none' }, g);
     } else if (gh.kind==='rail'){
-      svgEl('rect', { x:gh.x, y:gh.y-3.75, width:STRUCT.rail.len, height:7.5, fill:col, opacity:.4,
+      svgEl('rect', { x:gh.x, y:gh.y-17.5, width:STRUCT.rail.len, height:35, fill:col, opacity:.4,
         stroke:col, 'stroke-width':1, class:'ghost' }, g);
     } else if (gh.kind==='duct'){
       svgEl('rect', { x:gh.x, y:gh.y, width:STRUCT.duct.w, height:STRUCT.duct.h, fill:col, opacity:.4,
