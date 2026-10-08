@@ -437,22 +437,24 @@ function getTermPos(elId, term){
   return { x: e.x + p.x, y: e.y + p.y, side };
 }
 function elemRect(e){ const c=CATALOG[e.type]; return {x:e.x, y:e.y, w:c.w, h:c.h}; }
-const MIN_GAP = 4; /* minimum spacing (mm) between components on din rail */
+const MIN_GAP = 0; /* minimum spacing (mm) between components - 0 = boleh menempel, hanya overlap yang ditolak */
 function gapExpand(r){ return { x:r.x-MIN_GAP/2, y:r.y-MIN_GAP/2, w:r.w+MIN_GAP, h:r.h+MIN_GAP }; }
 function gapOverlap(a,b, g){ g = g || MIN_GAP;
   return a.x < b.x+b.w+g-0.1 && a.x+a.w+g-0.1 > b.x && a.y < b.y+b.h+g-0.1 && a.y+a.h+g-0.1 > b.y; }
 function busbarZones(){
   return busList().map(c => { const m = busMetrics(c);
-    return { x:m.bx-8, y:m.by-6, w:m.w+16, h:m.h+12 }; });
+    return { x:m.bx, y:m.by, w:m.w, h:m.h }; });
 }
 function rectsOverlap(a,b){ return a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y; }
 function gapConflict(rect, skipId){
-  for (const o of S.elements)
+  for (const o of S.elements){
+    if (skipId && o.id === skipId) continue;
     if (gapOverlap(rect, elemRect(o))) return o;
+  }
   for (const c of busList()){
     if (skipId && c.id === skipId) continue;
     const m = busMetrics(c);
-    const bz = { x:m.bx-8, y:m.by-6, w:m.w+16, h:m.h+12 };
+    const bz = { x:m.bx, y:m.by, w:m.w, h:m.h };
     if (rect.x < bz.x + bz.w && rect.x + rect.w > bz.x && rect.y < bz.y + bz.h && rect.y + rect.h > bz.y) return { zone:true };
   }
   return null;
@@ -1300,7 +1302,7 @@ svg.addEventListener('pointermove', ev => {
       ny2 = clamp(ny2, 0, S.h - c.h);
       /* enforce min spacing with other components / busbar zone */
       const cand = { x:nx2, y:ny2, w:c.w, h:c.h };
-      if (!gapConflict(cand) || (nx2 === ox && ny2 === oy)){
+      if (!gapConflict(cand, e.id) || (nx2 === ox && ny2 === oy)){
         e.x = nx2; e.y = ny2;
         if (best) e.rail = best.id;
       }
@@ -1537,8 +1539,8 @@ function makeGhost(part, wp){
   if (conflicts){
     ok = false;
     msg = conflicts.zone
-      ? 'Terlalu dekat dengan area busbar'
-      : 'Terlalu dekat dengan ' + (conflicts.name || CATALOG[conflicts.type].label) + ' (min ' + MIN_GAP + 'mm)';
+      ? 'Overlap dengan area busbar'
+      : 'Overlap dengan ' + (conflicts.name || CATALOG[conflicts.type].label);
   }
   return { kind:'elem', type:part, x, y, ok, msg, railY };
 }
