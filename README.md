@@ -23,7 +23,7 @@ Untuk merancang panel distribusi & kontrol: MCB, meter, kontaktor, PLC, PSU hing
 
 ## Fitur Utama
 
-- **Library komponen drag & drop** - MCB 1P/2P/3P, MCCB, meter IEM2050/IEM3255, kontaktor CHINT NCH8, PLC FX3U-64MR, PSU MEANWELL NDR-240-24, gateway MODBUS Moxa MGate MB3170, din rail & ducting.
+- **Library komponen drag & drop** - MCB 1P/2P/3P, MCCB, meter IEM2050/IEM3255, kontaktor CHINT NCH8, PLC FX3U-64MR, PSU MEANWELL NDR-240-24, gateway MODBUS Moxa MGate MB3170, switch ethernet 5 port, din rail & ducting.
 - **Busy bar** L1 / L2 / L3 / N / PE dengan tap terminal yang menerima kabel.
 - **Wiring orthogonal** - klik-terminal ke terminal, rute otomatis tegak/lurus; kabel RS485 dirender sebagai *twisted pair* A/B.
 - **Geser komponen setelah diwiring** - kabel ikut menyesuaikan (memendek) secara langsung, baik di mode Select maupun Wire.
