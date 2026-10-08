@@ -231,7 +231,7 @@ const LIB = [
 const STRUCT = {
   rail: { label:'Din Rail TS35', dim:'200-35 mm', len:200 },
   duct: { label:'Ducting 3.5cm', dim:'200-35 mm', w:200, h:35 },
-  busbar: { label:'Busbar RSTN', dim:'94-20 mm' }
+  busbar: { label:'Busbar RSTN', dim:'94-200 mm' }
 };
 /* Busbar L1/L2/L3/N/PE - template jalur; instance tersimpan di S.buses[]
    tiap instance: { id, x, y, rot, gap, len, tapGap, pe }
@@ -241,7 +241,7 @@ const STRUCT = {
             tetap = posisi visual walau di-rotate
    - rot  : 0/90/180/270
    - gap  : jarak antar jalur busbar (default 16)
-   - len  : panjang busbar (mm, default 20)
+   - len  : panjang busbar (mm, default 200)
    - tapGap : jarak antar lubang (default 18)
    - pe     : true = tampilkan jalur PE (default true) */
 const BUS = [
@@ -254,7 +254,7 @@ const BUS = [
 const BUS_W = 6;
 function normBus(b, h, id){
   const raw = (b && typeof b === 'object') ? b : {};
-  const len = raw.len != null ? Math.max(20, raw.len) : 20;
+  const len = raw.len != null ? Math.max(20, raw.len) : 200;
   return {
     id: id || raw.id || 'B',
     x: typeof raw.x === 'number' ? raw.x : 36,
@@ -351,7 +351,7 @@ const ui = {
 function defaultDesign(){
   return {
     name:'Panel Utama', w:600, h:800, d:250,
-    buses:[ { id:'B', x:36, y:40, rot:0, gap:16, len:20, tapGap:18, pe:true } ],
+    buses:[ { id:'B', x:36, y:40, rot:0, gap:16, len:200, tapGap:18, pe:true } ],
     rails:[ {id:'r1',x:125,y:160,len:460}, {id:'r2',x:125,y:330,len:460},
             {id:'r3',x:125,y:500,len:460}, {id:'r4',x:125,y:670,len:460} ],
     ducts:[ {id:'d1',x:125,y:95,w:460,h:35}, {id:'d2',x:125,y:250,w:460,h:35},
