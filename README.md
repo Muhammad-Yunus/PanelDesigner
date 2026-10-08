@@ -17,7 +17,9 @@ Untuk merancang panel distribusi & kontrol: MCB, meter, kontaktor, PLC, PSU hing
 
 ## Demo
 
-<video src="docs/demo.mp4" width="820" controls></video>
+<img src="docs/banner.png" alt="Panel Designer demo" width="820">
+
+[▶ Watch demo video](docs/demo.mp4)
 
 [![Try it live](https://img.shields.io/badge/Try%20it%20live-%E2%9A%A1%20Panel%20Designer-2563eb?style=for-the-badge)](https://muhammad-yunus.github.io/PanelDesigner)
 
