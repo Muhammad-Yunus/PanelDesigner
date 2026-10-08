@@ -1504,14 +1504,15 @@ function renderProps(){
       `<button class="rp-btn danger" data-act="del">Delete Element</button>`;
     bindPropInputs(e, 'element');
   } else if (s.kind === 'bus'){
-    const b = busCfg();
+    S.bus = normBus(S.bus, S.h);
+    const cfg = S.bus;
     t.textContent = 'Busbar - L1/L2/L3/N/PE';
     b.innerHTML =
-      row('Position X', num('x', b.x)) + row('Position Y', num('y', b.y)) +
-      row('Panjang (mm)', num('len', b.len)) +
-      row('Spacing antar busbar (mm)', num('gap', b.gap)) +
-      row('Jarak antar lubang (mm)', num('tapGap', b.tapGap)) +
-      row('Rotation', `<select data-f="rot">${[0,90,180,270].map(v=>`<option ${((b.rot%360)===v)?'selected':''}>${v}</option>`).join('')}</select>`) +
+      row('Position X', num('x', cfg.x)) + row('Position Y', num('y', cfg.y)) +
+      row('Panjang (mm)', num('len', cfg.len)) +
+      row('Spacing antar busbar (mm)', num('gap', cfg.gap)) +
+      row('Jarak antar lubang (mm)', num('tapGap', cfg.tapGap)) +
+      row('Rotation', `<select data-f="rot">${[0,90,180,270].map(v=>`<option ${((cfg.rot%360)===v)?'selected':''}>${v}</option>`).join('')}</select>`) +
       `<div class="rp-sec">Info</div>` +
       `<div class="conn-item">${BUS_TAPS} lubang per busbar. Jarak lubang & panjang saling terkait.</div>` +
       `<div class="conn-item">Klik busbar lalu drag untuk memindahkan.</div>`;
