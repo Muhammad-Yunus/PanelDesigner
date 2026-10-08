@@ -31,7 +31,7 @@ Untuk merancang panel distribusi & kontrol: MCB, meter, kontaktor, PLC, PSU hing
 - **Routing manual** - seret segmen tengah kabel untuk mengubah jalur.
 - **Validasi kelistrikan real-time** - deteksi salah sambung fasa, netral, PE, DC+, dan coil; ditampilkan di panel *Issues*.
 - **Auto-save ke localStorage** + **Export/Import JSON**.
-- **Dialog selamat datang** - pilih *Panel BAS* (contoh lengkap) atau *Empty Panel*.
+- **Dialog selamat datang** - pilih *Simple BAS*, *Complete BAS* (520×720 mm) atau *Empty Panel*.
 - **Undo / Redo**, zoom, grid, dan panel properti yang terintegrasi.
 
 ---
@@ -51,11 +51,18 @@ python -m http.server 8000
 ## Struktur
 
 ```
-panel-designer.html     # seluruh aplikasi (satu file)
-example_panel_bas.json  # contoh panel building automation
-docs/demo.mp4       # video demo (tampil di README)
-index.html              # redirect untuk GitHub Pages
+panel-designer.html              # seluruh aplikasi (satu file)
+example_panel_bas.json           # contoh Simple BAS
+example_panel_bas_completed.json # contoh Complete BAS (520x720)
+example_panel_empty.json         # contoh Empty Panel (tanpa komponen)
+tools/regen_embed.js             # regenerasi embed contoh di HTML
+docs/demo.mp4                # video demo (tampil di README)
+index.html                       # redirect untuk GitHub Pages
 ```
+
+> Ketiga contoh juga di-embed di `panel-designer.html` (`EXAMPLE_BAS` /
+> `EXAMPLE_BAS_COMPLETED` / `EXAMPLE_EMPTY`) agar tetap jalan offline.
+> Setiap file JSON contoh diubah, jalankan `node tools/regen_embed.js`.
 
 ## Tech Stack
 

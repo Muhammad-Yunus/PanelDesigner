@@ -1935,8 +1935,9 @@ $('fileImport').addEventListener('change', ev => {
   ev.target.value = '';
 });
 /* ===================== INIT ===================== */
-/* Contoh panel - salinan example_panel_bas.json (Simple BAS) dan example_panel_bas_completed.json
-   (Complete BAS) agar tetap jalan offline. Sinkronkan dengan script regen_embed.js. */
+/* Contoh panel - salinan example_panel_bas.json (Simple BAS), example_panel_bas_completed.json
+   (Complete BAS) dan example_panel_empty.json (Empty Panel) agar tetap jalan offline.
+   Regenerasi: node tools/regen_embed.js */
 const EXAMPLE_BAS =
 {
   "name": "Panel Utama",
@@ -20522,6 +20523,78 @@ const EXAMPLE_BAS_COMPLETED =
     }
   ]
 };
+const EXAMPLE_EMPTY =
+{
+  "name": "Panel Utama",
+  "w": 600,
+  "h": 800,
+  "d": 250,
+  "buses": [
+    {
+      "id": "B",
+      "x": 29,
+      "y": 61,
+      "rot": 0,
+      "gap": 16,
+      "len": 200,
+      "tapGap": 18,
+      "pe": false
+    }
+  ],
+  "rails": [
+    {
+      "id": "r1",
+      "x": 140,
+      "y": 146,
+      "len": 460
+    },
+    {
+      "id": "r2",
+      "x": 140,
+      "y": 379,
+      "len": 460
+    },
+    {
+      "id": "r3",
+      "x": 140,
+      "y": 635,
+      "len": 460
+    }
+  ],
+  "ducts": [
+    {
+      "id": "d1",
+      "x": 140,
+      "y": 29,
+      "w": 460,
+      "h": 35
+    },
+    {
+      "id": "d2",
+      "x": 140,
+      "y": 239,
+      "w": 460,
+      "h": 35
+    },
+    {
+      "id": "d3",
+      "x": 140,
+      "y": 489,
+      "w": 460,
+      "h": 35
+    },
+    {
+      "id": "d4",
+      "x": 140,
+      "y": 732,
+      "w": 460,
+      "h": 35
+    }
+  ],
+  "elements": [],
+  "wires": [],
+  "labels": []
+};
 function applyBasDesign(d, label){
   d.labels = d.labels || []; d.wires = d.wires || []; d.elements = d.elements || [];
   d.rails = d.rails || []; d.ducts = d.ducts || [];
@@ -20544,6 +20617,7 @@ function loadExample(file, embed, label){
 }
 function loadBasFromJson(){ loadExample('example_panel_bas.json', EXAMPLE_BAS, 'Simple BAS'); }
 function loadBasCompletedFromJson(){ loadExample('example_panel_bas_completed.json', EXAMPLE_BAS_COMPLETED, 'Complete BAS'); }
+function loadEmptyExample(){ loadExample('example_panel_empty.json', EXAMPLE_EMPTY, 'Empty Panel'); }
 function showWelcome(){
   const m = $('modal');
   m.innerHTML =
@@ -20571,14 +20645,7 @@ function showWelcome(){
     const opt = card.getAttribute('data-opt');
     if (opt === 'bas'){ loadBasFromJson(); return; }
     if (opt === 'completed'){ loadBasCompletedFromJson(); return; }
-    snapshot();
-    S = defaultDesign();
-    ui.sel = null; ui.drawing = null;
-    markDirty();
-    saveLS();
-    fitView(); renderAll();
-    $('modalBg').classList.remove('open');
-    setStatus('Panel kosong dibuat');
+    if (opt === 'empty'){ loadEmptyExample(); return; }
   }));
   $('ms_cancel').addEventListener('click', () => {
     $('modalBg').classList.remove('open');
@@ -20586,7 +20653,7 @@ function showWelcome(){
 }
 function init(){
   const fresh = !loadLS();
-  if (fresh) S = defaultDesign();
+  if (fresh) S = JSON.parse(JSON.stringify(EXAMPLE_EMPTY));
   buildLibrary();
   applyView();
   fitView();
