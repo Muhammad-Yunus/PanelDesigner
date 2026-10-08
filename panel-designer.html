@@ -334,7 +334,8 @@ const CLASS_COLOR = { L1:'#ef4444', L2:'#f97316', L3:'#eab308', L:'#dc2626', N:'
 const VR_MAP = { V1:'L1', V2:'L2', V3:'L3', Vn:'N', R1:'N', R2:'N', '1':'L', '2':'L' };
 /* warna fisik terminal block (dot) - override warna kelas kabel */
 const TERM_COLOR = { 'V-1':'#808080', 'V-2':'#808080', 'V-':'#808080', '0V1':'#808080', '0V2':'#808080',
-  'V+1':'#8b4513', 'V+2':'#8b4513', 'V+':'#8b4513', '24V1':'#8b4513', '24V2':'#8b4513' };
+  'V+1':'#8b4513', 'V+2':'#8b4513', 'V+':'#8b4513', '24V1':'#8b4513', '24V2':'#8b4513',
+  'COM1':'#dc2626', 'COM2':'#dc2626', 'COM3':'#dc2626', 'COM4':'#dc2626' };
 function termColor(elId, tn){ return TERM_COLOR[tn] || CLASS_COLOR[VR_MAP[tn] || termClass(elId, tn)] || '#94a3b8'; }
 const TYPE_FILL = { mcb_1p:'#f8fafc', mcb_2p:'#f8fafc', mcb_3p:'#f8fafc', mccb_3p:'#e2e8f0',
   meter_1p:'#0f2740', meter_3p:'#0f2740', contactor:'#d6dbe5', plc:'#0b1220', psu:'#0f2d26', mgate:'#101826' };
