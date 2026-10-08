@@ -644,7 +644,8 @@ function renderTerms(){
 const addDot = (elId, tn, p, color, lab, fs) => {
     const inert = tn === 'NC';
     if (lab){
-      const termNames = { RS485A:'A', RS485B:'B', SS:'S/S', '0V1':'0V', '0V2':'0V', '24V1':'24V', '24V2':'24V' };
+      const termNames = { RS485A:'A', RS485B:'B', SS:'S/S', '0V1':'0V', '0V2':'0V', '24V1':'24V', '24V2':'24V',
+        'L-in':'Li', 'L-out':'Lo', 'N-in':'Ni', 'N-out':'No' };
       const lt = svgEl('text', { x:p.x, y:p.y-5, 'font-size':fs || 4.2,
         fill: inert ? '#64748b' : '#e2e8f0',
         'text-anchor':'middle', 'pointer-events':'none', style:'paint-order:stroke',
