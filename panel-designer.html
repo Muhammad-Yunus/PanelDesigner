@@ -241,14 +241,46 @@ const BUS = [
   { id:'B_PE', label:'PE', cls:'PE', x:108, color:'#22c55e' }
 ];
 const BUS_TAPS = 8, BUS_W = 6, BUS_Y0 = 40;
-/* posisi busbar disimpan di S.bus {x,y} = pojok kiri-atas blok; default x:36 y:40 */
-function busMetrics(){
-  const bb = S.bus || { x:36, y:40 };
-  const w = BUS[BUS.length-1].x + BUS_W - BUS[0].x;
-  const h = S.h - 2*BUS_Y0;
-  return { bx:bb.x, by:bb.y, w, h };
+/* Busbar: posisi & dimensi disimpan di S.bus {x,y,rot,gap,len,tapGap}
+   - x,y  : asal blok (rot0, pojok kiri-atas jalur pertama)
+   - rot  : 0/90/180/270
+   - gap  : jarak antar jalur busbar (default 12, visual identik dgn lama)
+   - len  : panjang busbar (mm)
+   - tapGap : jarak antar lubang (default 90) */
+function normBus(b, h){
+  const raw = (b && typeof b.x === 'number') ? b : {};
+  const hh = h || 800;
+  const len = raw.len != null ? Math.max(20, raw.len) : Math.max(60, hh - 2*BUS_Y0);
+  return {
+    x: typeof raw.x === 'number' ? raw.x : 36,
+    y: typeof raw.y === 'number' ? raw.y : 40,
+    rot: raw.rot || 0,
+    gap: raw.gap != null ? raw.gap : 12,
+    len: Math.round(len),
+    tapGap: raw.tapGap != null ? raw.tapGap : Math.round(len / BUS_TAPS)
+  };
 }
-function barX(base){ return busMetrics().bx + (base - BUS[0].x); }
+function busCfg(){ return S.bus || normBus(null, S.h); }
+function barBlockW(c){ return BUS.length*BUS_W + (BUS.length-1)*c.gap; }
+function busWorldPt(c, qx, qy){
+  const bw = barBlockW(c), bh = c.len;
+  const cx = c.x + bw/2, cy = c.y + bh/2;
+  const dx = qx - bw/2, dy = qy - bh/2;
+  const r = ((c.rot % 360) + 360) % 360;
+  let rx, ry;
+  if (r === 0){ rx=dx; ry=dy; }
+  else if (r === 90){ rx=-dy; ry=dx; }
+  else if (r === 180){ rx=-dx; ry=-dy; }
+  else { rx=dy; ry=-dx; }
+  return { x: cx+rx, y: cy+ry };
+}
+function busRectFromW(c, lx, ly, w, h){
+  const p1 = busWorldPt(c, lx, ly), p2 = busWorldPt(c, lx+w, ly+h),
+        p3 = busWorldPt(c, lx, ly+h), p4 = busWorldPt(c, lx+w, ly);
+  const xs=[p1.x,p2.x,p3.x,p4.x], ys=[p1.y,p2.y,p3.y,p4.y];
+  return { x: Math.min(...xs), y: Math.min(...ys), w: Math.max(...xs)-Math.min(...xs), h: Math.max(...ys)-Math.min(...ys) };
+}
+function busMetrics(){ const r = busRectFromW(busCfg(), 0, 0, barBlockW(busCfg()), busCfg().len); return { bx:r.x, by:r.y, w:r.w, h:r.h }; }
 const CLASS_COLOR = { L1:'#ef4444', L2:'#f97316', L3:'#eab308', L:'#dc2626', N:'#3b82f6', PE:'#16a34a',
   'DC+':'#a855f7', 'DC-':'#15803d', COM:'#64748b', DC_IN:'#0ea5e9', DC_OUT:'#14b8a6', COIL:'#d946ef', AC:'#f59e0b', OTHER:'#94a3b8' };
 const VR_MAP = { V1:'L1', V2:'L2', V3:'L3', Vn:'N', R1:'N', R2:'N', '1':'L', '2':'L' };
@@ -271,7 +303,7 @@ const ui = {
 function defaultDesign(){
   return {
     name:'Panel Utama', w:600, h:800, d:250,
-    bus:{ x:36, y:40 },
+    bus:{ x:36, y:40, rot:0, gap:12, len:720, tapGap:90 },
     rails:[ {id:'r1',x:125,y:160,len:460}, {id:'r2',x:125,y:330,len:460},
             {id:'r3',x:125,y:500,len:460}, {id:'r4',x:125,y:670,len:460} ],
     ducts:[ {id:'d1',x:125,y:95,w:460,h:35}, {id:'d2',x:125,y:250,w:460,h:35},
@@ -319,11 +351,13 @@ function termClass(elId, term){
 function classGroup(c){ return /^L/.test(c) ? 'L' : c; }
 function isTwistPair(a, b){ return /RS485/.test(a.term) && /RS485/.test(b.term); }
 function busTapPos(bar, i){
-  const m = busMetrics();
-  const step = m.h / BUS_TAPS;
+  const c = busCfg();
   const bi = BUS.findIndex(b => b.id === bar.id);
-  const stagger = bi * Math.max(6, Math.round(step*0.15));
-  return { x: barX(bar.x) + BUS_W, y: m.by + step*(i+0.5) + stagger, side:'right' };
+  const stagger = bi * Math.max(6, Math.round(c.tapGap*0.15));
+  const p = busWorldPt(c, bi*(BUS_W + c.gap) + BUS_W, (i+0.5)*c.tapGap + stagger);
+  const r = ((c.rot % 360) + 360) % 360;
+  const sides = ['right','bottom','left','top'];
+  return { x:p.x, y:p.y, side: sides[r/90] };
 }
 function getTermPos(elId, term){
   if (elId && elId[0]==='B'){
@@ -448,17 +482,22 @@ function renderPanel(){
 /* ===================== RENDER: BUSBAR (moveable block) ===================== */
 function renderBus(){
   const g = $('lyrBus'); clearEl(g);
-  const m = busMetrics();
+  const c = busCfg();
+  const bw = barBlockW(c);
   for (const bar of BUS){
     const gr = svgEl('g', { class:'bus', 'data-id':bar.id, style:'cursor:move' }, g);
-    const x = barX(bar.x);
-    svgEl('rect', { x:x, y:m.by, width:BUS_W, height:m.h, fill:bar.color, rx:1, opacity:.9 }, gr);
-    const lb = svgEl('text', { x:x+BUS_W/2, y:m.by-4, class:'bus-label', fill:bar.color }, gr);
+    const bi = BUS.findIndex(b => b.id === bar.id);
+    const r = busRectFromW(c, bi*(BUS_W + c.gap), 0, BUS_W, c.len);
+    svgEl('rect', { x:r.x, y:r.y, width:r.w, height:r.h, fill:bar.color, rx:1, opacity:.9 }, gr);
+    const lt = busWorldPt(c, bi*(BUS_W + c.gap) + BUS_W/2, 2);
+    const lb = svgEl('text', { x:lt.x, y:lt.y-1, class:'bus-label', fill:bar.color, 'text-anchor':'middle' }, gr);
     lb.textContent = bar.label;
   }
-  if (ui.drag && ui.drag.type === 'move' && ui.drag.kind === 'bus')
+  if ((ui.drag && ui.drag.type === 'move' && ui.drag.kind === 'bus') || (ui.sel && ui.sel.kind === 'bus')){
+    const m = busMetrics();
     svgEl('rect', { x:m.bx-9, y:m.by-7, width:m.w+18, height:m.h+14, fill:'none', stroke:'#3b82f6',
       'stroke-width':1, 'stroke-dasharray':'4 3', 'pointer-events':'none' }, g);
+  }
 }
 /* ===================== RENDER: RAILS & DUCTS ===================== */
 function renderRails(){
@@ -1050,7 +1089,7 @@ svg.addEventListener('pointerdown', ev => {
         ui.drag = { type:'move', kind:'duct', id, dx:wp.x-dd.x, dy:wp.y-dd.y, sx:ev.clientX, sy:ev.clientY, moved:false };
         svg.setPointerCapture(ev.pointerId);
       } else if (busG){
-        select(null);
+        select('bus', 'BUS');
         const m = busMetrics();
         ui.drag = { type:'move', kind:'bus', dx:wp.x-m.bx, dy:wp.y-m.by, sx:ev.clientX, sy:ev.clientY, moved:false };
         svg.setPointerCapture(ev.pointerId);
@@ -1107,7 +1146,7 @@ svg.addEventListener('pointerdown', ev => {
     ui.drag = { type:'move', kind:'duct', id, dx:wp.x-d.x, dy:wp.y-d.y, sx:ev.clientX, sy:ev.clientY, moved:false };
     svg.setPointerCapture(ev.pointerId);
   } else if (busG){
-    select(null);
+    select('bus', 'BUS');
     const m = busMetrics();
     ui.drag = { type:'move', kind:'bus', dx:wp.x-m.bx, dy:wp.y-m.by, sx:ev.clientX, sy:ev.clientY, moved:false };
     svg.setPointerCapture(ev.pointerId);
@@ -1203,20 +1242,21 @@ svg.addEventListener('pointermove', ev => {
       renderDucts();
     } else if (d.kind === 'bus'){
       const m = busMetrics();
-      const obx = m.bx, oby = m.by;
-      const cbx = clamp(snap(wp.x - d.dx), 0, S.w - m.w);
-      const cby = clamp(snap(wp.y - d.dy), 0, S.h - m.h);
-      const cand = { x:cbx, y:cby, w:m.w, h:m.h };
-      let blocked = false;
-      for (const o of S.elements)
-        if (rectsOverlap(cand, elemRect(o))){ blocked = true; break; }
-      if (!blocked || (cbx === obx && cby === oby)){
-        S.bus = { x:cbx, y:cby };
-        if (cbx !== obx || cby !== oby)
-          for (const w of S.wires)
-            if (/^B_/.test(w.from.el) || /^B_/.test(w.to.el)) rerouteWire(w);
+      const ox = S.bus.x, oy = S.bus.y;
+      const cbx = clamp(snap(wp.x - d.dx), 0, Math.max(0, S.w - m.w));
+      const cby = clamp(snap(wp.y - d.dy), 0, Math.max(0, S.h - m.h));
+      if (cbx === ox && cby === oy){ renderElems(); renderTerms(); renderBus(); renderWires(); renderOverlay(); }
+      else {
+        S.bus.x = cbx; S.bus.y = cby;
+        const m2 = busMetrics();
+        let blocked = false;
+        for (const o of S.elements)
+          if (rectsOverlap({ x:m2.bx, y:m2.by, w:m2.w, h:m2.h }, elemRect(o))){ blocked = true; break; }
+        if (blocked){ S.bus.x = ox; S.bus.y = oy; }
+        else for (const w of S.wires)
+          if (/^B_/.test(w.from.el) || /^B_/.test(w.to.el)) rerouteWire(w);
+        renderElems(); renderTerms(); renderBus(); renderWires(); renderOverlay();
       }
-      renderElems(); renderTerms(); renderBus(); renderWires(); renderOverlay();
     } else if (d.kind === 'label'){
       const l = S.labels.find(x=>x.id===d.id);
       l.x = nx; l.y = ny;
@@ -1463,6 +1503,19 @@ function renderProps(){
       `<div class="rp-sec">Connections (${S.wires.filter(w=>w.from.el===e.id||w.to.el===e.id).length})</div>` + (conns || '<div class="empty">Belum ada kabel</div>') +
       `<button class="rp-btn danger" data-act="del">Delete Element</button>`;
     bindPropInputs(e, 'element');
+  } else if (s.kind === 'bus'){
+    const b = busCfg();
+    t.textContent = 'Busbar - L1/L2/L3/N/PE';
+    b.innerHTML =
+      row('Position X', num('x', b.x)) + row('Position Y', num('y', b.y)) +
+      row('Panjang (mm)', num('len', b.len)) +
+      row('Spacing antar busbar (mm)', num('gap', b.gap)) +
+      row('Jarak antar lubang (mm)', num('tapGap', b.tapGap)) +
+      row('Rotation', `<select data-f="rot">${[0,90,180,270].map(v=>`<option ${((b.rot%360)===v)?'selected':''}>${v}</option>`).join('')}</select>`) +
+      `<div class="rp-sec">Info</div>` +
+      `<div class="conn-item">${BUS_TAPS} lubang per busbar. Jarak lubang & panjang saling terkait.</div>` +
+      `<div class="conn-item">Klik busbar lalu drag untuk memindahkan.</div>`;
+    bindPropInputs(S.bus, 'bus');
   } else if (s.kind === 'wire'){
     const w = S.wires.find(x=>x.id===s.id); if (!w){ ui.sel=null; return renderProps(); }
     const cls = wireClsName(w);
@@ -1531,7 +1584,7 @@ function bindPropInputs(obj, kind){
         if (!m) return;
         v = '#' + m[1].toLowerCase();
       }
-      if (['x','y','w','h','len','gauge','rot'].includes(f)) v = parseFloat(v) || 0;
+      if (['x','y','w','h','len','gauge','rot','gap','tapGap'].includes(f)) v = parseFloat(v) || 0;
       if (f === 'rail') v = v || null;
       obj[f] = v;
       if (kind === 'rail' && (f === 'x' || f === 'y')){
@@ -1547,6 +1600,19 @@ function bindPropInputs(obj, kind){
         obj.x = clamp(obj.x, 0, S.w - c.w); obj.y = clamp(obj.y, 0, S.h - c.h);
         for (const w of S.wires)
           if (w.from.el === obj.id || w.to.el === obj.id) rerouteWire(w);
+      }
+      if (kind === 'bus'){
+        S.bus.rot = ((S.bus.rot % 360) + 360) % 360;
+        S.bus.len = Math.max(20, S.bus.len);
+        S.bus.gap = Math.max(6, S.bus.gap);
+        S.bus.tapGap = Math.max(10, S.bus.tapGap);
+        if (f === 'len') S.bus.tapGap = Math.round(S.bus.len / BUS_TAPS);
+        if (f === 'tapGap') S.bus.len = Math.round(S.bus.tapGap * BUS_TAPS);
+        const m = busMetrics();
+        S.bus.x = clamp(S.bus.x, 0, Math.max(0, S.w - m.w));
+        S.bus.y = clamp(S.bus.y, 0, Math.max(0, S.h - m.h));
+        for (const w of S.wires)
+          if (/^B_/.test(w.from.el) || /^B_/.test(w.to.el)) rerouteWire(w);
       }
       markDirty(); renderAll();
     });
@@ -1696,7 +1762,7 @@ function loadLS(){
     S = d;
     S.labels = S.labels || []; S.wires = S.wires || []; S.elements = S.elements || [];
     S.rails = S.rails || []; S.ducts = S.ducts || [];
-    S.bus = (S.bus && typeof S.bus.x === 'number') ? S.bus : { x:36, y:40 };
+    S.bus = normBus(S.bus, S.h);
     S.wires.forEach(w => { if (!w.rawPts) w.rawPts = (w.pts && w.pts.length) ? w.pts.slice() : []; });
     rebuildAllWires();
     return true;
@@ -1725,7 +1791,7 @@ $('fileImport').addEventListener('change', ev => {
       S = d;
       S.labels = S.labels || []; S.wires = S.wires || []; S.elements = S.elements || [];
       S.rails = S.rails || []; S.ducts = S.ducts || [];
-      S.bus = (S.bus && typeof S.bus.x === 'number') ? S.bus : { x:36, y:40 };
+      S.bus = normBus(S.bus, S.h);
       ui.sel = null;
       markDirty(); fitView(); renderAll();
       setStatus('Import ✓ ' + f.name);
@@ -4914,7 +4980,7 @@ const EXAMPLE_BAS =
 function applyBasDesign(d){
   d.labels = d.labels || []; d.wires = d.wires || []; d.elements = d.elements || [];
   d.rails = d.rails || []; d.ducts = d.ducts || [];
-  d.bus = (d.bus && typeof d.bus.x === 'number') ? d.bus : { x:36, y:40 };
+  d.bus = normBus(d.bus, d.h);
   snapshot();
   S = d;
   ui.sel = null; ui.drawing = null;
