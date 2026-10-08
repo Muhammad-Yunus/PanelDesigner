@@ -332,7 +332,10 @@ function busMetrics(c){ const cfg = c || busCfg(), d = busDims(cfg); return { bx
 const CLASS_COLOR = { L1:'#ef4444', L2:'#f97316', L3:'#eab308', L:'#dc2626', N:'#3b82f6', PE:'#16a34a',
   'DC+':'#a855f7', 'DC-':'#15803d', COM:'#64748b', DC_IN:'#0ea5e9', DC_OUT:'#14b8a6', COIL:'#d946ef', AC:'#f59e0b', OTHER:'#94a3b8' };
 const VR_MAP = { V1:'L1', V2:'L2', V3:'L3', Vn:'N', R1:'N', R2:'N', '1':'L', '2':'L' };
-function termColor(elId, tn){ return CLASS_COLOR[VR_MAP[tn] || termClass(elId, tn)] || '#94a3b8'; }
+/* warna fisik terminal block (dot) - override warna kelas kabel */
+const TERM_COLOR = { 'V-1':'#808080', 'V-2':'#808080', 'V-':'#808080', '0V1':'#808080', '0V2':'#808080',
+  'V+1':'#8b4513', 'V+2':'#8b4513', 'V+':'#8b4513', '24V1':'#8b4513', '24V2':'#8b4513' };
+function termColor(elId, tn){ return TERM_COLOR[tn] || CLASS_COLOR[VR_MAP[tn] || termClass(elId, tn)] || '#94a3b8'; }
 const TYPE_FILL = { mcb_1p:'#f8fafc', mcb_2p:'#f8fafc', mcb_3p:'#f8fafc', mccb_3p:'#e2e8f0',
   meter_1p:'#0f2740', meter_3p:'#0f2740', contactor:'#d6dbe5', plc:'#0b1220', psu:'#0f2d26', mgate:'#101826' };
 const TYPE_STROKE = { mcb_1p:'#334155', mcb_2p:'#334155', mcb_3p:'#334155', mccb_3p:'#334155',
@@ -1610,7 +1613,7 @@ function renderProps(){
       `<div class="rp-sec">Rail mount</div>` +
       row('Din Rail', `<select data-f="rail"><option value="">- none -</option>${S.rails.map(r=>`<option value="${r.id}" ${e.rail===r.id?'selected':''}>${r.id} @ y${r.y}</option>`).join('')}</select>`) +
       `<div class="rp-sec">Terminals</div>` +
-      Object.keys(c.terms).map(tn => `<div class="conn-item"><span style="color:${CLASS_COLOR[termClass(e.id,tn)]}">●</span> ${tn}</div>`).join('') +
+      Object.keys(c.terms).map(tn => `<div class="conn-item"><span style="color:${termColor(e.id,tn)}">●</span> ${tn}</div>`).join('') +
       `<div class="rp-sec">Connections (${S.wires.filter(w=>w.from.el===e.id||w.to.el===e.id).length})</div>` + (conns || '<div class="empty">Belum ada kabel</div>') +
       `<button class="rp-btn danger" data-act="del">Delete Element</button>`;
     bindPropInputs(e, 'element');
