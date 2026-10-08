@@ -240,22 +240,21 @@ const BUS = [
   { id:'B_N', label:'N', cls:'N', x:90, color:'#3b82f6' },
   { id:'B_PE', label:'PE', cls:'PE', x:108, color:'#22c55e' }
 ];
-const BUS_W = 6, BUS_Y0 = 40;
+const BUS_W = 6;
 /* Busbar: posisi & dimensi disimpan di S.bus {x,y,rot,gap,len,tapGap}
    - x,y  : asal blok (rot0, pojok kiri-atas jalur pertama)
    - rot  : 0/90/180/270
-   - gap  : jarak antar jalur busbar (default 12, visual identik dgn lama)
-   - len  : panjang busbar (mm)
+   - gap  : jarak antar jalur busbar (default 16)
+   - len  : panjang busbar (mm, default 20)
    - tapGap : jarak antar lubang (default 18) */
 function normBus(b, h){
   const raw = (b && typeof b.x === 'number') ? b : {};
-  const hh = h || 800;
-  const len = raw.len != null ? Math.max(20, raw.len) : Math.max(60, hh - 2*BUS_Y0);
+  const len = raw.len != null ? Math.max(20, raw.len) : 20;
   return {
     x: typeof raw.x === 'number' ? raw.x : 36,
     y: typeof raw.y === 'number' ? raw.y : 40,
     rot: raw.rot || 0,
-    gap: raw.gap != null ? raw.gap : 12,
+    gap: raw.gap != null ? raw.gap : 16,
     len: Math.round(len),
     tapGap: raw.tapGap != null ? raw.tapGap : 18
   };
@@ -304,7 +303,7 @@ const ui = {
 function defaultDesign(){
   return {
     name:'Panel Utama', w:600, h:800, d:250,
-    bus:{ x:36, y:40, rot:0, gap:12, len:720, tapGap:18 },
+    bus:{ x:36, y:40, rot:0, gap:16, len:20, tapGap:18 },
     rails:[ {id:'r1',x:125,y:160,len:460}, {id:'r2',x:125,y:330,len:460},
             {id:'r3',x:125,y:500,len:460}, {id:'r4',x:125,y:670,len:460} ],
     ducts:[ {id:'d1',x:125,y:95,w:460,h:35}, {id:'d2',x:125,y:250,w:460,h:35},
