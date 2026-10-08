@@ -240,7 +240,7 @@ const BUS = [
   { id:'B_N', label:'N', cls:'N', x:90, color:'#3b82f6' },
   { id:'B_PE', label:'PE', cls:'PE', x:108, color:'#22c55e' }
 ];
-const BUS_TAPS = 8, BUS_W = 6, BUS_Y0 = 40;
+const BUS_W = 6, BUS_Y0 = 40, BUS_DEF_TAPS = 8;
 /* Busbar: posisi & dimensi disimpan di S.bus {x,y,rot,gap,len,tapGap}
    - x,y  : asal blok (rot0, pojok kiri-atas jalur pertama)
    - rot  : 0/90/180/270
@@ -257,10 +257,11 @@ function normBus(b, h){
     rot: raw.rot || 0,
     gap: raw.gap != null ? raw.gap : 12,
     len: Math.round(len),
-    tapGap: raw.tapGap != null ? raw.tapGap : Math.round(len / BUS_TAPS)
+    tapGap: raw.tapGap != null ? raw.tapGap : Math.max(10, Math.round(len / BUS_DEF_TAPS))
   };
 }
 function busCfg(){ return S.bus || normBus(null, S.h); }
+function busNumTaps(c){ return Math.max(1, Math.floor(c.len / c.tapGap)); }
 function barBlockW(c){ return BUS.length*BUS_W + (BUS.length-1)*c.gap; }
 function busWorldPt(c, qx, qy){
   const bw = barBlockW(c), bh = c.len;
@@ -592,7 +593,8 @@ const addDot = (elId, tn, p, color, lab, fs) => {
     }
   }
   for (const bar of BUS){
-    for (let i=0; i<BUS_TAPS; i++){
+    const n = busNumTaps(busCfg());
+    for (let i=0; i<n; i++){
       addDot(bar.id, 'tap'+i, busTapPos(bar, i), bar.color);
     }
   }
@@ -1514,7 +1516,7 @@ function renderProps(){
       row('Jarak antar lubang (mm)', num('tapGap', cfg.tapGap)) +
       row('Rotation', `<select data-f="rot">${[0,90,180,270].map(v=>`<option ${((cfg.rot%360)===v)?'selected':''}>${v}</option>`).join('')}</select>`) +
       `<div class="rp-sec">Info</div>` +
-      `<div class="conn-item">${BUS_TAPS} lubang per busbar. Jarak lubang & panjang saling terkait.</div>` +
+      `<div class="conn-item">${busNumTaps(cfg)} lubang per busbar (mengikuti Panjang / Jarak lubang).</div>` +
       `<div class="conn-item">Klik busbar lalu drag untuk memindahkan.</div>`;
     bindPropInputs(S.bus, 'bus');
   } else if (s.kind === 'wire'){
@@ -1607,8 +1609,6 @@ function bindPropInputs(obj, kind){
         S.bus.len = Math.max(20, S.bus.len);
         S.bus.gap = Math.max(6, S.bus.gap);
         S.bus.tapGap = Math.max(10, S.bus.tapGap);
-        if (f === 'len') S.bus.tapGap = Math.round(S.bus.len / BUS_TAPS);
-        if (f === 'tapGap') S.bus.len = Math.round(S.bus.tapGap * BUS_TAPS);
         const m = busMetrics();
         S.bus.x = clamp(S.bus.x, 0, Math.max(0, S.w - m.w));
         S.bus.y = clamp(S.bus.y, 0, Math.max(0, S.h - m.h));
