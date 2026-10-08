@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Panel Designer â€” Electrical Panel Layout</title>
+<title>Panel Designer Ã¢â‚¬â€ Electrical Panel Layout</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,-apple-system,sans-serif}
 html,body{height:100%;overflow:hidden;background:#0f1115;color:#d8dbe2}
@@ -101,7 +101,7 @@ svg text{user-select:none}
       <button class="tb-btn" id="btnStraight" title="Luruskan seluruh kabel yang tidak tegak/lurus">Straighten</button>
     </div>
     <div class="tb-group">
-      <button class="tb-btn" id="btnZoomOut" title="Zoom out">âˆ’</button>
+      <button class="tb-btn" id="btnZoomOut" title="Zoom out">Ã¢Ë†â€™</button>
       <input class="tb-num" id="zoomVal" value="100%">
       <button class="tb-btn" id="btnZoomIn" title="Zoom in">+</button>
       <button class="tb-btn" id="btnFit">Fit</button>
@@ -109,12 +109,12 @@ svg text{user-select:none}
       <button class="tb-btn" id="btnDim">Dimensions</button>
     </div>
     <div class="tb-group">
-      <button class="tb-btn" id="btnPanelSettings">Panel Settingsâ€¦</button>
+      <button class="tb-btn" id="btnPanelSettings">Panel SettingsÃ¢â‚¬Â¦</button>
     </div>
   </div>
   <div id="main">
     <aside id="left">
-      <input id="libSearch" placeholder="Search partâ€¦" autocomplete="off">
+      <input id="libSearch" placeholder="Search partÃ¢â‚¬Â¦" autocomplete="off">
       <div id="libList"></div>
     </aside>
     <div id="canvasWrap">
@@ -153,7 +153,7 @@ svg text{user-select:none}
     <span id="stMode">Mode: Select</span>
     <span id="stCoord">X: 0 Y: 0 mm</span>
     <span id="stZoom">Zoom 100%</span>
-    <span id="stSave">Auto-save: â€”</span>
+    <span id="stSave">Auto-save: Ã¢â‚¬â€</span>
     <span id="stIssues">Issues: 0</span>
   </div>
 </div>
@@ -229,10 +229,10 @@ const LIB = [
   { cat:'Structure', items:['rail','duct'] }
 ];
 const STRUCT = {
-  rail: { label:'Din Rail TS35', dim:'600Ã—35 mm', len:600 },
-  duct: { label:'Ducting 3.5cm', dim:'600Ã—35 mm', w:600, h:35 }
+  rail: { label:'Din Rail TS35', dim:'600Ãƒâ€”35 mm', len:600 },
+  duct: { label:'Ducting 3.5cm', dim:'600Ãƒâ€”35 mm', w:600, h:35 }
 };
-/* Busbar L1/L2/L3/N/PE â€” blok tunggal yang bisa digeser (pick-and-place) */
+/* Busbar L1/L2/L3/N/PE Ã¢â‚¬â€ blok tunggal yang bisa digeser (pick-and-place) */
 const BUS = [
   { id:'B_L1', label:'L1', cls:'L1', x:36, color:'#ef4444' },
   { id:'B_L2', label:'L2', cls:'L2', x:54, color:'#f97316' },
@@ -400,7 +400,7 @@ function setZoom(k2, cx, cy){
 /* ===================== VALIDATION ===================== */
 function validateWire(w){
   if ((w.from && w.from.term === 'NC') || (w.to && w.to.term === 'NC'))
-    return { level:'error', msg:'NO CONNECT â€” terminal NC tidak dapat dihubungkan' };
+    return { level:'error', msg:'NO CONNECT Ã¢â‚¬â€ terminal NC tidak dapat dihubungkan' };
   const a = termClass(w.from.el, w.from.term);
   const b = termClass(w.to.el, w.to.term);
   if (a === b) return null;
@@ -408,18 +408,18 @@ function validateWire(w){
   const ga = classGroup(a), gb = classGroup(b);
   if (ga === gb){
     if (/^L\d$/.test(a) && /^L\d$/.test(b) && a !== b)
-      return { level:'warn', msg:`CROSS-PHASE: ${a} â†” ${b}` };
+      return { level:'warn', msg:`CROSS-PHASE: ${a} Ã¢â€ â€ ${b}` };
     return null;
   }
   const key = [ga,gb].sort().join('|');
   const OK_PAIR = { 'COIL|N':1, 'COIL|L':1, 'COIL|DC_OUT':1, 'COM|L':1 };
   if (OK_PAIR[key]) return null;
-  if (key === 'L|N')  return { level:'error', msg:'PHASE-NEUTRAL SHORT â€” L terhubung ke N' };
-  if (key === 'L|PE') return { level:'error', msg:'PHASE-EARTH SHORT â€” L terhubung ke PE' };
-  if (key === 'N|PE') return { level:'error', msg:'NEUTRAL-EARTH SHORT â€” N terhubung ke PE' };
-  if (key === 'DC+|DC-') return { level:'error', msg:'DC SUPPLY SHORT â€” 24V+ terhubung ke 24V-' };
-  if (key === 'DC_IN|DC_OUT') return { level:'warn', msg:'PLC I/O CROSS â€” input X terhubung ke output Y' };
-  return { level:'warn', msg:`CLASS MISMATCH: ${a} â†” ${b}` };
+  if (key === 'L|N')  return { level:'error', msg:'PHASE-NEUTRAL SHORT Ã¢â‚¬â€ L terhubung ke N' };
+  if (key === 'L|PE') return { level:'error', msg:'PHASE-EARTH SHORT Ã¢â‚¬â€ L terhubung ke PE' };
+  if (key === 'N|PE') return { level:'error', msg:'NEUTRAL-EARTH SHORT Ã¢â‚¬â€ N terhubung ke PE' };
+  if (key === 'DC+|DC-') return { level:'error', msg:'DC SUPPLY SHORT Ã¢â‚¬â€ 24V+ terhubung ke 24V-' };
+  if (key === 'DC_IN|DC_OUT') return { level:'warn', msg:'PLC I/O CROSS Ã¢â‚¬â€ input X terhubung ke output Y' };
+  return { level:'warn', msg:`CLASS MISMATCH: ${a} Ã¢â€ â€ ${b}` };
 }
 function validateAll(){
   const out = [];
@@ -486,7 +486,7 @@ function renderDucts(){
       svgEl('line', { x1:hx, y1:d.y+4, x2:hx-6, y2:d.y+d.h-4, stroke:'#cbd5e1', 'stroke-width':.8 }, gr);
     if (ui.dim){
       const t = svgEl('text', { x:d.x+d.w/2, y:d.y+d.h+6, class:'dim-text' }, gr);
-      t.textContent = d.w + 'Ã—' + d.h;
+      t.textContent = d.w + 'Ãƒâ€”' + d.h;
     }
     if (ui.sel && ui.sel.kind==='duct' && ui.sel.id===d.id)
       svgEl('rect', { x:d.x-3, y:d.y-3, width:d.w+6, height:d.h+6, class:'sel-outline' }, gr);
@@ -651,7 +651,7 @@ function renderWires(){
       'stroke-width':wd+3, opacity:.45, 'pointer-events':'none' }, gr);
     if (w.pts.length >= 2){
       const mid = w.pts[Math.floor(w.pts.length/2)];
-      const lab = w.label || (err ? 'âš  ' : '') + wireClsName(w);
+      const lab = w.label || (err ? 'Ã¢Å¡Â  ' : '') + wireClsName(w);
       const t = svgEl('text', { x:mid.x, y:mid.y-2.4, class:'el-sub', 'font-size':3.6, fill:col,
         stroke:'#0c0e13', 'stroke-width':1.1, 'paint-order':'stroke', 'pointer-events':'none' }, gr);
       t.textContent = lab;
@@ -842,7 +842,7 @@ function networkColorFix(id){
 function straightenPts(pts){
   const p = pts.map(q => ({ x:q.x, y:q.y }));
   if (p.length < 2) return p;
-  /* pass 1: relaksasi sumbu-dominan â€” rapikan titik yang meleset kolom/baris
+  /* pass 1: relaksasi sumbu-dominan Ã¢â‚¬â€ rapikan titik yang meleset kolom/baris
      (mis. setelah din rail digeser) jadi garis lurus, bukan lipatan sepatu */
   let changed = true, guard = 0;
   while (changed && guard++ < p.length*2 + 4){
@@ -1163,7 +1163,7 @@ svg.addEventListener('pointermove', ev => {
       const c = CATALOG[e.type];
       let nx2 = clamp(nx, 0, S.w - c.w);
       let ny2 = e.y;
-      /* vertical: only moves when near a din rail â€” element stays mounted on rail */
+      /* vertical: only moves when near a din rail Ã¢â‚¬â€ element stays mounted on rail */
       let best=null, bd=Math.max(4, Math.min(20, c.h/4));
       for (const r of S.rails){
         if (nx2 + c.w <= r.x || nx2 >= r.x + r.len) continue;
@@ -1272,7 +1272,7 @@ function handleTermClick(elId, term){
   rebuildAllWires();
   markDirty();
   renderAll();
-  if (v) setStatus('âš  ' + v.msg); else setStatus('Kabel dibuat: ' + wireClsName(w));
+  if (v) setStatus('Ã¢Å¡Â  ' + v.msg); else setStatus('Kabel dibuat: ' + wireClsName(w));
 }
 /* ===================== LIBRARY (drag & drop) ===================== */
 function buildLibrary(){
@@ -1288,7 +1288,7 @@ function buildLibrary(){
         it.innerHTML = `<span>${STRUCT[key].label}</span><span class="dim">${STRUCT[key].dim}</span>`;
       } else {
         const c = CATALOG[key];
-        it.innerHTML = `<span>${c.label}</span><span class="dim">${c.w}Ã—${c.h}</span>`;
+        it.innerHTML = `<span>${c.label}</span><span class="dim">${c.w}Ãƒâ€”${c.h}</span>`;
       }
       box.appendChild(it);
     }
@@ -1335,7 +1335,7 @@ svg.addEventListener('drop', ev => {
   const wp = worldPos(ev);
   const g = makeGhost(part, wp);
   renderOverlay();
-  if (!g.ok){ setStatus('âŒ ' + (g.msg||'Posisi tidak valid')); return; }
+  if (!g.ok){ setStatus('Ã¢ÂÅ’ ' + (g.msg||'Posisi tidak valid')); return; }
   snapshot();
   if (part === 'rail'){
     S.rails.push({ id:uid('r'), x:g.x, y:g.y, len:STRUCT.rail.len });
@@ -1422,11 +1422,11 @@ function renderProps(){
   clearEl(b);
   const s = ui.sel;
   if (!s){
-    t.textContent = 'Panel â€” ' + S.name;
+    t.textContent = 'Panel Ã¢â‚¬â€ ' + S.name;
     b.innerHTML =
       row('Width', num('w', S.w)) + row('Height', num('h', S.h)) + row('Depth (mm)', num('d', S.d)) +
       `<div class="rp-sec">Summary</div>` +
-      `<div class="conn-item">Elements: ${S.elements.length} Â· Wires: ${S.wires.length} Â· Rails: ${S.rails.length} Â· Ducts: ${S.ducts.length}</div>` +
+      `<div class="conn-item">Elements: ${S.elements.length} Ã‚Â· Wires: ${S.wires.length} Ã‚Â· Rails: ${S.rails.length} Ã‚Â· Ducts: ${S.ducts.length}</div>` +
       `<div class="empty">Klik objek di kanvas untuk edit properti.<br>Mode <b>Wire</b> untuk menggambar kabel.</div>`;
     b.querySelectorAll('input[data-f]').forEach(inp => {
       inp.addEventListener('change', () => {
@@ -1446,7 +1446,7 @@ function renderProps(){
         const a = w.from.el===e.id ? w.from : w.to;
         const o = w.from.el===e.id ? w.to : w.from;
         const oc = getTermLabel(o);
-        return `<div class="conn-item"><b>${a.term}</b> â†’ ${oc} <span style="color:${wireColor(w)}">â—</span> ${w.gauge}mmÂ²</div>`;
+        return `<div class="conn-item"><b>${a.term}</b> Ã¢â€ â€™ ${oc} <span style="color:${wireColor(w)}">Ã¢â€”Â</span> ${w.gauge}mmÃ‚Â²</div>`;
       }).join('');
     b.innerHTML =
       row('Name', txt('name', e.name || '')) +
@@ -1457,9 +1457,9 @@ function renderProps(){
       row('Position X', num('x', e.x)) + row('Position Y', num('y', e.y)) +
       row('Rotation', `<select data-f="rot">${[0,90,180,270].map(v=>`<option ${((e.rot||0)===v)?'selected':''}>${v}</option>`).join('')}</select>`) +
       `<div class="rp-sec">Rail mount</div>` +
-      row('Din Rail', `<select data-f="rail"><option value="">â€” none â€”</option>${S.rails.map(r=>`<option value="${r.id}" ${e.rail===r.id?'selected':''}>${r.id} @ y${r.y}</option>`).join('')}</select>`) +
+      row('Din Rail', `<select data-f="rail"><option value="">Ã¢â‚¬â€ none Ã¢â‚¬â€</option>${S.rails.map(r=>`<option value="${r.id}" ${e.rail===r.id?'selected':''}>${r.id} @ y${r.y}</option>`).join('')}</select>`) +
       `<div class="rp-sec">Terminals</div>` +
-      Object.keys(c.terms).map(tn => `<div class="conn-item"><span style="color:${CLASS_COLOR[termClass(e.id,tn)]}">â—</span> ${tn}</div>`).join('') +
+      Object.keys(c.terms).map(tn => `<div class="conn-item"><span style="color:${CLASS_COLOR[termClass(e.id,tn)]}">Ã¢â€”Â</span> ${tn}</div>`).join('') +
       `<div class="rp-sec">Connections (${S.wires.filter(w=>w.from.el===e.id||w.to.el===e.id).length})</div>` + (conns || '<div class="empty">Belum ada kabel</div>') +
       `<button class="rp-btn danger" data-act="del">Delete Element</button>`;
     bindPropInputs(e, 'element');
@@ -1467,16 +1467,16 @@ function renderProps(){
     const w = S.wires.find(x=>x.id===s.id); if (!w){ ui.sel=null; return renderProps(); }
     const cls = wireClsName(w);
     const v = validateWire(w);
-    t.textContent = 'Wire â€” ' + cls;
+    t.textContent = 'Wire Ã¢â‚¬â€ ' + cls;
     b.innerHTML =
       row('From', `<input value="${getTermLabel(w.from)}" disabled style="opacity:.5">`) +
       row('To', `<input value="${getTermLabel(w.to)}" disabled style="opacity:.5">`) +
       row('Class', `<input value="${cls}" disabled style="opacity:.5">`) +
-      row('Gauge (mmÂ²)', num('gauge', w.gauge)) +
+      row('Gauge (mmÃ‚Â²)', num('gauge', w.gauge)) +
       row('Twisted pair', chk('twist', !!w.twist)) +
       row('Label', txt('label', w.label || '')) +
       row('Color', `<input type="color" data-f="color" value="${wireColor(w)}" style="width:38px;vertical-align:middle"><input type="text" data-f="color" value="${wireColor(w)}" style="width:84px;font-family:Consolas,monospace;margin-left:6px;vertical-align:middle" placeholder="#RRGGBB" title="Masukkan hex, contoh #ff0000">`) +
-      (v ? `<div class="issue ${v.level==='error'?'error':'warn'}">${v.msg}</div>` : '<div class="conn-item" style="color:#4ade80">âœ“ Valid connection</div>') +
+      (v ? `<div class="issue ${v.level==='error'?'error':'warn'}">${v.msg}</div>` : '<div class="conn-item" style="color:#4ade80">Ã¢Å“â€œ Valid connection</div>') +
       `<button class="rp-btn" data-act="resetColor">Reset to standard color</button>` +
       `<button class="rp-btn danger" data-act="del">Delete Wire</button>`;
     bindPropInputs(w, 'wire');
@@ -1560,14 +1560,14 @@ function renderIssues(){
   $('stIssues').textContent = 'Issues: ' + issues.length;
   $('stIssues').className = issues.length ? 'err' : 'ok';
   if (!issues.length){
-    box.innerHTML = '<div class="conn-item" style="color:#4ade80">âœ“ Semua kabel valid</div>';
+    box.innerHTML = '<div class="conn-item" style="color:#4ade80">Ã¢Å“â€œ Semua kabel valid</div>';
     return;
   }
   for (const is of issues){
     const w = S.wires.find(x=>x.id===is.wireId);
     const div = document.createElement('div');
     div.className = 'issue ' + (is.level==='error' ? 'error' : 'warn');
-    div.textContent = (is.level==='error' ? 'âœ– ' : 'âš  ') + is.msg + (w ? ' (' + getTermLabel(w.from) + ' â†’ ' + getTermLabel(w.to) + ')' : '');
+    div.textContent = (is.level==='error' ? 'Ã¢Å“â€“ ' : 'Ã¢Å¡Â  ') + is.msg + (w ? ' (' + getTermLabel(w.from) + ' Ã¢â€ â€™ ' + getTermLabel(w.to) + ')' : '');
     if (is.wireId) div.addEventListener('click', () => select('wire', is.wireId));
     box.appendChild(div);
   }
@@ -1628,11 +1628,11 @@ function openPanelSettings(pending){
     `<div class="mrow"><label>Depth (mm)</label><input id="ms_d" type="number" value="${pending.d}"></div>` +
     `<div class="rp-sec">Din Rails <button class="tb-btn" id="ms_addRail" style="float:right;padding:2px 8px">+ Add</button></div>` +
     `<table class="mtable"><tr><th>X</th><th>Y</th><th>Length</th><th></th></tr>` +
-      pending.rails.map((r,i)=>`<tr><td><input data-t="rail" data-i="${i}" data-f="x" value="${r.x}"></td><td><input data-t="rail" data-i="${i}" data-f="y" value="${r.y}"></td><td><input data-t="rail" data-i="${i}" data-f="len" value="${r.len}"></td><td><button class="del" data-del="rail" data-i="${i}">âœ•</button></td></tr>`).join('') +
+      pending.rails.map((r,i)=>`<tr><td><input data-t="rail" data-i="${i}" data-f="x" value="${r.x}"></td><td><input data-t="rail" data-i="${i}" data-f="y" value="${r.y}"></td><td><input data-t="rail" data-i="${i}" data-f="len" value="${r.len}"></td><td><button class="del" data-del="rail" data-i="${i}">Ã¢Å“â€¢</button></td></tr>`).join('') +
     `</table>` +
     `<div class="rp-sec">Ducting Segments <button class="tb-btn" id="ms_addDuct" style="float:right;padding:2px 8px">+ Add</button></div>` +
     `<table class="mtable"><tr><th>X</th><th>Y</th><th>W</th><th>H</th><th></th></tr>` +
-      pending.ducts.map((d,i)=>`<tr><td><input data-t="duct" data-i="${i}" data-f="x" value="${d.x}"></td><td><input data-t="duct" data-i="${i}" data-f="y" value="${d.y}"></td><td><input data-t="duct" data-i="${i}" data-f="w" value="${d.w}"></td><td><input data-t="duct" data-i="${i}" data-f="h" value="${d.h}"></td><td><button class="del" data-del="duct" data-i="${i}">âœ•</button></td></tr>`).join('') +
+      pending.ducts.map((d,i)=>`<tr><td><input data-t="duct" data-i="${i}" data-f="x" value="${d.x}"></td><td><input data-t="duct" data-i="${i}" data-f="y" value="${d.y}"></td><td><input data-t="duct" data-i="${i}" data-f="w" value="${d.w}"></td><td><input data-t="duct" data-i="${i}" data-f="h" value="${d.h}"></td><td><button class="del" data-del="duct" data-i="${i}">Ã¢Å“â€¢</button></td></tr>`).join('') +
     `</table>` +
     `<div class="empty" style="text-align:left">Busbar (L1/L2/L3/PE) fixed di sisi kiri panel, tidak dapat dipindah.</div>` +
     `</div><div class="mfoot"><button class="rp-btn" id="ms_cancel" style="width:auto;margin:0">Cancel</button><button class="rp-btn" id="ms_apply" style="width:auto;margin:0;background:#2563eb;border-color:#3b82f6;color:#fff">Apply</button></div>`;
@@ -1710,7 +1710,7 @@ $('btnExport').addEventListener('click', () => {
   a.download = (S.name || 'panel').replace(/[^\w\- ]+/g,'').replace(/\s+/g,'_').toLowerCase() + '.json';
   a.click();
   URL.revokeObjectURL(a.href);
-  setStatus('Export JSON âœ“');
+  setStatus('Export JSON Ã¢Å“â€œ');
 });
 $('btnImport').addEventListener('click', () => $('fileImport').click());
 $('fileImport').addEventListener('change', ev => {
@@ -1728,7 +1728,7 @@ $('fileImport').addEventListener('change', ev => {
       S.bus = (S.bus && typeof S.bus.x === 'number') ? S.bus : { x:36, y:40 };
       ui.sel = null;
       markDirty(); fitView(); renderAll();
-      setStatus('Import âœ“ ' + f.name);
+      setStatus('Import Ã¢Å“â€œ ' + f.name);
     } catch(e){ alert('File JSON tidak valid: ' + f.name); }
   };
   rd.readAsText(f);
@@ -2516,15 +2516,15 @@ const EXAMPLE_BAS =
           "y": 505.7902233978225
         },
         {
-          "x": 118.93913131884835,
+          "x": 106.93913131884835,
           "y": 505.7902233978225
         },
         {
-          "x": 118.93913131884835,
+          "x": 106.93913131884835,
           "y": 535
         },
         {
-          "x": 42,
+          "x": 21,
           "y": 535,
           "side": "right"
         }
@@ -2536,8 +2536,7 @@ const EXAMPLE_BAS =
       "rawPts": [
         {
           "x": 246,
-          "y": 599,
-          "side": "left"
+          "y": 599
         },
         {
           "x": 245.90061470055662,
@@ -2548,17 +2547,16 @@ const EXAMPLE_BAS =
           "y": 505.7902233978225
         },
         {
-          "x": 118.93913131884835,
+          "x": 106.93913131884835,
           "y": 505.7902233978225
         },
         {
-          "x": 118.93913131884835,
+          "x": 106.93913131884835,
           "y": 535
         },
         {
-          "x": 42,
-          "y": 535,
-          "side": "right"
+          "x": 21,
+          "y": 535
         }
       ]
     },
@@ -3054,15 +3052,15 @@ const EXAMPLE_BAS =
           "y": 728.2477002784013
         },
         {
-          "x": 121.41283874863527,
+          "x": 111.41283874863527,
           "y": 728.2477002784013
         },
         {
-          "x": 121.41283874863527,
+          "x": 111.41283874863527,
           "y": 667
         },
         {
-          "x": 96,
+          "x": 75,
           "y": 667,
           "side": "right"
         }
@@ -3074,8 +3072,7 @@ const EXAMPLE_BAS =
       "rawPts": [
         {
           "x": 150,
-          "y": 649,
-          "side": "bottom"
+          "y": 649
         },
         {
           "x": 150,
@@ -3086,17 +3083,16 @@ const EXAMPLE_BAS =
           "y": 728.2477002784013
         },
         {
-          "x": 121.41283874863527,
+          "x": 111.41283874863527,
           "y": 728.2477002784013
         },
         {
-          "x": 121.41283874863527,
+          "x": 111.41283874863527,
           "y": 667
         },
         {
-          "x": 96,
-          "y": 667,
-          "side": "right"
+          "x": 75,
+          "y": 667
         }
       ]
     },
@@ -3125,15 +3121,15 @@ const EXAMPLE_BAS =
           "y": 753.6025544787011
         },
         {
-          "x": 118.68639223871841,
+          "x": 105.68639223871841,
           "y": 753.6025544787011
         },
         {
-          "x": 118.68639223871841,
+          "x": 105.68639223871841,
           "y": 625
         },
         {
-          "x": 42,
+          "x": 21,
           "y": 625,
           "side": "right"
         }
@@ -3145,8 +3141,7 @@ const EXAMPLE_BAS =
       "rawPts": [
         {
           "x": 246,
-          "y": 650,
-          "side": "left"
+          "y": 650
         },
         {
           "x": 246.10935534122848,
@@ -3157,17 +3152,16 @@ const EXAMPLE_BAS =
           "y": 753.6025544787011
         },
         {
-          "x": 118.68639223871841,
+          "x": 105.68639223871841,
           "y": 753.6025544787011
         },
         {
-          "x": 118.68639223871841,
+          "x": 105.68639223871841,
           "y": 625
         },
         {
-          "x": 42,
-          "y": 625,
-          "side": "right"
+          "x": 21,
+          "y": 625
         }
       ]
     },
@@ -3460,16 +3454,16 @@ const EXAMPLE_BAS =
       },
       "pts": [
         {
-          "x": 42,
+          "x": 21,
           "y": 85,
           "side": "right"
         },
         {
-          "x": 117.36680711378781,
+          "x": 107.36680711378781,
           "y": 85
         },
         {
-          "x": 117.36680711378781,
+          "x": 107.36680711378781,
           "y": 52.02811817574308
         },
         {
@@ -3488,16 +3482,15 @@ const EXAMPLE_BAS =
       "twist": false,
       "rawPts": [
         {
-          "x": 42,
-          "y": 85,
-          "side": "right"
-        },
-        {
-          "x": 117.36680711378781,
+          "x": 21,
           "y": 85
         },
         {
-          "x": 117.36680711378781,
+          "x": 107.36680711378781,
+          "y": 85
+        },
+        {
+          "x": 107.36680711378781,
           "y": 52.02811817574308
         },
         {
@@ -3506,8 +3499,7 @@ const EXAMPLE_BAS =
         },
         {
           "x": 151,
-          "y": 111,
-          "side": "top"
+          "y": 111
         }
       ]
     },
@@ -3523,16 +3515,16 @@ const EXAMPLE_BAS =
       },
       "pts": [
         {
-          "x": 60,
+          "x": 39,
           "y": 99,
           "side": "right"
         },
         {
-          "x": 121.08275989538961,
+          "x": 113.08275989538961,
           "y": 99
         },
         {
-          "x": 121.08275989538961,
+          "x": 113.08275989538961,
           "y": 55.744064514047345
         },
         {
@@ -3551,16 +3543,15 @@ const EXAMPLE_BAS =
       "twist": false,
       "rawPts": [
         {
-          "x": 60,
-          "y": 99,
-          "side": "right"
-        },
-        {
-          "x": 121.08275989538961,
+          "x": 39,
           "y": 99
         },
         {
-          "x": 121.08275989538961,
+          "x": 113.08275989538961,
+          "y": 99
+        },
+        {
+          "x": 113.08275989538961,
           "y": 55.744064514047345
         },
         {
@@ -3569,8 +3560,7 @@ const EXAMPLE_BAS =
         },
         {
           "x": 174,
-          "y": 111,
-          "side": "top"
+          "y": 111
         }
       ]
     },
@@ -3586,16 +3576,16 @@ const EXAMPLE_BAS =
       },
       "pts": [
         {
-          "x": 78,
+          "x": 57,
           "y": 113,
           "side": "right"
         },
         {
-          "x": 125.1365476533835,
+          "x": 119.1365476533835,
           "y": 113
         },
         {
-          "x": 125.1365476533835,
+          "x": 119.1365476533835,
           "y": 59.460023738946674
         },
         {
@@ -3614,16 +3604,15 @@ const EXAMPLE_BAS =
       "twist": false,
       "rawPts": [
         {
-          "x": 78,
-          "y": 113,
-          "side": "right"
-        },
-        {
-          "x": 125.1365476533835,
+          "x": 57,
           "y": 113
         },
         {
-          "x": 125.1365476533835,
+          "x": 119.1365476533835,
+          "y": 113
+        },
+        {
+          "x": 119.1365476533835,
           "y": 59.460023738946674
         },
         {
@@ -3632,8 +3621,7 @@ const EXAMPLE_BAS =
         },
         {
           "x": 198,
-          "y": 111,
-          "side": "top"
+          "y": 111
         }
       ]
     },
@@ -3649,16 +3637,16 @@ const EXAMPLE_BAS =
       },
       "pts": [
         {
-          "x": 96,
+          "x": 75,
           "y": 307,
           "side": "right"
         },
         {
-          "x": 118.34375460578453,
+          "x": 112.34375460578453,
           "y": 307
         },
         {
-          "x": 118.34375460578453,
+          "x": 112.34375460578453,
           "y": 274.7316733642615
         },
         {
@@ -3677,16 +3665,15 @@ const EXAMPLE_BAS =
       "twist": false,
       "rawPts": [
         {
-          "x": 96,
-          "y": 307,
-          "side": "right"
-        },
-        {
-          "x": 118.34375460578453,
+          "x": 75,
           "y": 307
         },
         {
-          "x": 118.34375460578453,
+          "x": 112.34375460578453,
+          "y": 307
+        },
+        {
+          "x": 112.34375460578453,
           "y": 274.7316733642615
         },
         {
@@ -3695,8 +3682,7 @@ const EXAMPLE_BAS =
         },
         {
           "x": 148,
-          "y": 308,
-          "side": "top"
+          "y": 308
         }
       ]
     },
@@ -3831,15 +3817,15 @@ const EXAMPLE_BAS =
           "y": 486.1900716483325
         },
         {
-          "x": 116.1899623134258,
+          "x": 108.1899623134258,
           "y": 486.1900716483325
         },
         {
-          "x": 116.1899623134258,
+          "x": 108.1899623134258,
           "y": 445
         },
         {
-          "x": 42,
+          "x": 21,
           "y": 445,
           "side": "right"
         }
@@ -3851,25 +3837,23 @@ const EXAMPLE_BAS =
       "rawPts": [
         {
           "x": 305,
-          "y": 401,
-          "side": "bottom"
+          "y": 401
         },
         {
           "x": 305,
           "y": 486.1900716483325
         },
         {
-          "x": 116.1899623134258,
+          "x": 108.1899623134258,
           "y": 486.1900716483325
         },
         {
-          "x": 116.1899623134258,
+          "x": 108.1899623134258,
           "y": 445
         },
         {
-          "x": 42,
-          "y": 445,
-          "side": "right"
+          "x": 21,
+          "y": 445
         }
       ]
     },
@@ -3894,15 +3878,15 @@ const EXAMPLE_BAS =
           "y": 488.5547489573413
         },
         {
-          "x": 119.2302966886237,
+          "x": 114.2302966886237,
           "y": 488.5547489573413
         },
         {
-          "x": 119.2302966886237,
+          "x": 114.2302966886237,
           "y": 459
         },
         {
-          "x": 60,
+          "x": 39,
           "y": 459,
           "side": "right"
         }
@@ -3914,25 +3898,23 @@ const EXAMPLE_BAS =
       "rawPts": [
         {
           "x": 313,
-          "y": 401,
-          "side": "bottom"
+          "y": 401
         },
         {
           "x": 313,
           "y": 488.5547489573413
         },
         {
-          "x": 119.2302966886237,
+          "x": 114.2302966886237,
           "y": 488.5547489573413
         },
         {
-          "x": 119.2302966886237,
+          "x": 114.2302966886237,
           "y": 459
         },
         {
-          "x": 60,
-          "y": 459,
-          "side": "right"
+          "x": 39,
+          "y": 459
         }
       ]
     },
@@ -3957,15 +3939,15 @@ const EXAMPLE_BAS =
           "y": 490.959773528143
         },
         {
-          "x": 122.60844026702354,
+          "x": 120.60844026702354,
           "y": 490.959773528143
         },
         {
-          "x": 122.60844026702354,
+          "x": 120.60844026702354,
           "y": 473
         },
         {
-          "x": 78,
+          "x": 57,
           "y": 473,
           "side": "right"
         }
@@ -3977,25 +3959,23 @@ const EXAMPLE_BAS =
       "rawPts": [
         {
           "x": 321,
-          "y": 401,
-          "side": "bottom"
+          "y": 401
         },
         {
           "x": 321,
           "y": 490.959773528143
         },
         {
-          "x": 122.60844026702354,
+          "x": 120.60844026702354,
           "y": 490.959773528143
         },
         {
-          "x": 122.60844026702354,
+          "x": 120.60844026702354,
           "y": 473
         },
         {
-          "x": 78,
-          "y": 473,
-          "side": "right"
+          "x": 57,
+          "y": 473
         }
       ]
     },
@@ -4024,15 +4004,15 @@ const EXAMPLE_BAS =
           "y": 503.6689607005618
         },
         {
-          "x": 121.76802967939764,
+          "x": 113.76802967939764,
           "y": 503.6689607005618
         },
         {
-          "x": 121.76802967939764,
+          "x": 113.76802967939764,
           "y": 577
         },
         {
-          "x": 96,
+          "x": 75,
           "y": 577,
           "side": "right"
         }
@@ -4044,8 +4024,7 @@ const EXAMPLE_BAS =
       "rawPts": [
         {
           "x": 256.4,
-          "y": 599,
-          "side": "left"
+          "y": 599
         },
         {
           "x": 256.89377281539186,
@@ -4056,17 +4035,16 @@ const EXAMPLE_BAS =
           "y": 503.6689607005618
         },
         {
-          "x": 121.76802967939764,
+          "x": 113.76802967939764,
           "y": 503.6689607005618
         },
         {
-          "x": 121.76802967939764,
+          "x": 113.76802967939764,
           "y": 577
         },
         {
-          "x": 96,
-          "y": 577,
-          "side": "right"
+          "x": 75,
+          "y": 577
         }
       ]
     },
@@ -4247,16 +4225,16 @@ const EXAMPLE_BAS =
       },
       "pts": [
         {
-          "x": 42,
+          "x": 21,
           "y": 535,
           "side": "right"
         },
         {
-          "x": 118.70849162596917,
+          "x": 106.70849162596917,
           "y": 535
         },
         {
-          "x": 118.70849162596917,
+          "x": 106.70849162596917,
           "y": 505.5888793344444
         },
         {
@@ -4275,16 +4253,15 @@ const EXAMPLE_BAS =
       "twist": false,
       "rawPts": [
         {
-          "x": 42,
-          "y": 535,
-          "side": "right"
-        },
-        {
-          "x": 118.70849162596917,
+          "x": 21,
           "y": 535
         },
         {
-          "x": 118.70849162596917,
+          "x": 106.70849162596917,
+          "y": 535
+        },
+        {
+          "x": 106.70849162596917,
           "y": 505.5888793344444
         },
         {
@@ -4293,8 +4270,7 @@ const EXAMPLE_BAS =
         },
         {
           "x": 577,
-          "y": 576,
-          "side": "top"
+          "y": 576
         }
       ]
     },
@@ -4484,15 +4460,15 @@ const EXAMPLE_BAS =
           "y": 723.9227574113404
         },
         {
-          "x": 124.62702130138761,
+          "x": 118.62702130138761,
           "y": 723.9227574113404
         },
         {
-          "x": 124.62702130138761,
+          "x": 118.62702130138761,
           "y": 681
         },
         {
-          "x": 114,
+          "x": 93,
           "y": 681,
           "side": "right"
         }
@@ -4504,25 +4480,23 @@ const EXAMPLE_BAS =
       "rawPts": [
         {
           "x": 511,
-          "y": 680.2,
-          "side": "bottom"
+          "y": 680.2
         },
         {
           "x": 511,
           "y": 723.9227574113404
         },
         {
-          "x": 124.62702130138761,
+          "x": 118.62702130138761,
           "y": 723.9227574113404
         },
         {
-          "x": 124.62702130138761,
+          "x": 118.62702130138761,
           "y": 681
         },
         {
-          "x": 114,
-          "y": 681,
-          "side": "right"
+          "x": 93,
+          "y": 681
         }
       ]
     },
@@ -4905,7 +4879,11 @@ const EXAMPLE_BAS =
       ]
     }
   ],
-  "labels": []
+  "labels": [],
+  "bus": {
+    "x": 15,
+    "y": 40
+  }
 };
 function applyBasDesign(d){
   d.labels = d.labels || []; d.wires = d.wires || []; d.elements = d.elements || [];
@@ -4936,11 +4914,11 @@ function showWelcome(){
        <div class="welcome-cards">
          <div class="welcome-card" data-opt="bas">
            <b>Panel BAS</b>
-           <span>Contoh panel building automation: MCB, meter 1P & 3P, kontaktor NCH8, PLC FX3U-64MR, PSU 24V dan gateway MODBUS MGate MB3170 â€” sudah tersambung wiring.</span>
+           <span>Contoh panel building automation: MCB, meter 1P & 3P, kontaktor NCH8, PLC FX3U-64MR, PSU 24V dan gateway MODBUS MGate MB3170 Ã¢â‚¬â€ sudah tersambung wiring.</span>
          </div>
          <div class="welcome-card" data-opt="empty">
            <b>Empty Panel</b>
-           <span>Mulai dari nol: hanya ducting, din rail dan busbar â€” tanpa kabel maupun komponen.</span>
+           <span>Mulai dari nol: hanya ducting, din rail dan busbar Ã¢â‚¬â€ tanpa kabel maupun komponen.</span>
          </div>
        </div>
      </div>
