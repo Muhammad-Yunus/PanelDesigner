@@ -1,8 +1,8 @@
 # Panel Designer ⚡
 
-> Desain panel listrik secara visual — taruh komponen di atas din rail, rangkai kabelnya, dan langsung dapat validasi kelistrikan.
+> Desain panel listrik secara visual - taruh komponen di atas din rail, rangkai kabelnya, dan langsung dapat validasi kelistrikan.
 
-Untuk merancang panel distribusi & kontrol: MCB, meter, kontaktor, PLC, PSU hingga gateway MODBUS — lengkap dengan busy bar, ducting, dan wiring otomatis yang rapi.
+Untuk merancang panel distribusi & kontrol: MCB, meter, kontaktor, PLC, PSU hingga gateway MODBUS - lengkap dengan busy bar, ducting, dan wiring otomatis yang rapi.
 
 ## Badges
 
@@ -23,22 +23,22 @@ Untuk merancang panel distribusi & kontrol: MCB, meter, kontaktor, PLC, PSU hing
 
 ## Fitur Utama
 
-- **Library komponen drag & drop** — MCB 1P/2P/3P, MCCB, meter IEM2050/IEM3255, kontaktor CHINT NCH8, PLC FX3U-64MR, PSU MEANWELL NDR-240-24, gateway MODBUS Moxa MGate MB3170, din rail & ducting.
+- **Library komponen drag & drop** - MCB 1P/2P/3P, MCCB, meter IEM2050/IEM3255, kontaktor CHINT NCH8, PLC FX3U-64MR, PSU MEANWELL NDR-240-24, gateway MODBUS Moxa MGate MB3170, din rail & ducting.
 - **Busy bar** L1 / L2 / L3 / N / PE dengan tap terminal yang menerima kabel.
-- **Wiring orthogonal** — klik-terminal ke terminal, rute otomatis tegak/lurus; kabel RS485 dirender sebagai *twisted pair* A/B.
-- **Geser komponen setelah diwiring** — kabel ikut menyesuaikan (memendek) secara langsung, baik di mode Select maupun Wire.
-- **Auto-Straighten** — satu klik meluruskan semua kabel yang tidak tegak/lurus.
-- **Routing manual** — seret segmen tengah kabel untuk mengubah jalur.
-- **Validasi kelistrikan real-time** — deteksi salah sambung fasa, netral, PE, DC+, dan coil; ditampilkan di panel *Issues*.
+- **Wiring orthogonal** - klik-terminal ke terminal, rute otomatis tegak/lurus; kabel RS485 dirender sebagai *twisted pair* A/B.
+- **Geser komponen setelah diwiring** - kabel ikut menyesuaikan (memendek) secara langsung, baik di mode Select maupun Wire.
+- **Auto-Straighten** - satu klik meluruskan semua kabel yang tidak tegak/lurus.
+- **Routing manual** - seret segmen tengah kabel untuk mengubah jalur.
+- **Validasi kelistrikan real-time** - deteksi salah sambung fasa, netral, PE, DC+, dan coil; ditampilkan di panel *Issues*.
 - **Auto-save ke localStorage** + **Export/Import JSON**.
-- **Dialog selamat datang** — pilih *Panel BAS* (contoh lengkap) atau *Empty Panel*.
+- **Dialog selamat datang** - pilih *Panel BAS* (contoh lengkap) atau *Empty Panel*.
 - **Undo / Redo**, zoom, grid, dan panel properti yang terintegrasi.
 
 ---
 
 ### Mulai Cepat
 
-Buka [Panel Designer](https://muhammad-yunus.github.io/PanelDesigner) — tidak perlu instalasi apa pun.
+Buka [Panel Designer](https://muhammad-yunus.github.io/PanelDesigner) - tidak perlu instalasi apa pun.
 
 Atau jalankan secara lokal:
 
@@ -59,6 +59,6 @@ index.html              # redirect untuk GitHub Pages
 
 ## Tech Stack
 
-- **HTML/CSS/JavaScript** murni — tanpa framework, tanpa step build.
+- **HTML/CSS/JavaScript** murni - tanpa framework, tanpa step build.
 - **SVG** untuk render kanvas (grid, komponen, terminal, kabel).
 - **localStorage** untuk auto-save desain.

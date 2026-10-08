@@ -109,12 +109,12 @@ svg text{user-select:none}
       <button class="tb-btn" id="btnDim">Dimensions</button>
     </div>
     <div class="tb-group">
-      <button class="tb-btn" id="btnPanelSettings">Panel Settings—</button>
+      <button class="tb-btn" id="btnPanelSettings">Panel Settings-</button>
     </div>
   </div>
   <div id="main">
     <aside id="left">
-      <input id="libSearch" placeholder="Search part—" autocomplete="off">
+      <input id="libSearch" placeholder="Search part-" autocomplete="off">
       <div id="libList"></div>
     </aside>
     <div id="canvasWrap">
@@ -153,7 +153,7 @@ svg text{user-select:none}
     <span id="stMode">Mode: Select</span>
     <span id="stCoord">X: 0 Y: 0 mm</span>
     <span id="stZoom">Zoom 100%</span>
-    <span id="stSave">Auto-save: —</span>
+    <span id="stSave">Auto-save: -</span>
     <span id="stIssues">Issues: 0</span>
   </div>
 </div>
@@ -229,10 +229,10 @@ const LIB = [
   { cat:'Structure', items:['rail','duct'] }
 ];
 const STRUCT = {
-  rail: { label:'Din Rail TS35', dim:'600—35 mm', len:600 },
-  duct: { label:'Ducting 3.5cm', dim:'600—35 mm', w:600, h:35 }
+  rail: { label:'Din Rail TS35', dim:'600-35 mm', len:600 },
+  duct: { label:'Ducting 3.5cm', dim:'600-35 mm', w:600, h:35 }
 };
-/* Busbar L1/L2/L3/N/PE — blok tunggal yang bisa digeser (pick-and-place) */
+/* Busbar L1/L2/L3/N/PE - blok tunggal yang bisa digeser (pick-and-place) */
 const BUS = [
   { id:'B_L1', label:'L1', cls:'L1', x:36, color:'#ef4444' },
   { id:'B_L2', label:'L2', cls:'L2', x:54, color:'#f97316' },
@@ -400,7 +400,7 @@ function setZoom(k2, cx, cy){
 /* ===================== VALIDATION ===================== */
 function validateWire(w){
   if ((w.from && w.from.term === 'NC') || (w.to && w.to.term === 'NC'))
-    return { level:'error', msg:'NO CONNECT — terminal NC tidak dapat dihubungkan' };
+    return { level:'error', msg:'NO CONNECT - terminal NC tidak dapat dihubungkan' };
   const a = termClass(w.from.el, w.from.term);
   const b = termClass(w.to.el, w.to.term);
   if (a === b) return null;
@@ -414,11 +414,11 @@ function validateWire(w){
   const key = [ga,gb].sort().join('|');
   const OK_PAIR = { 'COIL|N':1, 'COIL|L':1, 'COIL|DC_OUT':1, 'COM|L':1 };
   if (OK_PAIR[key]) return null;
-  if (key === 'L|N')  return { level:'error', msg:'PHASE-NEUTRAL SHORT — L terhubung ke N' };
-  if (key === 'L|PE') return { level:'error', msg:'PHASE-EARTH SHORT — L terhubung ke PE' };
-  if (key === 'N|PE') return { level:'error', msg:'NEUTRAL-EARTH SHORT — N terhubung ke PE' };
-  if (key === 'DC+|DC-') return { level:'error', msg:'DC SUPPLY SHORT — 24V+ terhubung ke 24V-' };
-  if (key === 'DC_IN|DC_OUT') return { level:'warn', msg:'PLC I/O CROSS — input X terhubung ke output Y' };
+  if (key === 'L|N')  return { level:'error', msg:'PHASE-NEUTRAL SHORT - L terhubung ke N' };
+  if (key === 'L|PE') return { level:'error', msg:'PHASE-EARTH SHORT - L terhubung ke PE' };
+  if (key === 'N|PE') return { level:'error', msg:'NEUTRAL-EARTH SHORT - N terhubung ke PE' };
+  if (key === 'DC+|DC-') return { level:'error', msg:'DC SUPPLY SHORT - 24V+ terhubung ke 24V-' };
+  if (key === 'DC_IN|DC_OUT') return { level:'warn', msg:'PLC I/O CROSS - input X terhubung ke output Y' };
   return { level:'warn', msg:`CLASS MISMATCH: ${a} ↔ ${b}` };
 }
 function validateAll(){
@@ -486,7 +486,7 @@ function renderDucts(){
       svgEl('line', { x1:hx, y1:d.y+4, x2:hx-6, y2:d.y+d.h-4, stroke:'#cbd5e1', 'stroke-width':.8 }, gr);
     if (ui.dim){
       const t = svgEl('text', { x:d.x+d.w/2, y:d.y+d.h+6, class:'dim-text' }, gr);
-      t.textContent = d.w + '—' + d.h;
+      t.textContent = d.w + '-' + d.h;
     }
     if (ui.sel && ui.sel.kind==='duct' && ui.sel.id===d.id)
       svgEl('rect', { x:d.x-3, y:d.y-3, width:d.w+6, height:d.h+6, class:'sel-outline' }, gr);
@@ -842,7 +842,7 @@ function networkColorFix(id){
 function straightenPts(pts){
   const p = pts.map(q => ({ x:q.x, y:q.y }));
   if (p.length < 2) return p;
-  /* pass 1: relaksasi sumbu-dominan — rapikan titik yang meleset kolom/baris
+  /* pass 1: relaksasi sumbu-dominan - rapikan titik yang meleset kolom/baris
      (mis. setelah din rail digeser) jadi garis lurus, bukan lipatan sepatu */
   let changed = true, guard = 0;
   while (changed && guard++ < p.length*2 + 4){
@@ -1163,7 +1163,7 @@ svg.addEventListener('pointermove', ev => {
       const c = CATALOG[e.type];
       let nx2 = clamp(nx, 0, S.w - c.w);
       let ny2 = e.y;
-      /* vertical: only moves when near a din rail — element stays mounted on rail */
+      /* vertical: only moves when near a din rail - element stays mounted on rail */
       let best=null, bd=Math.max(4, Math.min(20, c.h/4));
       for (const r of S.rails){
         if (nx2 + c.w <= r.x || nx2 >= r.x + r.len) continue;
@@ -1288,7 +1288,7 @@ function buildLibrary(){
         it.innerHTML = `<span>${STRUCT[key].label}</span><span class="dim">${STRUCT[key].dim}</span>`;
       } else {
         const c = CATALOG[key];
-        it.innerHTML = `<span>${c.label}</span><span class="dim">${c.w}—${c.h}</span>`;
+        it.innerHTML = `<span>${c.label}</span><span class="dim">${c.w}-${c.h}</span>`;
       }
       box.appendChild(it);
     }
@@ -1422,11 +1422,11 @@ function renderProps(){
   clearEl(b);
   const s = ui.sel;
   if (!s){
-    t.textContent = 'Panel — ' + S.name;
+    t.textContent = 'Panel - ' + S.name;
     b.innerHTML =
       row('Width', num('w', S.w)) + row('Height', num('h', S.h)) + row('Depth (mm)', num('d', S.d)) +
       `<div class="rp-sec">Summary</div>` +
-      `<div class="conn-item">Elements: ${S.elements.length} — Wires: ${S.wires.length} — Rails: ${S.rails.length} — Ducts: ${S.ducts.length}</div>` +
+      `<div class="conn-item">Elements: ${S.elements.length} - Wires: ${S.wires.length} - Rails: ${S.rails.length} - Ducts: ${S.ducts.length}</div>` +
       `<div class="empty">Klik objek di kanvas untuk edit properti.<br>Mode <b>Wire</b> untuk menggambar kabel.</div>`;
     b.querySelectorAll('input[data-f]').forEach(inp => {
       inp.addEventListener('change', () => {
@@ -1446,7 +1446,7 @@ function renderProps(){
         const a = w.from.el===e.id ? w.from : w.to;
         const o = w.from.el===e.id ? w.to : w.from;
         const oc = getTermLabel(o);
-        return `<div class="conn-item"><b>${a.term}</b> → ${oc} <span style="color:${wireColor(w)}">●</span> ${w.gauge}mm—</div>`;
+        return `<div class="conn-item"><b>${a.term}</b> → ${oc} <span style="color:${wireColor(w)}">●</span> ${w.gauge}mm-</div>`;
       }).join('');
     b.innerHTML =
       row('Name', txt('name', e.name || '')) +
@@ -1457,7 +1457,7 @@ function renderProps(){
       row('Position X', num('x', e.x)) + row('Position Y', num('y', e.y)) +
       row('Rotation', `<select data-f="rot">${[0,90,180,270].map(v=>`<option ${((e.rot||0)===v)?'selected':''}>${v}</option>`).join('')}</select>`) +
       `<div class="rp-sec">Rail mount</div>` +
-      row('Din Rail', `<select data-f="rail"><option value="">— none —</option>${S.rails.map(r=>`<option value="${r.id}" ${e.rail===r.id?'selected':''}>${r.id} @ y${r.y}</option>`).join('')}</select>`) +
+      row('Din Rail', `<select data-f="rail"><option value="">- none -</option>${S.rails.map(r=>`<option value="${r.id}" ${e.rail===r.id?'selected':''}>${r.id} @ y${r.y}</option>`).join('')}</select>`) +
       `<div class="rp-sec">Terminals</div>` +
       Object.keys(c.terms).map(tn => `<div class="conn-item"><span style="color:${CLASS_COLOR[termClass(e.id,tn)]}">●</span> ${tn}</div>`).join('') +
       `<div class="rp-sec">Connections (${S.wires.filter(w=>w.from.el===e.id||w.to.el===e.id).length})</div>` + (conns || '<div class="empty">Belum ada kabel</div>') +
@@ -1467,12 +1467,12 @@ function renderProps(){
     const w = S.wires.find(x=>x.id===s.id); if (!w){ ui.sel=null; return renderProps(); }
     const cls = wireClsName(w);
     const v = validateWire(w);
-    t.textContent = 'Wire — ' + cls;
+    t.textContent = 'Wire - ' + cls;
     b.innerHTML =
       row('From', `<input value="${getTermLabel(w.from)}" disabled style="opacity:.5">`) +
       row('To', `<input value="${getTermLabel(w.to)}" disabled style="opacity:.5">`) +
       row('Class', `<input value="${cls}" disabled style="opacity:.5">`) +
-      row('Gauge (mm—)', num('gauge', w.gauge)) +
+      row('Gauge (mm-)', num('gauge', w.gauge)) +
       row('Twisted pair', chk('twist', !!w.twist)) +
       row('Label', txt('label', w.label || '')) +
       row('Color', `<input type="color" data-f="color" value="${wireColor(w)}" style="width:38px;vertical-align:middle"><input type="text" data-f="color" value="${wireColor(w)}" style="width:84px;font-family:Consolas,monospace;margin-left:6px;vertical-align:middle" placeholder="#RRGGBB" title="Masukkan hex, contoh #ff0000">`) +
@@ -4914,11 +4914,11 @@ function showWelcome(){
        <div class="welcome-cards">
          <div class="welcome-card" data-opt="bas">
            <b>Panel BAS</b>
-           <span>Contoh panel building automation: MCB, meter 1P & 3P, kontaktor NCH8, PLC FX3U-64MR, PSU 24V dan gateway MODBUS MGate MB3170 — sudah tersambung wiring.</span>
+           <span>Contoh panel building automation: MCB, meter 1P & 3P, kontaktor NCH8, PLC FX3U-64MR, PSU 24V dan gateway MODBUS MGate MB3170 - sudah tersambung wiring.</span>
          </div>
          <div class="welcome-card" data-opt="empty">
            <b>Empty Panel</b>
-           <span>Mulai dari nol: hanya ducting, din rail dan busbar — tanpa kabel maupun komponen.</span>
+           <span>Mulai dari nol: hanya ducting, din rail dan busbar - tanpa kabel maupun komponen.</span>
          </div>
        </div>
      </div>
