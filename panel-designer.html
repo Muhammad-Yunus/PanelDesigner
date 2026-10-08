@@ -229,8 +229,8 @@ const LIB = [
   { cat:'Structure', items:['rail','duct'] }
 ];
 const STRUCT = {
-  rail: { label:'Din Rail TS35', dim:'600-35 mm', len:600 },
-  duct: { label:'Ducting 3.5cm', dim:'600-35 mm', w:600, h:35 }
+  rail: { label:'Din Rail TS35', dim:'200-35 mm', len:200 },
+  duct: { label:'Ducting 3.5cm', dim:'200-35 mm', w:200, h:35 }
 };
 /* Busbar L1/L2/L3/N/PE - blok tunggal yang bisa digeser (pick-and-place) */
 const BUS = [
@@ -1721,8 +1721,8 @@ function openPanelSettings(pending){
     pending.h = parseFloat($('ms_h').value) || pending.h;
     pending.d = parseFloat($('ms_d').value) || pending.d;
   };
-  $('ms_addRail').addEventListener('click', () => { sync(); pending.rails.push({ id:uid('r'), x:150, y:200, len:600 }); openPanelSettings(pending); });
-  $('ms_addDuct').addEventListener('click', () => { sync(); pending.ducts.push({ id:uid('d'), x:150, y:200, w:600, h:35 }); openPanelSettings(pending); });
+  $('ms_addRail').addEventListener('click', () => { sync(); pending.rails.push({ id:uid('r'), x:150, y:200, len:STRUCT.rail.len }); openPanelSettings(pending); });
+  $('ms_addDuct').addEventListener('click', () => { sync(); pending.ducts.push({ id:uid('d'), x:150, y:200, w:STRUCT.duct.w, h:STRUCT.duct.h }); openPanelSettings(pending); });
   m.querySelectorAll('.del').forEach(btn => btn.addEventListener('click', () => {
     sync();
     const t = btn.getAttribute('data-del'), i = +btn.getAttribute('data-i');
