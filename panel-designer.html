@@ -338,9 +338,12 @@ const TERM_COLOR = { 'V-1':'#808080', 'V-2':'#808080', 'V-':'#808080', '0V1':'#8
   'V+1':'#8b4513', 'V+2':'#8b4513', 'V+':'#8b4513', '24V1':'#8b4513', '24V2':'#8b4513',
   'COM1':'#dc2626', 'COM2':'#dc2626', 'COM3':'#dc2626', 'COM4':'#dc2626',
   'plc:0V':'#808080' };
+/* terminal input PLC (X0-X37) */
+const TERM_COLOR_RULE = [ { type:'plc', re:/^X\d+$/, color:'#00eeff' } ];
 function termColor(elId, tn){
   const e = elId ? S.elements.find(x => x.id === elId) : null;
   if (e && TERM_COLOR[e.type + ':' + tn]) return TERM_COLOR[e.type + ':' + tn];
+  if (e) for (const r of TERM_COLOR_RULE) if (r.type === e.type && r.re.test(tn)) return r.color;
   return TERM_COLOR[tn] || CLASS_COLOR[VR_MAP[tn] || termClass(elId, tn)] || '#94a3b8';
 }
 const TYPE_FILL = { mcb_1p:'#f8fafc', mcb_2p:'#f8fafc', mcb_3p:'#f8fafc', mccb_3p:'#e2e8f0',
