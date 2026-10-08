@@ -242,7 +242,8 @@ const BUS = [
 ];
 const BUS_W = 6;
 /* Busbar: posisi & dimensi disimpan di S.bus {x,y,rot,gap,len,tapGap}
-   - x,y  : asal blok (rot0, pojok kiri-atas jalur pertama)
+   - x,y  : pojok kiri-atas kotak pembatas (bbox) busbar di dunia,
+            tetap = posisi visual walau di-rotate
    - rot  : 0/90/180/270
    - gap  : jarak antar jalur busbar (default 16)
    - len  : panjang busbar (mm, default 20)
@@ -262,11 +263,17 @@ function normBus(b, h){
 function busCfg(){ return S.bus || normBus(null, S.h); }
 function busNumTaps(c){ return Math.max(1, Math.floor(c.len / c.tapGap)); }
 function barBlockW(c){ return BUS.length*BUS_W + (BUS.length-1)*c.gap; }
-function busWorldPt(c, qx, qy){
-  const bw = barBlockW(c), bh = c.len;
-  const cx = c.x + bw/2, cy = c.y + bh/2;
-  const dx = qx - bw/2, dy = qy - bh/2;
+function busDims(c){
   const r = ((c.rot % 360) + 360) % 360;
+  const bw = barBlockW(c), bh = c.len;
+  return (r === 90 || r === 270) ? { w:bh, h:bw } : { w:bw, h:bh };
+}
+function busWorldPt(c, qx, qy){
+  const r = ((c.rot % 360) + 360) % 360;
+  const bw = barBlockW(c), bh = c.len;
+  const db = busDims(c);
+  const cx = c.x + db.w/2, cy = c.y + db.h/2;
+  const dx = qx - bw/2, dy = qy - bh/2;
   let rx, ry;
   if (r === 0){ rx=dx; ry=dy; }
   else if (r === 90){ rx=-dy; ry=dx; }
@@ -280,7 +287,7 @@ function busRectFromW(c, lx, ly, w, h){
   const xs=[p1.x,p2.x,p3.x,p4.x], ys=[p1.y,p2.y,p3.y,p4.y];
   return { x: Math.min(...xs), y: Math.min(...ys), w: Math.max(...xs)-Math.min(...xs), h: Math.max(...ys)-Math.min(...ys) };
 }
-function busMetrics(){ const r = busRectFromW(busCfg(), 0, 0, barBlockW(busCfg()), busCfg().len); return { bx:r.x, by:r.y, w:r.w, h:r.h }; }
+function busMetrics(){ const c = busCfg(), d = busDims(c); return { bx:c.x, by:c.y, w:d.w, h:d.h }; }
 const CLASS_COLOR = { L1:'#ef4444', L2:'#f97316', L3:'#eab308', L:'#dc2626', N:'#3b82f6', PE:'#16a34a',
   'DC+':'#a855f7', 'DC-':'#15803d', COM:'#64748b', DC_IN:'#0ea5e9', DC_OUT:'#14b8a6', COIL:'#d946ef', AC:'#f59e0b', OTHER:'#94a3b8' };
 const VR_MAP = { V1:'L1', V2:'L2', V3:'L3', Vn:'N', R1:'N', R2:'N', '1':'L', '2':'L' };
