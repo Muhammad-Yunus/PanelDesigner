@@ -226,22 +226,17 @@ const LIB = [
   { cat:'Control', items:['contactor','plc'] },
   { cat:'Power', items:['psu'] },
   { cat:'Comms', items:['mgate'] },
-  { cat:'Structure', items:['rail','duct'] }
+  { cat:'Structure', items:['rail','duct','busbar'] }
 ];
 const STRUCT = {
   rail: { label:'Din Rail TS35', dim:'200-35 mm', len:200 },
-  duct: { label:'Ducting 3.5cm', dim:'200-35 mm', w:200, h:35 }
+  duct: { label:'Ducting 3.5cm', dim:'200-35 mm', w:200, h:35 },
+  busbar: { label:'Busbar RSTN', dim:'94-20 mm' }
 };
-/* Busbar L1/L2/L3/N/PE - blok tunggal yang bisa digeser (pick-and-place) */
-const BUS = [
-  { id:'B_L1', label:'L1', cls:'L1', x:36, color:'#ef4444' },
-  { id:'B_L2', label:'L2', cls:'L2', x:54, color:'#f97316' },
-  { id:'B_L3', label:'L3', cls:'L3', x:72, color:'#eab308' },
-  { id:'B_N', label:'N', cls:'N', x:90, color:'#3b82f6' },
-  { id:'B_PE', label:'PE', cls:'PE', x:108, color:'#22c55e' }
-];
-const BUS_W = 6;
-/* Busbar: posisi & dimensi disimpan di S.bus {x,y,rot,gap,len,tapGap}
+/* Busbar L1/L2/L3/N/PE - template jalur; instance tersimpan di S.buses[]
+   tiap instance: { id, x, y, rot, gap, len, tapGap, pe }
+   - id   : 'B' untuk instance pertama (kompat desain lama), lalu 'B2','B3',...
+            bar id = instance id + '_' + kelas  (mis. B_L1, B2_PE)
    - x,y  : pojok kiri-atas kotak pembatas (bbox) busbar di dunia,
             tetap = posisi visual walau di-rotate
    - rot  : 0/90/180/270
@@ -249,10 +244,19 @@ const BUS_W = 6;
    - len  : panjang busbar (mm, default 20)
    - tapGap : jarak antar lubang (default 18)
    - pe     : true = tampilkan jalur PE (default true) */
-function normBus(b, h){
-  const raw = (b && typeof b.x === 'number') ? b : {};
+const BUS = [
+  { cls:'L1', label:'L1', color:'#ef4444' },
+  { cls:'L2', label:'L2', color:'#f97316' },
+  { cls:'L3', label:'L3', color:'#eab308' },
+  { cls:'N', label:'N', color:'#3b82f6' },
+  { cls:'PE', label:'PE', color:'#22c55e' }
+];
+const BUS_W = 6;
+function normBus(b, h, id){
+  const raw = (b && typeof b === 'object') ? b : {};
   const len = raw.len != null ? Math.max(20, raw.len) : 20;
   return {
+    id: id || raw.id || 'B',
     x: typeof raw.x === 'number' ? raw.x : 36,
     y: typeof raw.y === 'number' ? raw.y : 40,
     rot: raw.rot || 0,
@@ -262,9 +266,43 @@ function normBus(b, h){
     pe: raw.pe !== false
   };
 }
-function busCfg(){ return S.bus || normBus(null, S.h); }
+function busList(){
+  if (!Array.isArray(S.buses)) S.buses = [];
+  if (!S.buses.length) S.buses.push(normBus(null, S.h, 'B'));
+  return S.buses;
+}
+function normBuses(d){
+  let l = Array.isArray(d.buses) ? d.buses.map(b => normBus(b, d.h)) : [normBus(d.bus, d.h, 'B')];
+  if (!l.length) l = [normBus(null, d.h, 'B')];
+  d.buses = l;
+  delete d.bus;
+  return d;
+}
+function busCfg(id){
+  const l = busList();
+  if (id){ const f = l.find(b => b.id === id); if (f) return f; }
+  return l[0];
+}
+function nextBusId(){
+  const l = busList();
+  if (!l.some(b => b.id === 'B')) return 'B';
+  let n = 2;
+  while (l.some(b => b.id === 'B' + n)) n++;
+  return 'B' + n;
+}
+function isBusBar(elId){ return !!elId && elId[0] === 'B'; }
+function findBus(elId){
+  if (!isBusBar(elId)) return null;
+  for (const c of busList()){
+    const t = BUS.find(b => c.id + '_' + b.cls === elId);
+    if (t) return { bus:c, cls:t.cls, label:t.label, color:t.color, id:elId };
+  }
+  return null;
+}
+function busOf(elId, c){ return elId && elId.indexOf(c.id + '_') === 0; }
 function busNumTaps(c){ return Math.max(1, Math.floor(c.len / c.tapGap)); }
-function busBars(c){ return c.pe === false ? BUS.filter(b => b.id !== 'B_PE') : BUS; }
+function busBars(c){ return BUS.filter(b => !(c.pe === false && b.cls === 'PE'))
+  .map(b => ({ id:c.id + '_' + b.cls, cls:b.cls, label:b.label, color:b.color })); }
 function barBlockW(c){ const n = busBars(c).length; return n*BUS_W + (n-1)*c.gap; }
 function busDims(c){
   const r = ((c.rot % 360) + 360) % 360;
@@ -290,7 +328,7 @@ function busRectFromW(c, lx, ly, w, h){
   const xs=[p1.x,p2.x,p3.x,p4.x], ys=[p1.y,p2.y,p3.y,p4.y];
   return { x: Math.min(...xs), y: Math.min(...ys), w: Math.max(...xs)-Math.min(...xs), h: Math.max(...ys)-Math.min(...ys) };
 }
-function busMetrics(){ const c = busCfg(), d = busDims(c); return { bx:c.x, by:c.y, w:d.w, h:d.h }; }
+function busMetrics(c){ const cfg = c || busCfg(), d = busDims(cfg); return { bx:cfg.x, by:cfg.y, w:d.w, h:d.h }; }
 const CLASS_COLOR = { L1:'#ef4444', L2:'#f97316', L3:'#eab308', L:'#dc2626', N:'#3b82f6', PE:'#16a34a',
   'DC+':'#a855f7', 'DC-':'#15803d', COM:'#64748b', DC_IN:'#0ea5e9', DC_OUT:'#14b8a6', COIL:'#d946ef', AC:'#f59e0b', OTHER:'#94a3b8' };
 const VR_MAP = { V1:'L1', V2:'L2', V3:'L3', Vn:'N', R1:'N', R2:'N', '1':'L', '2':'L' };
@@ -313,7 +351,7 @@ const ui = {
 function defaultDesign(){
   return {
     name:'Panel Utama', w:600, h:800, d:250,
-    bus:{ x:36, y:40, rot:0, gap:16, len:20, tapGap:18, pe:true },
+    buses:[ { id:'B', x:36, y:40, rot:0, gap:16, len:20, tapGap:18, pe:true } ],
     rails:[ {id:'r1',x:125,y:160,len:460}, {id:'r2',x:125,y:330,len:460},
             {id:'r3',x:125,y:500,len:460}, {id:'r4',x:125,y:670,len:460} ],
     ducts:[ {id:'d1',x:125,y:95,w:460,h:35}, {id:'d2',x:125,y:250,w:460,h:35},
@@ -341,7 +379,7 @@ function rotPt(px,py,cx,cy,deg){
 }
 function termClass(elId, term){
   if (VR_MAP[term]) return VR_MAP[term];
-  if (elId && elId[0]==='B'){ const b=BUS.find(x=>x.id===elId); return b?b.cls:'OTHER'; }
+  if (isBusBar(elId)){ const r = findBus(elId); return r ? r.cls : 'OTHER'; }
   if (term==='A1' || term==='A2') return 'COIL';
   if (term==='G') return 'PE';
   if (/^V\+/.test(term)) return 'DC+';
@@ -360,9 +398,8 @@ function termClass(elId, term){
 }
 function classGroup(c){ return /^L/.test(c) ? 'L' : c; }
 function isTwistPair(a, b){ return /RS485/.test(a.term) && /RS485/.test(b.term); }
-function busTapPos(bar, i){
-  const c = busCfg();
-  const bi = BUS.findIndex(b => b.id === bar.id);
+function busTapPos(c, bar, i){
+  const bi = BUS.findIndex(b => b.cls === bar.cls);
   const stagger = bi * Math.max(6, Math.round(c.tapGap*0.15));
   const p = busWorldPt(c, bi*(BUS_W + c.gap) + BUS_W, (i+0.5)*c.tapGap + stagger);
   const r = ((c.rot % 360) + 360) % 360;
@@ -370,12 +407,13 @@ function busTapPos(bar, i){
   return { x:p.x, y:p.y, side: sides[r/90] };
 }
 function getTermPos(elId, term){
-  if (elId && elId[0]==='B'){
-    const bar = BUS.find(b=>b.id===elId); if (!bar) return null;
-    if (busCfg().pe === false && elId === 'B_PE') return null; /* PE disembunyikan */
-    if (/^tap\d+$/.test(term)) return busTapPos(bar, parseInt(term.slice(3),10));
+  const br = isBusBar(elId) ? findBus(elId) : null;
+  if (br){
+    if (br.bus.pe === false && br.cls === 'PE') return null; /* PE disembunyikan */
+    if (/^tap\d+$/.test(term)) return busTapPos(br.bus, br, parseInt(term.slice(3),10));
     return null;
   }
+  if (isBusBar(elId)) return null;
   const e = S.elements.find(x=>x.id===elId); if (!e) return null;
   const c = CATALOG[e.type]; if (!c) return null;
   const t = c.terms[term]; if (!t) return null;
@@ -390,16 +428,20 @@ const MIN_GAP = 4; /* minimum spacing (mm) between components on din rail */
 function gapExpand(r){ return { x:r.x-MIN_GAP/2, y:r.y-MIN_GAP/2, w:r.w+MIN_GAP, h:r.h+MIN_GAP }; }
 function gapOverlap(a,b, g){ g = g || MIN_GAP;
   return a.x < b.x+b.w+g-0.1 && a.x+a.w+g-0.1 > b.x && a.y < b.y+b.h+g-0.1 && a.y+a.h+g-0.1 > b.y; }
-function busbarZone(){
-  const m = busMetrics();
-  return { x:m.bx-8, y:m.by-6, w:m.w+16, h:m.h+12 };
+function busbarZones(){
+  return busList().map(c => { const m = busMetrics(c);
+    return { x:m.bx-8, y:m.by-6, w:m.w+16, h:m.h+12 }; });
 }
 function rectsOverlap(a,b){ return a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y; }
-function gapConflict(rect){
+function gapConflict(rect, skipId){
   for (const o of S.elements)
     if (gapOverlap(rect, elemRect(o))) return o;
-  const bz = busbarZone();
-  if (rect.x < bz.x + bz.w && rect.x + rect.w > bz.x && rect.y < bz.y + bz.h && rect.y + rect.h > bz.y) return { zone:true };
+  for (const c of busList()){
+    if (skipId && c.id === skipId) continue;
+    const m = busMetrics(c);
+    const bz = { x:m.bx-8, y:m.by-6, w:m.w+16, h:m.h+12 };
+    if (rect.x < bz.x + bz.w && rect.x + rect.w > bz.x && rect.y < bz.y + bz.h && rect.y + rect.h > bz.y) return { zone:true };
+  }
   return null;
 }
 function inPanel(r){ return r.x>=0 && r.y>=0 && r.x+r.w<=S.w && r.y+r.h<=S.h; }
@@ -446,7 +488,10 @@ function setZoom(k2, cx, cy){
 function validateWire(w){
   if ((w.from && w.from.term === 'NC') || (w.to && w.to.term === 'NC'))
     return { level:'error', msg:'NO CONNECT - terminal NC tidak dapat dihubungkan' };
-  if (busCfg().pe === false && ((w.from && w.from.el === 'B_PE') || (w.to && w.to.el === 'B_PE')))
+  const fBus = w.from && w.from.el ? findBus(w.from.el) : null;
+  const tBus = w.to && w.to.el ? findBus(w.to.el) : null;
+  if (((fBus && fBus.cls === 'PE') || (tBus && tBus.cls === 'PE')) &&
+      ((fBus && fBus.bus.pe === false) || (tBus && tBus.bus.pe === false)))
     return { level:'warn', msg:'PE busbar disabled - kabel tetap tersimpan, centang Include PE untuk menampilkannya' };
   const a = termClass(w.from.el, w.from.term);
   const b = termClass(w.to.el, w.to.term);
@@ -495,21 +540,24 @@ function renderPanel(){
 /* ===================== RENDER: BUSBAR (moveable block) ===================== */
 function renderBus(){
   const g = $('lyrBus'); clearEl(g);
-  const c = busCfg();
-  const bw = barBlockW(c);
-  for (const bar of busBars(c)){
-    const gr = svgEl('g', { class:'bus', 'data-id':bar.id, style:'cursor:move' }, g);
-    const bi = busBars(c).indexOf(bar);
-    const r = busRectFromW(c, bi*(BUS_W + c.gap), 0, BUS_W, c.len);
-    svgEl('rect', { x:r.x, y:r.y, width:r.w, height:r.h, fill:bar.color, rx:1, opacity:.9 }, gr);
-    const lt = busWorldPt(c, bi*(BUS_W + c.gap) + BUS_W/2, 2);
-    const lb = svgEl('text', { x:lt.x, y:lt.y-1, class:'bus-label', fill:bar.color, 'text-anchor':'middle' }, gr);
-    lb.textContent = bar.label;
-  }
-  if ((ui.drag && ui.drag.type === 'move' && ui.drag.kind === 'bus') || (ui.sel && ui.sel.kind === 'bus')){
-    const m = busMetrics();
-    svgEl('rect', { x:m.bx-9, y:m.by-7, width:m.w+18, height:m.h+14, fill:'none', stroke:'#3b82f6',
-      'stroke-width':1, 'stroke-dasharray':'4 3', 'pointer-events':'none' }, g);
+  for (const c of busList()){
+    const bars = busBars(c);
+    for (const bar of bars){
+      const gr = svgEl('g', { class:'bus', 'data-id':c.id, style:'cursor:move' }, g);
+      const bi = bars.indexOf(bar);
+      const r = busRectFromW(c, bi*(BUS_W + c.gap), 0, BUS_W, c.len);
+      svgEl('rect', { x:r.x, y:r.y, width:r.w, height:r.h, fill:bar.color, rx:1, opacity:.9 }, gr);
+      const lt = busWorldPt(c, bi*(BUS_W + c.gap) + BUS_W/2, 2);
+      const lb = svgEl('text', { x:lt.x, y:lt.y-1, class:'bus-label', fill:bar.color, 'text-anchor':'middle' }, gr);
+      lb.textContent = bar.label;
+    }
+    const sel = (ui.drag && ui.drag.type === 'move' && ui.drag.kind === 'bus' && ui.drag.id === c.id) ||
+                (ui.sel && ui.sel.kind === 'bus' && ui.sel.id === c.id);
+    if (sel){
+      const m = busMetrics(c);
+      svgEl('rect', { x:m.bx-9, y:m.by-7, width:m.w+18, height:m.h+14, fill:'none', stroke:'#3b82f6',
+        'stroke-width':1, 'stroke-dasharray':'4 3', 'pointer-events':'none' }, g);
+    }
   }
 }
 /* ===================== RENDER: RAILS & DUCTS ===================== */
@@ -604,11 +652,12 @@ const addDot = (elId, tn, p, color, lab, fs) => {
       addDot(e.id, tn, { x:p.x + e.x, y:p.y + e.y }, termColor(e.id, tn), lab, fs);
     }
   }
-  for (const bar of busBars(busCfg())){
-    const n = busNumTaps(busCfg());
-    for (let i=0; i<n; i++){
-      addDot(bar.id, 'tap'+i, busTapPos(bar, i), bar.color);
-    }
+  for (const c of busList()){
+    const bars = busBars(c);
+    const n = busNumTaps(c);
+    for (const bar of bars)
+      for (let i=0; i<n; i++)
+        addDot(bar.id, 'tap'+i, busTapPos(c, bar, i), bar.color);
   }
 }
 /* ===================== RENDER: WIRES ===================== */
@@ -772,6 +821,16 @@ function renderOverlay(){
     } else if (gh.kind==='duct'){
       svgEl('rect', { x:gh.x, y:gh.y, width:STRUCT.duct.w, height:STRUCT.duct.h, fill:col, opacity:.4,
         stroke:col, 'stroke-width':1, class:'ghost' }, g);
+    } else if (gh.kind==='busbar'){
+      const tmp = normBus(null, S.h, 'B'), d = busDims(tmp);
+      const bars = busBars(tmp);
+      svgEl('rect', { x:gh.x, y:gh.y, width:d.w, height:d.h, fill:col, opacity:.25,
+        stroke:col, 'stroke-width':1, class:'ghost' }, g);
+      for (const bar of bars){
+        const bi = bars.indexOf(bar);
+        const bx = gh.x + bi*(BUS_W + tmp.gap);
+        svgEl('rect', { x:bx, y:gh.y, width:BUS_W, height:d.h, fill:bar.color, opacity:.5, class:'ghost' }, g);
+      }
     }
     if (!gh.ok && gh.msg){
       const t = svgEl('text', { x:gh.x, y:gh.y-6, class:'ghost', 'font-size':5, fill:'#ef4444',
@@ -849,8 +908,7 @@ function shiftRailChildren(r, dx, dy){
       if (moved.indexOf(o) >= 0) continue;
       if (gapOverlap(rc, elemRect(o))) return false;
     }
-    const bz = busbarZone();
-    if (rectsOverlap(rc, bz)) return false;
+    if (busbarZones().some(bz => rectsOverlap(rc, bz))) return false;
   }
   for (const { e } of cands){
     e.x += dx; e.y += dy;
@@ -1103,9 +1161,10 @@ svg.addEventListener('pointerdown', ev => {
         ui.drag = { type:'move', kind:'duct', id, dx:wp.x-dd.x, dy:wp.y-dd.y, sx:ev.clientX, sy:ev.clientY, moved:false };
         svg.setPointerCapture(ev.pointerId);
       } else if (busG){
-        select('bus', 'BUS');
-        const m = busMetrics();
-        ui.drag = { type:'move', kind:'bus', dx:wp.x-m.bx, dy:wp.y-m.by, sx:ev.clientX, sy:ev.clientY, moved:false };
+        const id = busG.getAttribute('data-id');
+        select('bus', id);
+        const m = busMetrics(busCfg(id));
+        ui.drag = { type:'move', kind:'bus', id, dx:wp.x-m.bx, dy:wp.y-m.by, sx:ev.clientX, sy:ev.clientY, moved:false };
         svg.setPointerCapture(ev.pointerId);
       } else if (lblG){
         const id = lblG.getAttribute('data-id');
@@ -1160,9 +1219,10 @@ svg.addEventListener('pointerdown', ev => {
     ui.drag = { type:'move', kind:'duct', id, dx:wp.x-d.x, dy:wp.y-d.y, sx:ev.clientX, sy:ev.clientY, moved:false };
     svg.setPointerCapture(ev.pointerId);
   } else if (busG){
-    select('bus', 'BUS');
-    const m = busMetrics();
-    ui.drag = { type:'move', kind:'bus', dx:wp.x-m.bx, dy:wp.y-m.by, sx:ev.clientX, sy:ev.clientY, moved:false };
+    const id = busG.getAttribute('data-id');
+    select('bus', id);
+    const m = busMetrics(busCfg(id));
+    ui.drag = { type:'move', kind:'bus', id, dx:wp.x-m.bx, dy:wp.y-m.by, sx:ev.clientX, sy:ev.clientY, moved:false };
     svg.setPointerCapture(ev.pointerId);
   } else if (lblG){
     select('label', lblG.getAttribute('data-id'));
@@ -1255,20 +1315,28 @@ svg.addEventListener('pointermove', ev => {
       dd.x = clamp(nx, 0, S.w - dd.w); dd.y = clamp(ny, 0, S.h - dd.h);
       renderDucts();
     } else if (d.kind === 'bus'){
-      const m = busMetrics();
-      const ox = S.bus.x, oy = S.bus.y;
+      const c = busCfg(d.id);
+      const m = busMetrics(c);
+      const ox = c.x, oy = c.y;
       const cbx = clamp(snap(wp.x - d.dx), 0, Math.max(0, S.w - m.w));
       const cby = clamp(snap(wp.y - d.dy), 0, Math.max(0, S.h - m.h));
       if (cbx === ox && cby === oy){ renderElems(); renderTerms(); renderBus(); renderWires(); renderOverlay(); }
       else {
-        S.bus.x = cbx; S.bus.y = cby;
-        const m2 = busMetrics();
+        c.x = cbx; c.y = cby;
+        const m2 = busMetrics(c);
+        const cand = { x:m2.bx, y:m2.by, w:m2.w, h:m2.h };
         let blocked = false;
         for (const o of S.elements)
-          if (rectsOverlap({ x:m2.bx, y:m2.by, w:m2.w, h:m2.h }, elemRect(o))){ blocked = true; break; }
-        if (blocked){ S.bus.x = ox; S.bus.y = oy; }
+          if (rectsOverlap(cand, elemRect(o))){ blocked = true; break; }
+        if (!blocked)
+          for (const o of busList()){
+            if (o.id === c.id) continue;
+            const om = busMetrics(o);
+            if (rectsOverlap(cand, { x:om.bx, y:om.by, w:om.w, h:om.h })){ blocked = true; break; }
+          }
+        if (blocked){ c.x = ox; c.y = oy; }
         else for (const w of S.wires)
-          if (/^B_/.test(w.from.el) || /^B_/.test(w.to.el)) rerouteWire(w);
+          if (busOf(w.from.el, c) || busOf(w.to.el, c)) rerouteWire(w);
         renderElems(); renderTerms(); renderBus(); renderWires(); renderOverlay();
       }
     } else if (d.kind === 'label'){
@@ -1338,7 +1406,7 @@ function buildLibrary(){
       const it = document.createElement('div');
       it.className = 'lib-item'; it.draggable = true;
       it.setAttribute('data-part', key);
-      if (key === 'rail' || key === 'duct'){
+      if (key === 'rail' || key === 'duct' || key === 'busbar'){
         it.innerHTML = `<span>${STRUCT[key].label}</span><span class="dim">${STRUCT[key].dim}</span>`;
       } else {
         const c = CATALOG[key];
@@ -1395,6 +1463,12 @@ svg.addEventListener('drop', ev => {
     S.rails.push({ id:uid('r'), x:g.x, y:g.y, len:STRUCT.rail.len });
   } else if (part === 'duct'){
     S.ducts.push({ id:uid('d'), x:g.x, y:g.y, w:STRUCT.duct.w, h:STRUCT.duct.h });
+  } else if (part === 'busbar'){
+    const id = nextBusId();
+    const cfg = normBus(null, S.h, id);
+    cfg.x = g.x; cfg.y = g.y;
+    busList().push(cfg);
+    select('bus', id);
   } else if (CATALOG[part]){
     const c = CATALOG[part];
     const e = { id:uid('e'), type:part, x:g.x, y:g.y, rot:0, circuit:'', rating:c.rating, name:'' };
@@ -1416,6 +1490,19 @@ function makeGhost(part, wp){
     const x = snap(wp.x - STRUCT.duct.w/2), y = snap(wp.y - STRUCT.duct.h/2);
     return { kind:'duct', x, y, ok: x>=0 && y>=0 && x+STRUCT.duct.w<=S.w && y+STRUCT.duct.h<=S.h,
       msg:'Ducting di luar panel' };
+  }
+  if (part === 'busbar'){
+    const tmp = normBus(null, S.h, 'B'), d = busDims(tmp);
+    const x = snap(wp.x - d.w/2), y = snap(wp.y - d.h/2);
+    const rect = { x, y, w:d.w, h:d.h };
+    let ok = inPanel(rect), msg = ok ? '' : 'Busbar di luar panel';
+    if (ok) for (const o of S.elements)
+      if (rectsOverlap(rect, elemRect(o))){ ok = false; msg = 'Busbar menabrak komponen'; break; }
+    if (ok) for (const c of busList()){
+      const m = busMetrics(c);
+      if (rectsOverlap(rect, { x:m.bx, y:m.by, w:m.w, h:m.h })){ ok = false; msg = 'Menabrak busbar lain'; break; }
+    }
+    return { kind:'busbar', x, y, ok, msg };
   }
   const c = CATALOG[part];
   if (!c) return null;
@@ -1458,6 +1545,16 @@ function deleteSelected(){
   else if (s.kind === 'rail') S.rails = S.rails.filter(r => r.id !== s.id);
   else if (s.kind === 'duct') S.ducts = S.ducts.filter(d => d.id !== s.id);
   else if (s.kind === 'label') S.labels = S.labels.filter(l => l.id !== s.id);
+  else if (s.kind === 'bus'){
+    const c = busList().find(b => b.id === s.id);
+    S.buses = S.buses.filter(b => b.id !== s.id);
+    if (c){
+      const pfx = c.id + '_';
+      S.wires = S.wires.filter(w => !(w.from.el && w.from.el.indexOf(pfx) === 0) &&
+                                     !(w.to.el && w.to.el.indexOf(pfx) === 0));
+    }
+    if (!S.buses.length) S.buses.push(normBus(null, S.h, 'B'));
+  }
   ui.sel = null;
   markDirty();
   rebuildAllWires();
@@ -1518,9 +1615,11 @@ function renderProps(){
       `<button class="rp-btn danger" data-act="del">Delete Element</button>`;
     bindPropInputs(e, 'element');
   } else if (s.kind === 'bus'){
-    S.bus = normBus(S.bus, S.h);
-    const cfg = S.bus;
-    t.textContent = 'Busbar - L1/L2/L3/N/PE';
+    const bi = busList().findIndex(b => b.id === s.id);
+    if (bi < 0){ ui.sel = null; return renderProps(); }
+    S.buses[bi] = normBus(S.buses[bi], S.h, s.id);
+    const cfg = S.buses[bi];
+    t.textContent = 'Busbar ' + cfg.id + ' - L1/L2/L3/N/PE';
     b.innerHTML =
       row('Position X', num('x', cfg.x)) + row('Position Y', num('y', cfg.y)) +
       row('Panjang (mm)', num('len', cfg.len)) +
@@ -1530,8 +1629,9 @@ function renderProps(){
       row('Rotation', `<select data-f="rot">${[0,90,180,270].map(v=>`<option ${((cfg.rot%360)===v)?'selected':''}>${v}</option>`).join('')}</select>`) +
       `<div class="rp-sec">Info</div>` +
       `<div class="conn-item">${busNumTaps(cfg)} lubang per busbar (mengikuti Panjang / Jarak lubang).</div>` +
-      `<div class="conn-item">Klik busbar lalu drag untuk memindahkan.</div>`;
-    bindPropInputs(S.bus, 'bus');
+      `<div class="conn-item">${S.buses.length} busbar di panel. Klik busbar lalu drag untuk memindahkan.</div>` +
+      `<button class="rp-btn danger" data-act="del">Delete Busbar</button>`;
+    bindPropInputs(cfg, 'bus');
   } else if (s.kind === 'wire'){
     const w = S.wires.find(x=>x.id===s.id); if (!w){ ui.sel=null; return renderProps(); }
     const cls = wireClsName(w);
@@ -1580,7 +1680,8 @@ function renderProps(){
   }));
 }
 function getTermLabel(ref){
-  if (ref.el[0]==='B'){ const b=BUS.find(x=>x.id===ref.el); return (b?b.label:ref.el)+'.'+ref.term; }
+  const br = findBus(ref.el);
+  if (br) return br.label + '.' + ref.term;
   const e = S.elements.find(x=>x.id===ref.el);
   return (e ? (e.name || CATALOG[e.type].label) : '?') + '.' + ref.term;
 }
@@ -1618,15 +1719,15 @@ function bindPropInputs(obj, kind){
           if (w.from.el === obj.id || w.to.el === obj.id) rerouteWire(w);
       }
       if (kind === 'bus'){
-        S.bus.rot = ((S.bus.rot % 360) + 360) % 360;
-        S.bus.len = Math.max(20, S.bus.len);
-        S.bus.gap = Math.max(6, S.bus.gap);
-        S.bus.tapGap = Math.max(10, S.bus.tapGap);
-        const m = busMetrics();
-        S.bus.x = clamp(S.bus.x, 0, Math.max(0, S.w - m.w));
-        S.bus.y = clamp(S.bus.y, 0, Math.max(0, S.h - m.h));
+        obj.rot = ((obj.rot % 360) + 360) % 360;
+        obj.len = Math.max(20, obj.len);
+        obj.gap = Math.max(6, obj.gap);
+        obj.tapGap = Math.max(10, obj.tapGap);
+        const m = busMetrics(obj);
+        obj.x = clamp(obj.x, 0, Math.max(0, S.w - m.w));
+        obj.y = clamp(obj.y, 0, Math.max(0, S.h - m.h));
         for (const w of S.wires)
-          if (/^B_/.test(w.from.el) || /^B_/.test(w.to.el)) rerouteWire(w);
+          if (busOf(w.from.el, obj) || busOf(w.to.el, obj)) rerouteWire(w);
       }
       markDirty(); renderAll();
     });
@@ -1748,7 +1849,7 @@ function openPanelSettings(pending){
       e.x = clamp(e.x, 0, S.w - c.w); e.y = clamp(e.y, 0, S.h - c.h);
       e.rail = S.rails.some(r=>r.id===e.rail) ? e.rail : null;
     }
-    S.wires = S.wires.filter(w => (w.from.el && w.from.el[0] === 'B') || (w.to.el && w.to.el[0] === 'B') ||
+    S.wires = S.wires.filter(w => (w.from.el && findBus(w.from.el)) || (w.to.el && findBus(w.to.el)) ||
       (getTermPos(w.from.el, w.from.term) && getTermPos(w.to.el, w.to.term)));
     $('modalBg').classList.remove('open');
     markDirty(); fitView(); renderAll();
@@ -1777,7 +1878,7 @@ function loadLS(){
     S = d;
     S.labels = S.labels || []; S.wires = S.wires || []; S.elements = S.elements || [];
     S.rails = S.rails || []; S.ducts = S.ducts || [];
-    S.bus = normBus(S.bus, S.h);
+    normBuses(S);
     S.wires.forEach(w => { if (!w.rawPts) w.rawPts = (w.pts && w.pts.length) ? w.pts.slice() : []; });
     rebuildAllWires();
     return true;
@@ -1806,7 +1907,7 @@ $('fileImport').addEventListener('change', ev => {
       S = d;
       S.labels = S.labels || []; S.wires = S.wires || []; S.elements = S.elements || [];
       S.rails = S.rails || []; S.ducts = S.ducts || [];
-      S.bus = normBus(S.bus, S.h);
+      normBuses(S);
       ui.sel = null;
       markDirty(); fitView(); renderAll();
       setStatus('Import ✓ ' + f.name);
@@ -3143,7 +3244,7 @@ const EXAMPLE_BAS =
           "y": 667
         },
         {
-          "x": 75,
+          "x": 69,
           "y": 667,
           "side": "right"
         }
@@ -3175,7 +3276,7 @@ const EXAMPLE_BAS =
           "y": 667
         },
         {
-          "x": 75,
+          "x": 69,
           "y": 667,
           "side": "right"
         }
@@ -3604,7 +3705,7 @@ const EXAMPLE_BAS =
       },
       "pts": [
         {
-          "x": 39,
+          "x": 37,
           "y": 99,
           "side": "right"
         },
@@ -3632,7 +3733,7 @@ const EXAMPLE_BAS =
       "twist": false,
       "rawPts": [
         {
-          "x": 39,
+          "x": 37,
           "y": 99,
           "side": "right"
         },
@@ -3667,7 +3768,7 @@ const EXAMPLE_BAS =
       },
       "pts": [
         {
-          "x": 57,
+          "x": 53,
           "y": 113,
           "side": "right"
         },
@@ -3695,7 +3796,7 @@ const EXAMPLE_BAS =
       "twist": false,
       "rawPts": [
         {
-          "x": 57,
+          "x": 53,
           "y": 113,
           "side": "right"
         },
@@ -3730,7 +3831,7 @@ const EXAMPLE_BAS =
       },
       "pts": [
         {
-          "x": 75,
+          "x": 69,
           "y": 307,
           "side": "right"
         },
@@ -3758,7 +3859,7 @@ const EXAMPLE_BAS =
       "twist": false,
       "rawPts": [
         {
-          "x": 75,
+          "x": 69,
           "y": 307,
           "side": "right"
         },
@@ -3983,7 +4084,7 @@ const EXAMPLE_BAS =
           "y": 459
         },
         {
-          "x": 39,
+          "x": 37,
           "y": 459,
           "side": "right"
         }
@@ -4011,7 +4112,7 @@ const EXAMPLE_BAS =
           "y": 459
         },
         {
-          "x": 39,
+          "x": 37,
           "y": 459,
           "side": "right"
         }
@@ -4046,7 +4147,7 @@ const EXAMPLE_BAS =
           "y": 473
         },
         {
-          "x": 57,
+          "x": 53,
           "y": 473,
           "side": "right"
         }
@@ -4074,7 +4175,7 @@ const EXAMPLE_BAS =
           "y": 473
         },
         {
-          "x": 57,
+          "x": 53,
           "y": 473,
           "side": "right"
         }
@@ -4113,7 +4214,7 @@ const EXAMPLE_BAS =
           "y": 577
         },
         {
-          "x": 75,
+          "x": 69,
           "y": 577,
           "side": "right"
         }
@@ -4145,7 +4246,7 @@ const EXAMPLE_BAS =
           "y": 577
         },
         {
-          "x": 75,
+          "x": 69,
           "y": 577,
           "side": "right"
         }
@@ -4573,7 +4674,7 @@ const EXAMPLE_BAS =
           "y": 681
         },
         {
-          "x": 93,
+          "x": 85,
           "y": 681,
           "side": "right"
         }
@@ -4601,7 +4702,7 @@ const EXAMPLE_BAS =
           "y": 681
         },
         {
-          "x": 93,
+          "x": 85,
           "y": 681,
           "side": "right"
         }
@@ -4989,13 +5090,18 @@ const EXAMPLE_BAS =
   "labels": [],
   "bus": {
     "x": 15,
-    "y": 40
+    "y": 40,
+    "rot": 0,
+    "gap": 10,
+    "len": 720,
+    "tapGap": 90,
+    "pe": true
   }
 };
 function applyBasDesign(d){
   d.labels = d.labels || []; d.wires = d.wires || []; d.elements = d.elements || [];
   d.rails = d.rails || []; d.ducts = d.ducts || [];
-  d.bus = normBus(d.bus, d.h);
+  normBuses(d);
   snapshot();
   S = d;
   ui.sel = null; ui.drawing = null;
