@@ -50,13 +50,16 @@ input.tb-num{background:#222632;border:1px solid #323847;color:#c6cbd6;border-ra
 #status .err{color:#f87171;font-weight:600}
 #modalBg{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;z-index:50}
 #modalBg.open{display:flex}
-.modal{background:#171a21;border:1px solid #2c3244;border-radius:10px;width:560px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.modal{background:#171a21;border:1px solid #2c3244;border-radius:10px;width:800px;max-width:94vw;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.5)}
 .modal h3{padding:13px 16px;font-size:14px;border-bottom:1px solid #2a2e38;color:#fff}
 .modal .mbody{padding:14px 16px;overflow-y:auto}
 .modal .mfoot{padding:10px 16px;border-top:1px solid #2a2e38;display:flex;justify-content:flex-end;gap:8px}
 .welcome-cards{display:flex;gap:14px;flex-wrap:wrap}
-.welcome-card{flex:1;min-width:190px;background:#1f2330;border:1px solid #2c3244;border-radius:8px;padding:14px;cursor:pointer;text-align:left;transition:border-color .12s,background .12s}
+.welcome-card{flex:1;min-width:240px;background:#1f2330;border:1px solid #2c3244;border-radius:8px;padding:12px;cursor:pointer;text-align:left;transition:border-color .12s,background .12s;display:flex;gap:12px;align-items:flex-start}
 .welcome-card:hover{border-color:#3b82f6;background:#242a3a}
+.welcome-card .wthumb{flex:0 0 37%;max-width:37%;background:#0b0e14;border:1px solid #2c3244;border-radius:5px;overflow:hidden;display:flex;align-items:center;justify-content:center;padding:3px}
+.welcome-card .wthumb img{display:block;width:100%;height:auto}
+.welcome-card .wtext{flex:1;min-width:0}
 .welcome-card b{color:#fff;font-size:13px;display:block;margin-bottom:6px}
 .welcome-card span{color:#8a92a6;font-size:11px;line-height:1.5;display:block}
 .welcome-card .wrow{display:flex;gap:6px;margin-top:10px;align-items:center;font-size:10px;color:#6b7386}
@@ -20626,16 +20629,25 @@ function showWelcome(){
        <p style="color:#8a92a6;font-size:12px;margin-bottom:12px">Belum ada desain tersimpan di perangkat ini. Pilih cara memulai:</p>
        <div class="welcome-cards">
          <div class="welcome-card" data-opt="bas">
-           <b>Simple BAS</b>
-           <span>Contoh panel BAS sederhana: MCB, meter 1P & 3P, kontaktor NCH8, PLC FX3U, PSU 24V dan gateway MODBUS - sudah tersambung wiring.</span>
+           <div class="wthumb"><img src="docs/thumbnail_example_panel_bas.png" alt="Simple BAS"></div>
+           <div class="wtext">
+             <b>Simple BAS</b>
+             <span>Contoh panel BAS sederhana: MCB, meter 1P & 3P, kontaktor NCH8, PLC FX3U, PSU 24V dan gateway MODBUS - sudah tersambung wiring.</span>
+           </div>
          </div>
          <div class="welcome-card" data-opt="completed">
-           <b>Complete BAS</b>
-           <span>Panel BAS lengkap 520&times;720 mm: 56 komponen, 243 kabel, 2 busbar - contoh desain penuh building automation.</span>
+           <div class="wthumb"><img src="docs/thumbnail_example_panel_bas_completed.png" alt="Complete BAS"></div>
+           <div class="wtext">
+             <b>Complete BAS</b>
+             <span>Panel BAS lengkap 520&times;720 mm: 56 komponen, 243 kabel, 2 busbar - contoh desain penuh building automation.</span>
+           </div>
          </div>
          <div class="welcome-card" data-opt="empty">
-           <b>Empty Panel</b>
-           <span>Mulai dari nol: hanya ducting, din rail dan busbar - tanpa kabel maupun komponen.</span>
+           <div class="wthumb"><img src="docs/thumbnail_example_panel_empty.png" alt="Empty Panel"></div>
+           <div class="wtext">
+             <b>Empty Panel</b>
+             <span>Mulai dari nol: hanya ducting, din rail dan busbar - tanpa kabel maupun komponen.</span>
+           </div>
          </div>
        </div>
      </div>
