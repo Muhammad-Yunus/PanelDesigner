@@ -247,7 +247,8 @@ const BUS_W = 6;
    - rot  : 0/90/180/270
    - gap  : jarak antar jalur busbar (default 16)
    - len  : panjang busbar (mm, default 20)
-   - tapGap : jarak antar lubang (default 18) */
+   - tapGap : jarak antar lubang (default 18)
+   - pe     : true = tampilkan jalur PE (default true) */
 function normBus(b, h){
   const raw = (b && typeof b.x === 'number') ? b : {};
   const len = raw.len != null ? Math.max(20, raw.len) : 20;
@@ -257,12 +258,14 @@ function normBus(b, h){
     rot: raw.rot || 0,
     gap: raw.gap != null ? raw.gap : 16,
     len: Math.round(len),
-    tapGap: raw.tapGap != null ? raw.tapGap : 18
+    tapGap: raw.tapGap != null ? raw.tapGap : 18,
+    pe: raw.pe !== false
   };
 }
 function busCfg(){ return S.bus || normBus(null, S.h); }
 function busNumTaps(c){ return Math.max(1, Math.floor(c.len / c.tapGap)); }
-function barBlockW(c){ return BUS.length*BUS_W + (BUS.length-1)*c.gap; }
+function busBars(c){ return c.pe === false ? BUS.filter(b => b.id !== 'B_PE') : BUS; }
+function barBlockW(c){ const n = busBars(c).length; return n*BUS_W + (n-1)*c.gap; }
 function busDims(c){
   const r = ((c.rot % 360) + 360) % 360;
   const bw = barBlockW(c), bh = c.len;
@@ -310,7 +313,7 @@ const ui = {
 function defaultDesign(){
   return {
     name:'Panel Utama', w:600, h:800, d:250,
-    bus:{ x:36, y:40, rot:0, gap:16, len:20, tapGap:18 },
+    bus:{ x:36, y:40, rot:0, gap:16, len:20, tapGap:18, pe:true },
     rails:[ {id:'r1',x:125,y:160,len:460}, {id:'r2',x:125,y:330,len:460},
             {id:'r3',x:125,y:500,len:460}, {id:'r4',x:125,y:670,len:460} ],
     ducts:[ {id:'d1',x:125,y:95,w:460,h:35}, {id:'d2',x:125,y:250,w:460,h:35},
@@ -369,6 +372,7 @@ function busTapPos(bar, i){
 function getTermPos(elId, term){
   if (elId && elId[0]==='B'){
     const bar = BUS.find(b=>b.id===elId); if (!bar) return null;
+    if (busCfg().pe === false && elId === 'B_PE') return null; /* PE disembunyikan */
     if (/^tap\d+$/.test(term)) return busTapPos(bar, parseInt(term.slice(3),10));
     return null;
   }
@@ -442,6 +446,8 @@ function setZoom(k2, cx, cy){
 function validateWire(w){
   if ((w.from && w.from.term === 'NC') || (w.to && w.to.term === 'NC'))
     return { level:'error', msg:'NO CONNECT - terminal NC tidak dapat dihubungkan' };
+  if (busCfg().pe === false && ((w.from && w.from.el === 'B_PE') || (w.to && w.to.el === 'B_PE')))
+    return { level:'warn', msg:'PE busbar disabled - kabel tetap tersimpan, centang Include PE untuk menampilkannya' };
   const a = termClass(w.from.el, w.from.term);
   const b = termClass(w.to.el, w.to.term);
   if (a === b) return null;
@@ -491,9 +497,9 @@ function renderBus(){
   const g = $('lyrBus'); clearEl(g);
   const c = busCfg();
   const bw = barBlockW(c);
-  for (const bar of BUS){
+  for (const bar of busBars(c)){
     const gr = svgEl('g', { class:'bus', 'data-id':bar.id, style:'cursor:move' }, g);
-    const bi = BUS.findIndex(b => b.id === bar.id);
+    const bi = busBars(c).indexOf(bar);
     const r = busRectFromW(c, bi*(BUS_W + c.gap), 0, BUS_W, c.len);
     svgEl('rect', { x:r.x, y:r.y, width:r.w, height:r.h, fill:bar.color, rx:1, opacity:.9 }, gr);
     const lt = busWorldPt(c, bi*(BUS_W + c.gap) + BUS_W/2, 2);
@@ -598,7 +604,7 @@ const addDot = (elId, tn, p, color, lab, fs) => {
       addDot(e.id, tn, { x:p.x + e.x, y:p.y + e.y }, termColor(e.id, tn), lab, fs);
     }
   }
-  for (const bar of BUS){
+  for (const bar of busBars(busCfg())){
     const n = busNumTaps(busCfg());
     for (let i=0; i<n; i++){
       addDot(bar.id, 'tap'+i, busTapPos(bar, i), bar.color);
@@ -1520,6 +1526,7 @@ function renderProps(){
       row('Panjang (mm)', num('len', cfg.len)) +
       row('Spacing antar busbar (mm)', num('gap', cfg.gap)) +
       row('Jarak antar lubang (mm)', num('tapGap', cfg.tapGap)) +
+      row('Include PE', chk('pe', cfg.pe !== false)) +
       row('Rotation', `<select data-f="rot">${[0,90,180,270].map(v=>`<option ${((cfg.rot%360)===v)?'selected':''}>${v}</option>`).join('')}</select>`) +
       `<div class="rp-sec">Info</div>` +
       `<div class="conn-item">${busNumTaps(cfg)} lubang per busbar (mengikuti Panjang / Jarak lubang).</div>` +
@@ -1741,7 +1748,8 @@ function openPanelSettings(pending){
       e.x = clamp(e.x, 0, S.w - c.w); e.y = clamp(e.y, 0, S.h - c.h);
       e.rail = S.rails.some(r=>r.id===e.rail) ? e.rail : null;
     }
-    S.wires = S.wires.filter(w => getTermPos(w.from.el, w.from.term) && getTermPos(w.to.el, w.to.term));
+    S.wires = S.wires.filter(w => (w.from.el && w.from.el[0] === 'B') || (w.to.el && w.to.el[0] === 'B') ||
+      (getTermPos(w.from.el, w.from.term) && getTermPos(w.to.el, w.to.term)));
     $('modalBg').classList.remove('open');
     markDirty(); fitView(); renderAll();
   });
