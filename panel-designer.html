@@ -808,9 +808,6 @@ function wireName(w){
   if (side) return 'RS485 ' + side;
   try { return wireClsName(w) || 'Other'; } catch(e){ return 'Other'; }
 }
-function wireShort(w){
-  try { return getTermLabel(w.from) + '  \u2192  ' + getTermLabel(w.to); } catch(e){ return ''; }
-}
 function wireColor(w){
   if (w.color) return w.color;
   const side = rs485Side(w);
@@ -1860,45 +1857,58 @@ function renderWirePanel(force){
   panel.classList.toggle('collapsed', ui.wpCollapsed);
   const minb = $('wpMin'); if (minb) minb.textContent = ui.wpCollapsed ? '+' : '\u2013';
   if (!ui.wpOpen) return;
+  /* kelompokkan wire dengan nama & warna sama menjadi satu entri (distinct) */
+  const gmap = new Map();
+  for (const w of S.wires){
+    const name = wireName(w), color = String(wireColor(w)).toLowerCase();
+    const key = name + '\u0001' + color;
+    let g = gmap.get(key);
+    if (!g){ g = { key, name, color, wires:[] }; gmap.set(key, g); }
+    g.wires.push(w);
+  }
+  const groups = Array.from(gmap.values());
+  for (const g of groups) g.hidden = g.wires.every(w => ui.hiddenWires.has(w.id));
+  const selId = ui.sel && ui.sel.kind === 'wire' ? ui.sel.id : '';
+  let selKey = '';
+  if (selId){ const sw = S.wires.find(x => x.id === selId); if (sw) selKey = wireName(sw) + '\u0001' + String(wireColor(sw)).toLowerCase(); }
   const fname = (ui.wpFilterName || '').toLowerCase();
   const fcol = ui.wpFilterColorActive ? String(ui.wpFilterColor || '').toLowerCase() : '';
-  const sig = S.wires.map(w => w.id + ':' + wireName(w) + ':' + wireColor(w) + ':' + (ui.hiddenWires.has(w.id) ? '0' : '1')).join('|') +
-    '#' + fname + '#' + fcol + '#' + (ui.sel && ui.sel.kind === 'wire' ? ui.sel.id : '');
+  const sig = groups.map(g => g.key + ':' + (g.hidden ? '0' : '1')).join('|') +
+    '#' + fname + '#' + fcol + '#' + selKey;
   if (!force && sig === _wpSig) return;
   _wpSig = sig;
   const list = $('wpList'); clearEl(list);
-  const rows = S.wires.filter(w => {
-    if (fname && wireName(w).toLowerCase().indexOf(fname) < 0) return false;
-    if (fcol && String(wireColor(w)).toLowerCase() !== fcol) return false;
+  const shown = groups.filter(g => {
+    if (fname && g.name.toLowerCase().indexOf(fname) < 0) return false;
+    if (fcol && g.color !== fcol) return false;
     return true;
   });
-  $('wpCount').textContent = '(' + rows.length + '/' + S.wires.length + ')';
+  $('wpCount').textContent = '(' + shown.length + '/' + groups.length + ')';
   $('wpCf').classList.toggle('on', !!fcol);
-  if (!rows.length){
+  if (!shown.length){
     const e = document.createElement('div');
     e.className = 'wp-empty';
-    e.textContent = S.wires.length ? 'Tidak ada wire yang cocok filter.' : 'Belum ada wire di kanvas.';
+    e.textContent = groups.length ? 'Tidak ada sinyal yang cocok filter.' : 'Belum ada wire di kanvas.';
     list.appendChild(e);
     return;
   }
-  for (const w of rows){
-    const hidden = ui.hiddenWires.has(w.id);
+  for (const g of shown){
     const row = document.createElement('div');
-    row.className = 'wp-row' + (hidden ? ' off' : '') +
-      (ui.sel && ui.sel.kind === 'wire' && ui.sel.id === w.id ? ' sel' : '');
+    row.className = 'wp-row' + (g.hidden ? ' off' : '') + (g.key === selKey ? ' sel' : '');
     const cb = document.createElement('input');
-    cb.type = 'checkbox'; cb.checked = !hidden;
+    cb.type = 'checkbox'; cb.checked = !g.hidden;
     cb.addEventListener('click', ev => ev.stopPropagation());
     cb.addEventListener('change', () => {
-      if (cb.checked) ui.hiddenWires.delete(w.id); else ui.hiddenWires.add(w.id);
+      for (const w of g.wires){ if (cb.checked) ui.hiddenWires.delete(w.id); else ui.hiddenWires.add(w.id); }
       renderWires(); renderWirePanel(true);
     });
     const nm = document.createElement('span');
-    nm.className = 'wp-name'; nm.textContent = wireName(w); nm.title = wireShort(w);
+    nm.className = 'wp-name'; nm.textContent = g.name;
+    nm.title = g.name + '  (' + g.wires.length + ' wire)';
     const bar = document.createElement('span');
-    bar.className = 'wp-bar'; bar.style.background = wireColor(w); bar.title = wireColor(w);
+    bar.className = 'wp-bar'; bar.style.background = g.color; bar.title = g.color;
     row.appendChild(cb); row.appendChild(nm); row.appendChild(bar);
-    row.addEventListener('click', () => select('wire', w.id));
+    row.addEventListener('click', () => { if (g.wires[0]) select('wire', g.wires[0].id); });
     list.appendChild(row);
   }
 }
