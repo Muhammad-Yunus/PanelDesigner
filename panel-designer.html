@@ -29,7 +29,9 @@ input.tb-num{background:#222632;border:1px solid #323847;color:#c6cbd6;border-ra
 .lib-item{background:#1f2330;border:1px solid #2c3244;border-radius:6px;padding:6px 8px;margin-bottom:5px;cursor:grab;display:flex;justify-content:space-between;align-items:center;font-size:12px;user-select:none}
 .lib-item:hover{border-color:#3b82f6;background:#242a3a}
 .lib-item:active{cursor:grabbing}
-.lib-item .dim{color:#6b7386;font-size:10px}
+.lib-item .dim{color:#6b7386;font-size:10px;flex-shrink:0;padding-left:6px}
+.lib-name{display:inline-flex;align-items:center;gap:7px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lib-name svg{width:15px;height:15px;flex-shrink:0;color:#8a93a6}
 #canvasWrap{flex:1;position:relative;overflow:hidden;background:#0c0e13}
 #svg{width:100%;height:100%;display:block;cursor:default;touch-action:none}
 #right{width:280px;background:#171a21;border-left:1px solid #2a2e38;display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
@@ -1621,6 +1623,14 @@ function handleTermClick(elId, term){
   if (v) setStatus('⚠ ' + v.msg); else setStatus('Kabel dibuat: ' + wireClsName(w));
 }
 /* ===================== LIBRARY (drag & drop) ===================== */
+const PART_ICON = {
+  mcb_1p:'power', mcb_2p:'zap', mcb_3p:'zap', mccb_3p:'shield-check',
+  meter_1p:'gauge', meter_3p:'activity',
+  contactor:'toggle-right', plc:'cpu',
+  psu:'plug-zap',
+  mgate:'router', eswitch:'network',
+  rail:'minus', duct:'route', busbar:'align-justify'
+};
 function buildLibrary(){
   const box = $('libList'); clearEl(box);
   for (const grp of LIB){
@@ -1630,15 +1640,17 @@ function buildLibrary(){
       const it = document.createElement('div');
       it.className = 'lib-item'; it.draggable = true;
       it.setAttribute('data-part', key);
+      const icon = PART_ICON[key] || 'box';
       if (key === 'rail' || key === 'duct' || key === 'busbar'){
-        it.innerHTML = `<span>${STRUCT[key].label}</span><span class="dim">${STRUCT[key].dim}</span>`;
+        it.innerHTML = `<span class="lib-name"><i data-lucide="${icon}"></i>${STRUCT[key].label}</span><span class="dim">${STRUCT[key].dim}</span>`;
       } else {
         const c = CATALOG[key];
-        it.innerHTML = `<span>${c.label}</span><span class="dim">${c.w}-${c.h}</span>`;
+        it.innerHTML = `<span class="lib-name"><i data-lucide="${icon}"></i>${c.label}</span><span class="dim">${c.w}-${c.h}</span>`;
       }
       box.appendChild(it);
     }
   }
+  lucideRefresh();
 }
 $('libSearch').addEventListener('input', ev => {
   const q = ev.target.value.toLowerCase();
