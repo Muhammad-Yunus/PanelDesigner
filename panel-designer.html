@@ -735,7 +735,7 @@ function renderRails(){
     if (ui.dim){
       const t = svgEl('text', { x:r.x+r.len/2, y:r.y+22, class:'dim-text' }, gr);
       t.textContent = r.len + ' mm';
-      originDims(gr, r.x, r.y-17.5);
+      originDims(gr, r.x, r.y);
     }
     if (ui.sel && ui.sel.kind==='rail' && ui.sel.id===r.id)
       svgEl('rect', { x:r.x-3, y:r.y-20, width:r.len+6, height:40, class:'sel-outline' }, gr);
