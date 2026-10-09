@@ -34,6 +34,7 @@ Untuk merancang panel distribusi & kontrol: MCB, meter, kontaktor, PLC, PSU hing
 - **Validasi kelistrikan real-time** - deteksi salah sambung fasa, netral, PE, DC+, dan coil; ditampilkan di panel *Issues*.
 - **Auto-save ke localStorage** + **Export/Import JSON**.
 - **Print / Export PDF** - cetak layout panel langsung dari browser (pas satu halaman, orientasi mengikuti rasio, kabel yang dirutekan di luar box tetap ikut ter-cetak).
+- **Show/hide wire (ala KiCad)** - floating panel yang bisa di-expand/collapse, berisi daftar kabel dengan checkbox, bar warna, dan nama wire; bisa difilter berdasarkan nama dan warna (color picker).
 - **Dialog selamat datang** - pilih *Simple BAS*, *Complete BAS* (520×720 mm) atau *Empty Panel*.
 - **Undo / Redo**, zoom, grid, dan panel properti yang terintegrasi.
 
