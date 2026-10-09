@@ -15,7 +15,8 @@ html,body{height:100%;overflow:hidden;background:#0f1115;color:#d8dbe2}
 .tb-btn svg{width:15px;height:15px;flex-shrink:0}
 .tb-btn:hover{background:#2b3040}
 .tb-btn.active{background:#2563eb;border-color:#3b82f6;color:#fff}
-.tb-title{font-weight:700;font-size:13px;color:#fff;margin-right:4px;letter-spacing:.3px}
+.tb-title{font-weight:700;font-size:13px;color:#fff;margin-right:4px;letter-spacing:.3px;display:inline-flex;align-items:center;gap:6px}
+.tb-title svg{width:16px;height:16px;color:#3b82f6}
 input.tb-num{background:#222632;border:1px solid #323847;color:#c6cbd6;border-radius:5px;padding:4px 6px;font-size:12px;width:58px;text-align:center}
 #main{display:flex;flex:1;min-height:0}
 #left{width:250px;background:#171a21;border-right:1px solid #2a2e38;display:flex;flex-direction:column;flex-shrink:0}
@@ -135,7 +136,7 @@ html.printing #printOverlay svg{display:block;margin:0 auto}
 <body>
 <div id="app">
   <div id="toolbar">
-    <span class="tb-title">Panel Designer</span>
+    <span class="tb-title"><i data-lucide="panels-top-left"></i>Panel Designer</span>
     <div class="tb-group">
       <button class="tb-btn" id="btnNew"><i data-lucide="file-plus"></i>New</button>
       <button class="tb-btn" id="btnExport" title="Export"><i data-lucide="download"></i></button>
