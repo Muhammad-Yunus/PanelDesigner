@@ -31,6 +31,7 @@ Untuk merancang panel distribusi & kontrol: MCB, meter, kontaktor, PLC, PSU hing
 - **Geser komponen setelah diwiring** - kabel ikut menyesuaikan (memendek) secara langsung, baik di mode Select maupun Wire.
 - **Auto-Straighten** - satu klik meluruskan semua kabel yang tidak tegak/lurus.
 - **Routing manual** - seret segmen tengah kabel untuk mengubah jalur.
+- **Mode Dimensions** - tombol *Dimensions* menampilkan ukuran panel (lebar/tinggi) sekaligus **jarak tiap din rail & ducting dari titik origin X0,Y0** (offset X dan Y dengan garis ukur + label mm, plus penanda origin `0,0`).
 - **Validasi kelistrikan real-time** - deteksi salah sambung fasa, netral, PE, DC+, dan coil; ditampilkan di panel *Issues*.
 - **Dry contact kontaktor** - terminal R1/R2 dan 1/2 pada kontaktor NCH8 diperlakukan *pass-through* (bebas warna/sinyal apa pun, seperti wire). Divalidasi hanya sebagai pasangan: R1↔R2 dan 1↔2 tidak boleh mempertemukan sinyal berbahaya (L↔N, L↔PE, N↔PE, DC+↔DC-, atau beda fasa).
 - **Common PLC & S/S** - terminal common keluaran PLC (COM) maupun input *sink/source* (S/S) boleh disambung ke L, 24V+ (DC+) atau 0V (DC-) tanpa peringatan.

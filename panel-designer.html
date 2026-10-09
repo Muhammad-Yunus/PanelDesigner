@@ -82,6 +82,7 @@ svg text{user-select:none}
 .sel-outline{fill:none;stroke:#3b82f6;stroke-dasharray:5 4;stroke-width:1.2;pointer-events:none}
 .ghost{pointer-events:none}
 .dim-text{font-size:4.6px;fill:#64748b;text-anchor:middle;pointer-events:none}
+.dim-off{font-size:4.4px;fill:#f59e0b;text-anchor:middle;pointer-events:none;paint-order:stroke;stroke:#0f172a;stroke-width:.5}
 .bus-label{font-size:5.2px;font-weight:700;text-anchor:middle;pointer-events:none}
 /* Wire show/hide floating panel (KiCad-style) */
 .wp{position:absolute;top:10px;right:10px;width:276px;max-height:calc(100% - 20px);display:flex;flex-direction:column;
@@ -678,6 +679,9 @@ function renderPanel(){
   const t1 = svgEl('text', { x:S.w/2, y:-13, class:'dim-text' }, g); t1.textContent = S.w + ' mm';
   svgEl('line', { x1:-10, y1:0, x2:-10, y2:S.h, stroke:'#64748b', 'stroke-width':.5 }, g);
   const t2 = svgEl('text', { x:-13, y:S.h/2, class:'dim-text', transform:`rotate(-90 -13 ${S.h/2})` }, g); t2.textContent = S.h + ' mm';
+  svgEl('line', { x1:-4, y1:0, x2:4, y2:0, stroke:'#f59e0b', 'stroke-width':.5, 'pointer-events':'none' }, g);
+  svgEl('line', { x1:0, y1:-4, x2:0, y2:4, stroke:'#f59e0b', 'stroke-width':.5, 'pointer-events':'none' }, g);
+  const t0 = svgEl('text', { x:5, y:-2, class:'dim-off', 'text-anchor':'start' }, g); t0.textContent = '0,0';
 }
 /* ===================== RENDER: BUSBAR (moveable block) ===================== */
 function renderBus(){
@@ -703,6 +707,23 @@ function renderBus(){
   }
 }
 /* ===================== RENDER: RAILS & DUCTS ===================== */
+/* Jarak (offset) dari origin panel (0,0) ke sudut kiri-atas objek */
+function originDims(gr, x, y){
+  const c = '#f59e0b';
+  if (x > 0.5){
+    svgEl('line', { x1:0, y1:y, x2:x, y2:y, stroke:c, 'stroke-width':.5, 'stroke-dasharray':'3 2','pointer-events':'none' }, gr);
+    svgEl('line', { x1:0, y1:y-3, x2:0, y2:y+3, stroke:c, 'stroke-width':.5,'pointer-events':'none' }, gr);
+    svgEl('line', { x1:x, y1:y-3, x2:x, y2:y+3, stroke:c, 'stroke-width':.5,'pointer-events':'none' }, gr);
+    const th = svgEl('text', { x:x/2, y:y-1.6, class:'dim-off' }, gr); th.textContent = Math.round(x) + ' mm';
+  }
+  if (y > 0.5){
+    svgEl('line', { x1:x, y1:0, x2:x, y2:y, stroke:c, 'stroke-width':.5, 'stroke-dasharray':'3 2','pointer-events':'none' }, gr);
+    svgEl('line', { x1:x-3, y1:0, x2:x+3, y2:0, stroke:c, 'stroke-width':.5,'pointer-events':'none' }, gr);
+    svgEl('line', { x1:x-3, y1:y, x2:x+3, y2:y, stroke:c, 'stroke-width':.5,'pointer-events':'none' }, gr);
+    const tv = svgEl('text', { x:x-1.6, y:y/2, class:'dim-off', transform:`rotate(-90 ${x-1.6} ${y/2})` }, gr);
+    tv.textContent = Math.round(y) + ' mm';
+  }
+}
 function renderRails(){
   const g = $('lyrRail'); clearEl(g);
   for (const r of S.rails){
@@ -714,6 +735,7 @@ function renderRails(){
     if (ui.dim){
       const t = svgEl('text', { x:r.x+r.len/2, y:r.y+22, class:'dim-text' }, gr);
       t.textContent = r.len + ' mm';
+      originDims(gr, r.x, r.y-17.5);
     }
     if (ui.sel && ui.sel.kind==='rail' && ui.sel.id===r.id)
       svgEl('rect', { x:r.x-3, y:r.y-20, width:r.len+6, height:40, class:'sel-outline' }, gr);
@@ -729,6 +751,7 @@ function renderDucts(){
     if (ui.dim){
       const t = svgEl('text', { x:d.x+d.w/2, y:d.y+d.h+6, class:'dim-text' }, gr);
       t.textContent = d.w + '-' + d.h;
+      originDims(gr, d.x, d.y);
     }
     if (ui.sel && ui.sel.kind==='duct' && ui.sel.id===d.id)
       svgEl('rect', { x:d.x-3, y:d.y-3, width:d.w+6, height:d.h+6, class:'sel-outline' }, gr);
