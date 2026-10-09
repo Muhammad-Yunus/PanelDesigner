@@ -400,7 +400,7 @@ function busRectFromW(c, lx, ly, w, h){
 }
 function busMetrics(c){ const cfg = c || busCfg(), d = busDims(cfg); return { bx:cfg.x, by:cfg.y, w:d.w, h:d.h }; }
 const CLASS_COLOR = { L1:'#ef4444', L2:'#f97316', L3:'#eab308', L:'#dc2626', N:'#3b82f6', PE:'#16a34a',
-  'DC+':'#a855f7', 'DC-':'#15803d', COM:'#64748b', DC_IN:'#0ea5e9', DC_OUT:'#14b8a6', COIL:'#d946ef', AC:'#f59e0b', OTHER:'#94a3b8' };
+  'DC+':'#a855f7', 'DC-':'#15803d', COM:'#64748b', DC_IN:'#0ea5e9', 'PLC_RELAY_OUT':'#14b8a6', COIL:'#d946ef', AC:'#f59e0b', OTHER:'#94a3b8' };
 const VR_MAP = { V1:'L1', V2:'L2', V3:'L3', Vn:'N' };
 /* warna fisik terminal block (dot) - override warna kelas kabel
    key boleh 'terminal' atau 'tipeElemen:terminal' (contoh 'plc:0V') */
@@ -480,7 +480,7 @@ function termClass(elId, term){
   if (/^220/.test(term)) return 'AC';
   if (term==='COM' || /^COM\d/.test(term)) return 'COM';
   if (/^X/.test(term)) return 'DC_IN';
-  if (/^Y/.test(term)) return 'DC_OUT';
+  if (/^Y/.test(term)) return 'PLC_RELAY_OUT';
   if (/^PE/.test(term)) return 'PE';
   if (/^N/.test(term)) return 'N';
   const m = term.match(/^(L\d?)/); if (m) return m[1];
@@ -588,13 +588,13 @@ function pairHazard(a, b){
     return null;
   }
   const key = [ga,gb].sort().join('|');
-  const OK_PAIR = { 'COIL|N':1, 'COIL|L':1, 'COIL|DC_OUT':1, 'COM|L':1 };
+  const OK_PAIR = { 'COIL|N':1, 'COIL|L':1, 'COIL|PLC_RELAY_OUT':1, 'COM|L':1 };
   if (OK_PAIR[key]) return null;
   if (key === 'L|N')  return { level:'error', msg:'PHASE-NEUTRAL SHORT - L terhubung ke N' };
   if (key === 'L|PE') return { level:'error', msg:'PHASE-EARTH SHORT - L terhubung ke PE' };
   if (key === 'N|PE') return { level:'error', msg:'NEUTRAL-EARTH SHORT - N terhubung ke PE' };
   if (key === 'DC+|DC-') return { level:'error', msg:'DC SUPPLY SHORT - 24V+ terhubung ke 24V-' };
-  if (key === 'DC_IN|DC_OUT') return { level:'warn', msg:'PLC I/O CROSS - input X terhubung ke output Y' };
+  if (key === 'DC_IN|PLC_RELAY_OUT') return { level:'warn', msg:'PLC I/O CROSS - input X terhubung ke output Y' };
   return { level:'warn', msg:`CLASS MISMATCH: ${a} ↔ ${b}` };
 }
 function validateWire(w){
