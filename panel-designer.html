@@ -758,19 +758,27 @@ function renderGapDims(){
   const c = '#22d3ee';
   const fs = dimFS(), off = dimOff();
   const X = Math.max(S.w + 14, ...segs.map(s=>s.right + 6));
-  for (let i=0;i<segs.length-1;i++){
-    const a = segs[i], b = segs[i+1];
-    const gap = b.top - a.bot;
-    if (gap <= 0.5) continue;
-    const mid = (a.bot + b.top)/2;
-    svgEl('line', { x1:a.right, y1:a.bot, x2:X+4, y2:a.bot, stroke:c, 'stroke-width':.4, 'stroke-dasharray':'3 2', 'pointer-events':'none' }, g);
-    svgEl('line', { x1:b.right, y1:b.top, x2:X+4, y2:b.top, stroke:c, 'stroke-width':.4, 'stroke-dasharray':'3 2', 'pointer-events':'none' }, g);
-    svgEl('line', { x1:X, y1:a.bot, x2:X, y2:b.top, stroke:c, 'stroke-width':.6, 'pointer-events':'none' }, g);
-    svgEl('line', { x1:X-3, y1:a.bot, x2:X+3, y2:a.bot, stroke:c, 'stroke-width':.6, 'pointer-events':'none' }, g);
-    svgEl('line', { x1:X-3, y1:b.top, x2:X+3, y2:b.top, stroke:c, 'stroke-width':.6, 'pointer-events':'none' }, g);
+  /* Satu pengukuran vertikal (celah) antara dua tepi y1(y2), extension dari r1/r2 ke garis ukur X */
+  function measure(y1, r1, y2, r2){
+    const gap = y2 - y1;
+    if (gap <= 0.5) return;
+    const mid = (y1 + y2)/2;
+    svgEl('line', { x1:r1, y1:y1, x2:X+4, y2:y1, stroke:c, 'stroke-width':.4, 'stroke-dasharray':'3 2', 'pointer-events':'none' }, g);
+    svgEl('line', { x1:r2, y1:y2, x2:X+4, y2:y2, stroke:c, 'stroke-width':.4, 'stroke-dasharray':'3 2', 'pointer-events':'none' }, g);
+    svgEl('line', { x1:X, y1:y1, x2:X, y2:y2, stroke:c, 'stroke-width':.6, 'pointer-events':'none' }, g);
+    svgEl('line', { x1:X-3, y1:y1, x2:X+3, y2:y1, stroke:c, 'stroke-width':.6, 'pointer-events':'none' }, g);
+    svgEl('line', { x1:X-3, y1:y2, x2:X+3, y2:y2, stroke:c, 'stroke-width':.6, 'pointer-events':'none' }, g);
     const t = svgEl('text', { x:X+off, y:mid, class:'dim-gap', style:`font-size:${fs}px`, transform:`rotate(-90 ${X+off} ${mid})` }, g);
     t.textContent = Math.round(gap) + ' mm';
   }
+  if (!segs.length) return;
+  /* Tepi atas panel -> elemen teratas */
+  measure(0, S.w, segs[0].top, segs[0].right);
+  /* Celah antar elemen berurutan */
+  for (let i=0;i<segs.length-1;i++) measure(segs[i].bot, segs[i].right, segs[i+1].top, segs[i+1].right);
+  /* Elemen terbawah -> tepi bawah panel */
+  const last = segs[segs.length-1];
+  measure(last.bot, last.right, S.h, S.w);
 }
 /* ===================== RENDER: ELEMENTS ===================== */
 function renderElems(){
