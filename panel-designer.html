@@ -83,6 +83,18 @@ svg text{user-select:none}
 .ghost{pointer-events:none}
 .dim-text{font-size:4.6px;fill:#64748b;text-anchor:middle;pointer-events:none}
 .bus-label{font-size:5.2px;font-weight:700;text-anchor:middle;pointer-events:none}
+/* Print: hide UI, show only #printOverlay */
+#printOverlay{display:none}
+html.printing #app,html.printing #toolbar,html.printing #left,html.printing #right,
+html.printing #status,html.printing #modalBg{display:none!important}
+html.printing #printOverlay{display:block!important;position:fixed;inset:0;background:#fff;overflow:hidden;z-index:9999}
+html.printing #printOverlay svg{display:block;margin:0 auto}
+@media print{
+  html,body{overflow:visible;background:#fff}
+  html.printing body>*:not(#printOverlay){display:none!important}
+  html.printing #printOverlay{position:static;width:100%;height:100%}
+  html.printing #printOverlay svg{width:100vw;height:100vh}
+}
 </style>
 </head>
 <body>
@@ -93,6 +105,7 @@ svg text{user-select:none}
       <button class="tb-btn" id="btnNew">New</button>
       <button class="tb-btn" id="btnExport">Export</button>
       <button class="tb-btn" id="btnImport">Import</button>
+      <button class="tb-btn" id="btnPrint">Print</button>
     </div>
     <div class="tb-group">
       <button class="tb-btn active" data-mode="select" id="mSelect">Select</button>
@@ -1905,6 +1918,64 @@ function loadLS(){
     return true;
   } catch(e){ return false; }
 }
+function printPanel(){
+  /* Clone kanvas SVG, reset view ke skala panel, tampilkan overlay print, lalu window.print() */
+  const w = S.w, h = S.h;
+  const pad = 24;      /* margin kiri/kanan/bawah (mm = satuan dunia) */
+  const padTop = 22;   /* ruang untuk judul di atas panel */
+  const svgW = w + pad*2, svgH = padTop + h + pad;
+  const clone = svg.cloneNode(true);
+  clone.removeAttribute('id');
+  clone.setAttribute('width', svgW);
+  clone.setAttribute('height', svgH);
+  clone.setAttribute('viewBox', `0 0 ${svgW} ${svgH}`);
+  clone.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+  clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+  /* bersihkan elemen interaktif & grid */
+  clone.querySelectorAll('.term-hit,.wire-hit,.ghost,.sel-outline').forEach(n => n.remove());
+  const gGrid = clone.querySelector('#lyrGrid'); if (gGrid) gGrid.style.display = 'none';
+  const gOver = clone.querySelector('#lyrOver'); if (gOver) gOver.style.display = 'none';
+  /* reset transform viewport: panel (0,0)-(w,h) mm -> (pad,padTop) */
+  const gView = clone.querySelector('#viewport');
+  if (gView) gView.setAttribute('transform', `translate(${pad} ${padTop})`);
+  /* latar putih + judul + bingkai panel */
+  const mk = (tag, attrs) => { const e = document.createElementNS('http://www.w3.org/2000/svg', tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; };
+  clone.insertBefore(mk('rect', { x:0, y:0, width:svgW, height:svgH, fill:'#ffffff' }), clone.firstChild);
+  const border = mk('rect', { x:pad, y:padTop, width:w, height:h, fill:'none', stroke:'#cbd5e1', 'stroke-width':0.6 });
+  const title = mk('text', { x:pad, y:padTop-8, 'font-size':13, 'font-weight':600, fill:'#111' });
+  title.textContent = S.name || 'Panel Designer';
+  const sub = mk('text', { x:pad + w, y:padTop-8, 'font-size':9, 'text-anchor':'end', fill:'#64748b' });
+  sub.textContent = `${w} x ${h} mm`;
+  clone.appendChild(border); clone.appendChild(title); clone.appendChild(sub);
+
+  /* orientasi halaman mengikuti rasio panel */
+  let ps = document.getElementById('printPageStyle');
+  if (!ps){ ps = document.createElement('style'); ps.id = 'printPageStyle'; document.head.appendChild(ps); }
+  ps.textContent = `@page{ size:${w > h ? 'landscape' : 'portrait'}; margin:8mm }`;
+
+  /* Overlay */
+  let ov = $('printOverlay');
+  if (!ov){
+    ov = document.createElement('div');
+    ov.id = 'printOverlay';
+    document.body.appendChild(ov);
+  }
+  ov.innerHTML = '';
+  ov.appendChild(clone);
+
+  /* Hide UI, tampilkan overlay, trigger print */
+  document.documentElement.classList.add('printing');
+  setTimeout(() => {
+    window.print();
+  }, 50);
+
+  const afterPrint = () => {
+    document.documentElement.classList.remove('printing');
+    ov.innerHTML = '';
+    window.removeEventListener('afterprint', afterPrint);
+  };
+  window.addEventListener('afterprint', afterPrint);
+}
 setInterval(() => { if (ui.dirty) saveLS(); }, 5000);
 $('btnExport').addEventListener('click', () => {
   const blob = new Blob([JSON.stringify(S, null, 2)], { type:'application/json' });
@@ -1916,6 +1987,7 @@ $('btnExport').addEventListener('click', () => {
   setStatus('Export JSON ✓');
 });
 $('btnImport').addEventListener('click', () => $('fileImport').click());
+$('btnPrint').addEventListener('click', printPanel);
 $('fileImport').addEventListener('change', ev => {
   const f = ev.target.files[0];
   if (!f) return;
