@@ -853,7 +853,7 @@ function rs485Side(w){
   if (/RS485B/.test(ft) || /RS485B/.test(tt)) return 'B';
   return null;
 }
-function wireClsName(w){
+function autoWireCls(w){
   const side = rs485Side(w);
   if (side !== null) return side;
   let cls = refClass(w.from);
@@ -863,8 +863,13 @@ function wireClsName(w){
   }
   return cls;
 }
+function wireClsName(w){
+  if (w.cls) return w.cls;
+  return autoWireCls(w);
+}
 function wireName(w){
   if (w.label && String(w.label).trim()) return String(w.label).trim();
+  if (w.cls) return w.cls;
   const side = rs485Side(w);
   if (side) return 'RS485 ' + side;
   try { return wireClsName(w) || 'Other'; } catch(e){ return 'Other'; }
@@ -875,6 +880,7 @@ function refClass(ref){
 }
 function wireColor(w){
   if (w.color) return w.color;
+  if (w.cls) return CLASS_COLOR[w.cls] || '#94a3b8';
   const side = rs485Side(w);
   if (side === 'A') return '#fb923c';
   if (side === 'B') return '#f97316';
@@ -1545,7 +1551,7 @@ function handleTermClick(elId, term){
   const pts = orthoPreview(d.pts, target);
   pts[pts.length-1] = target;
   const w = { id:uid('w'), from:d.from, to:{ el:elId, term:term }, pts:pts,
-    gauge:2.5, label:'', color:'', twist:isTwistPair(d.from, { el:elId, term:term }) };
+    gauge:2.5, label:'', color:'', cls:'', twist:isTwistPair(d.from, { el:elId, term:term }) };
   w.rawPts = pts.slice();
   ui.drawing = null;
   const v = validateWire(w);
@@ -1804,7 +1810,10 @@ function renderProps(){
     b.innerHTML =
       row('From', `<input value="${getTermLabel(w.from)}" disabled style="opacity:.5">`) +
       row('To', `<input value="${getTermLabel(w.to)}" disabled style="opacity:.5">`) +
-      row('Class', `<input value="${cls}" disabled style="opacity:.5">`) +
+      row('Class', `<select data-f="cls" title="Ubah class sinyal kabel ini (pindah grup)">
+        <option value="" ${w.cls?'':'selected'}>Auto${w.cls ? ' (' + autoWireCls(w) + ')' : ''}</option>
+        ${Object.keys(CLASS_COLOR).map(k=>`<option value="${k}" ${w.cls===k?'selected':''}>${k}</option>`).join('')}
+      </select>`) +
       row('Gauge (mm-)', num('gauge', w.gauge)) +
       row('Twisted pair', chk('twist', !!w.twist)) +
       row('Label', txt('label', w.label || '')) +
@@ -2107,7 +2116,7 @@ function loadLS(){
     S.labels = S.labels || []; S.wires = S.wires || []; S.elements = S.elements || [];
     S.rails = S.rails || []; S.ducts = S.ducts || [];
     normBuses(S);
-    S.wires.forEach(w => { if (!w.rawPts) w.rawPts = (w.pts && w.pts.length) ? w.pts.slice() : []; });
+    S.wires.forEach(w => { if (!w.rawPts) w.rawPts = (w.pts && w.pts.length) ? w.pts.slice() : []; if (w.cls == null) w.cls = ''; });
     rebuildAllWires();
     return true;
   } catch(e){ return false; }
