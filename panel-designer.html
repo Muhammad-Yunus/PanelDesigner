@@ -401,7 +401,7 @@ function busRectFromW(c, lx, ly, w, h){
 function busMetrics(c){ const cfg = c || busCfg(), d = busDims(cfg); return { bx:cfg.x, by:cfg.y, w:d.w, h:d.h }; }
 const CLASS_COLOR = { L1:'#ef4444', L2:'#f97316', L3:'#eab308', L:'#dc2626', N:'#3b82f6', PE:'#16a34a',
   'DC+':'#a855f7', 'DC-':'#15803d', COM:'#64748b', DC_IN:'#0ea5e9', DC_OUT:'#14b8a6', COIL:'#d946ef', AC:'#f59e0b', OTHER:'#94a3b8' };
-const VR_MAP = { V1:'L1', V2:'L2', V3:'L3', Vn:'N', R1:'N', R2:'N', '1':'L', '2':'L' };
+const VR_MAP = { V1:'L1', V2:'L2', V3:'L3', Vn:'N' };
 /* warna fisik terminal block (dot) - override warna kelas kabel
    key boleh 'terminal' atau 'tipeElemen:terminal' (contoh 'plc:0V') */
 const TERM_COLOR = { 'V-1':'#808080', 'V-2':'#808080', 'V-':'#808080', '0V1':'#808080', '0V2':'#808080',
@@ -462,8 +462,13 @@ function rotPt(px,py,cx,cy,deg){
   const r = deg*Math.PI/180, dx=px-cx, dy=py-cy;
   return { x:cx+dx*Math.cos(r)-dy*Math.sin(r), y:cy+dx*Math.sin(r)+dy*Math.cos(r) };
 }
+function isDryContact(elId, term){
+  const e = S.elements.find(x => x.id === elId);
+  return !!(e && e.type === 'contactor' && (term === 'R1' || term === 'R2' || term === '1' || term === '2'));
+}
 function termClass(elId, term){
   if (VR_MAP[term]) return VR_MAP[term];
+  if (isDryContact(elId, term)) return 'CONTACT';
   if (isBusBar(elId)){ const r = findBus(elId); return r ? r.cls : 'OTHER'; }
   if (term==='A1' || term==='A2') return 'COIL';
   if (term==='G') return 'PE';
@@ -572,17 +577,9 @@ function setZoom(k2, cx, cy){
   applyView();
 }
 /* ===================== VALIDATION ===================== */
-function validateWire(w){
-  if ((w.from && w.from.term === 'NC') || (w.to && w.to.term === 'NC'))
-    return { level:'error', msg:'NO CONNECT - terminal NC tidak dapat dihubungkan' };
-  const fBus = w.from && w.from.el ? findBus(w.from.el) : null;
-  const tBus = w.to && w.to.el ? findBus(w.to.el) : null;
-  if (((fBus && fBus.cls === 'PE') || (tBus && tBus.cls === 'PE')) &&
-      ((fBus && fBus.bus.pe === false) || (tBus && tBus.bus.pe === false)))
-    return { level:'warn', msg:'PE busbar disabled - kabel tetap tersimpan, centang Include PE untuk menampilkannya' };
-  const a = termClass(w.from.el, w.from.term);
-  const b = termClass(w.to.el, w.to.term);
-  if (a === b) return null;
+/* Bahaya bila dua kelas sinyal bertemu (dipakai wire & pasangan dry contact) */
+function pairHazard(a, b){
+  if (!a || !b || a === b) return null;
   if (a === 'AC' || b === 'AC') return null;
   const ga = classGroup(a), gb = classGroup(b);
   if (ga === gb){
@@ -600,13 +597,71 @@ function validateWire(w){
   if (key === 'DC_IN|DC_OUT') return { level:'warn', msg:'PLC I/O CROSS - input X terhubung ke output Y' };
   return { level:'warn', msg:`CLASS MISMATCH: ${a} ↔ ${b}` };
 }
+function validateWire(w){
+  if ((w.from && w.from.term === 'NC') || (w.to && w.to.term === 'NC'))
+    return { level:'error', msg:'NO CONNECT - terminal NC tidak dapat dihubungkan' };
+  const fBus = w.from && w.from.el ? findBus(w.from.el) : null;
+  const tBus = w.to && w.to.el ? findBus(w.to.el) : null;
+  if (((fBus && fBus.cls === 'PE') || (tBus && tBus.cls === 'PE')) &&
+      ((fBus && fBus.bus.pe === false) || (tBus && tBus.bus.pe === false)))
+    return { level:'warn', msg:'PE busbar disabled - kabel tetap tersimpan, centang Include PE untuk menampilkannya' };
+  const a = termClass(w.from.el, w.from.term);
+  const b = termClass(w.to.el, w.to.term);
+  /* dry contact = lewat saja (seperti wire), tidak ada aturan L/N */
+  if (a === 'CONTACT' || b === 'CONTACT') return null;
+  return pairHazard(a, b);
+}
+/* Sinyal yang "melihat" sebuah terminal dry contact (1 hop) */
+function contactSignal(elId, term){
+  for (const w of S.wires){
+    let other = null;
+    if (w.from && w.from.el === elId && w.from.term === term) other = w.to;
+    else if (w.to && w.to.el === elId && w.to.term === term) other = w.from;
+    if (!other || !other.el) continue;
+    const c = termClass(other.el, other.term);
+    if (c && c !== 'CONTACT' && c !== 'OTHER') return { cls:c, wireId:w.id };
+  }
+  return null;
+}
+/* Untuk pasangan dry contact: hanya bahaya keras; selainnya aman */
+function contactHazard(a, b){
+  if (!a || !b || a === b) return null;
+  if (a === 'AC' || b === 'AC') return null;
+  const ga = classGroup(a), gb = classGroup(b);
+  if (ga === gb){
+    if (/^L\d$/.test(a) && /^L\d$/.test(b) && a !== b)
+      return { level:'warn', msg:`CROSS-PHASE: ${a} ↔ ${b}` };
+    return null;
+  }
+  const key = [ga,gb].sort().join('|');
+  if (key === 'L|N')  return { level:'error', msg:'PHASE-NEUTRAL SHORT - L terhubung ke N' };
+  if (key === 'L|PE') return { level:'error', msg:'PHASE-EARTH SHORT - L terhubung ke PE' };
+  if (key === 'N|PE') return { level:'error', msg:'NEUTRAL-EARTH SHORT - N terhubung ke PE' };
+  if (key === 'DC+|DC-') return { level:'error', msg:'DC SUPPLY SHORT - 24V+ terhubung ke 24V-' };
+  return null;
+}
+function contactPairIssues(){
+  const out = [];
+  for (const e of S.elements){
+    if (e.type !== 'contactor') continue;
+    for (const pair of [['R1','R2'], ['1','2']]){
+      const s1 = contactSignal(e.id, pair[0]);
+      const s2 = contactSignal(e.id, pair[1]);
+      if (!s1 || !s2) continue;
+      const hz = contactHazard(s1.cls, s2.cls);
+      if (hz) out.push({ wireId:s1.wireId, level:hz.level,
+        msg:`CONTACT ${pair[0]}/${pair[1]} (${e.name || 'Contactor'}) - ${hz.msg}` });
+    }
+  }
+  return out;
+}
 function validateAll(){
   const out = [];
   for (const w of S.wires){
     const v = validateWire(w);
     if (v) out.push({ wireId:w.id, level:v.level, msg:v.msg });
   }
-  return out;
+  return out.concat(contactPairIssues());
 }
 /* ===================== RENDER: GRID & PANEL ===================== */
 function renderGrid(){
@@ -800,7 +855,13 @@ function rs485Side(w){
 }
 function wireClsName(w){
   const side = rs485Side(w);
-  return side === null ? termClass(w.from.el, w.from.term) : side;
+  if (side !== null) return side;
+  let cls = refClass(w.from);
+  if (cls === 'CONTACT' || cls === 'OTHER'){
+    const c2 = refClass(w.to);
+    if (c2 !== 'CONTACT' && c2 !== 'OTHER') cls = c2;
+  }
+  return cls;
 }
 function wireName(w){
   if (w.label && String(w.label).trim()) return String(w.label).trim();
@@ -808,12 +869,20 @@ function wireName(w){
   if (side) return 'RS485 ' + side;
   try { return wireClsName(w) || 'Other'; } catch(e){ return 'Other'; }
 }
+function refClass(ref){
+  if (!ref || !ref.el) return 'OTHER';
+  return VR_MAP[ref.term] || termClass(ref.el, ref.term);
+}
 function wireColor(w){
   if (w.color) return w.color;
   const side = rs485Side(w);
   if (side === 'A') return '#fb923c';
   if (side === 'B') return '#f97316';
-  const cls = VR_MAP[(w.from&&w.from.term)||''] || termClass(w.from.el, w.from.term);
+  let cls = refClass(w.from);
+  if (cls === 'CONTACT' || cls === 'OTHER'){
+    const c2 = refClass(w.to);
+    if (c2 !== 'CONTACT' && c2 !== 'OTHER') cls = c2;
+  }
   return CLASS_COLOR[cls] || '#94a3b8';
 }
 function renderWires(){
