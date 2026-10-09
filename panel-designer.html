@@ -588,7 +588,7 @@ function pairHazard(a, b){
     return null;
   }
   const key = [ga,gb].sort().join('|');
-  const OK_PAIR = { 'COIL|N':1, 'COIL|L':1, 'COIL|PLC_RELAY_OUT':1, 'COM|L':1 };
+  const OK_PAIR = { 'COIL|N':1, 'COIL|L':1, 'COIL|PLC_RELAY_OUT':1, 'COM|L':1, 'COM|DC+':1, 'COM|DC-':1 };
   if (OK_PAIR[key]) return null;
   if (key === 'L|N')  return { level:'error', msg:'PHASE-NEUTRAL SHORT - L terhubung ke N' };
   if (key === 'L|PE') return { level:'error', msg:'PHASE-EARTH SHORT - L terhubung ke PE' };

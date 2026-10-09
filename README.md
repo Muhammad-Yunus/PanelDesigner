@@ -33,6 +33,7 @@ Untuk merancang panel distribusi & kontrol: MCB, meter, kontaktor, PLC, PSU hing
 - **Routing manual** - seret segmen tengah kabel untuk mengubah jalur.
 - **Validasi kelistrikan real-time** - deteksi salah sambung fasa, netral, PE, DC+, dan coil; ditampilkan di panel *Issues*.
 - **Dry contact kontaktor** - terminal R1/R2 dan 1/2 pada kontaktor NCH8 diperlakukan *pass-through* (bebas warna/sinyal apa pun, seperti wire). Divalidasi hanya sebagai pasangan: R1↔R2 dan 1↔2 tidak boleh mempertemukan sinyal berbahaya (L↔N, L↔PE, N↔PE, DC+↔DC-, atau beda fasa).
+- **Common PLC & S/S** - terminal common keluaran PLC (COM) maupun input *sink/source* (S/S) boleh disambung ke L, 24V+ (DC+) atau 0V (DC-) tanpa peringatan.
 - **Auto-save ke localStorage** + **Export/Import JSON**.
 - **Print / Export PDF** - cetak layout panel langsung dari browser (pas satu halaman, orientasi mengikuti rasio, kabel yang dirutekan di luar box tetap ikut ter-cetak).
 - **Show/hide wire (ala KiCad)** - floating panel expand/collapse berisi daftar **sinyal distinct** (wire dengan nama & warna sama digabung) dengan checkbox, bar warna, dan nama; bisa difilter berdasarkan nama dan warna (color picker).
