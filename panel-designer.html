@@ -82,7 +82,6 @@ svg text{user-select:none}
 .sel-outline{fill:none;stroke:#3b82f6;stroke-dasharray:5 4;stroke-width:1.2;pointer-events:none}
 .ghost{pointer-events:none}
 .dim-text{font-size:4.6px;fill:#64748b;text-anchor:middle;pointer-events:none}
-.dim-off{font-size:4.4px;fill:#f59e0b;text-anchor:middle;pointer-events:none;paint-order:stroke;stroke:#0f172a;stroke-width:.5}
 .dim-gap{font-size:4.2px;fill:#22d3ee;text-anchor:middle;pointer-events:none;paint-order:stroke;stroke:#0f172a;stroke-width:.5}
 .bus-label{font-size:5.2px;font-weight:700;text-anchor:middle;pointer-events:none}
 /* Wire show/hide floating panel (KiCad-style) */
@@ -681,14 +680,11 @@ function renderPanel(){
   svgEl('rect', { x:0, y:0, width:S.w, height:S.h, fill:'#14171f', stroke:'#475569', 'stroke-width':1.4 }, g);
   svgEl('rect', { x:6, y:6, width:S.w-12, height:S.h-12, fill:'none', stroke:'#252a38', 'stroke-width':.6, 'stroke-dasharray':'6 4' }, g);
   if (!ui.dim) return;
-  const fs = dimFS(), off = dimOff(), lo = off + fs*0.7, lb = lo + fs*1.0;
+  const fs = dimFS(), lo = Math.max(10, fs*0.8), lb = lo + fs*0.95;
   svgEl('line', { x1:0, y1:-lo, x2:S.w, y2:-lo, stroke:'#64748b', 'stroke-width':.5 }, g);
   const t1 = svgEl('text', { x:S.w/2, y:-lb, class:'dim-text', style:`font-size:${fs}px` }, g); t1.textContent = S.w + ' mm';
   svgEl('line', { x1:-lo, y1:0, x2:-lo, y2:S.h, stroke:'#64748b', 'stroke-width':.5 }, g);
   const t2 = svgEl('text', { x:-lb, y:S.h/2, class:'dim-text', style:`font-size:${fs}px`, transform:`rotate(-90 ${-lb} ${S.h/2})` }, g); t2.textContent = S.h + ' mm';
-  svgEl('line', { x1:-4, y1:0, x2:4, y2:0, stroke:'#f59e0b', 'stroke-width':.5, 'pointer-events':'none' }, g);
-  svgEl('line', { x1:0, y1:-4, x2:0, y2:4, stroke:'#f59e0b', 'stroke-width':.5, 'pointer-events':'none' }, g);
-  const t0 = svgEl('text', { x:fs*0.7, y:-fs*0.5, class:'dim-off', style:`font-size:${fs*0.9}px`, 'text-anchor':'start' }, g); t0.textContent = '0,0';
 }
 /* ===================== RENDER: BUSBAR (moveable block) ===================== */
 function renderBus(){
@@ -717,24 +713,6 @@ function renderBus(){
 /* Ukuran font label dimensi: ikut zoom tapi tidak lebih kecil dari ~9px di layar */
 function dimFS(){ return Math.max(4.6, 9/(ui.view.k||1)); }
 function dimOff(){ return dimFS()*1.5; }
-/* Jarak (offset) dari origin panel (0,0) ke sudut kiri-atas objek */
-function originDims(gr, x, y){
-  const c = '#f59e0b';
-  const fs = dimFS(), off = dimOff();
-  if (x > 0.5){
-    svgEl('line', { x1:0, y1:y, x2:x, y2:y, stroke:c, 'stroke-width':.5, 'stroke-dasharray':'3 2','pointer-events':'none' }, gr);
-    svgEl('line', { x1:0, y1:y-3, x2:0, y2:y+3, stroke:c, 'stroke-width':.5,'pointer-events':'none' }, gr);
-    svgEl('line', { x1:x, y1:y-3, x2:x, y2:y+3, stroke:c, 'stroke-width':.5,'pointer-events':'none' }, gr);
-    const th = svgEl('text', { x:x/2, y:y-off, class:'dim-off', style:`font-size:${fs}px` }, gr); th.textContent = Math.round(x) + ' mm';
-  }
-  if (y > 0.5){
-    svgEl('line', { x1:x, y1:0, x2:x, y2:y, stroke:c, 'stroke-width':.5, 'stroke-dasharray':'3 2','pointer-events':'none' }, gr);
-    svgEl('line', { x1:x-3, y1:0, x2:x+3, y2:0, stroke:c, 'stroke-width':.5,'pointer-events':'none' }, gr);
-    svgEl('line', { x1:x-3, y1:y, x2:x+3, y2:y, stroke:c, 'stroke-width':.5,'pointer-events':'none' }, gr);
-    const tv = svgEl('text', { x:x-off, y:y/2, class:'dim-off', style:`font-size:${fs}px`, transform:`rotate(-90 ${x-off} ${y/2})` }, gr);
-    tv.textContent = Math.round(y) + ' mm';
-  }
-}
 function renderRails(){
   const g = $('lyrRail'); clearEl(g);
   for (const r of S.rails){
@@ -747,7 +725,6 @@ function renderRails(){
       const fs = dimFS(), oy = Math.max(22, dimOff());
       const t = svgEl('text', { x:r.x+r.len/2, y:r.y+oy, class:'dim-text', style:`font-size:${fs}px` }, gr);
       t.textContent = r.len + ' mm';
-      originDims(gr, r.x, r.y);
     }
     if (ui.sel && ui.sel.kind==='rail' && ui.sel.id===r.id)
       svgEl('rect', { x:r.x-3, y:r.y-20, width:r.len+6, height:40, class:'sel-outline' }, gr);
@@ -764,7 +741,6 @@ function renderDucts(){
       const fs = dimFS(), oy = Math.max(6, dimOff());
       const t = svgEl('text', { x:d.x+d.w/2, y:d.y+d.h+oy, class:'dim-text', style:`font-size:${fs}px` }, gr);
       t.textContent = d.w + '-' + d.h;
-      originDims(gr, d.x, d.y);
     }
     if (ui.sel && ui.sel.kind==='duct' && ui.sel.id===d.id)
       svgEl('rect', { x:d.x-3, y:d.y-3, width:d.w+6, height:d.h+6, class:'sel-outline' }, gr);
