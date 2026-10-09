@@ -2121,7 +2121,6 @@ function openPanelSettings(pending){
     `<table class="mtable"><tr><th>X</th><th>Y</th><th>W</th><th>H</th><th></th></tr>` +
       pending.ducts.map((d,i)=>`<tr><td><input data-t="duct" data-i="${i}" data-f="x" value="${d.x}"></td><td><input data-t="duct" data-i="${i}" data-f="y" value="${d.y}"></td><td><input data-t="duct" data-i="${i}" data-f="w" value="${d.w}"></td><td><input data-t="duct" data-i="${i}" data-f="h" value="${d.h}"></td><td><button class="del" data-del="duct" data-i="${i}"><i data-lucide="x"></i></button></td></tr>`).join('') +
     `</table>` +
-    `<div class="empty" style="text-align:left">Busbar (L1/L2/L3/PE) fixed di sisi kiri panel, tidak dapat dipindah.</div>` +
     `</div><div class="mfoot"><button class="rp-btn" id="ms_cancel" style="width:auto;margin:0"><i data-lucide="x"></i>Cancel</button><button class="rp-btn" id="ms_apply" style="width:auto;margin:0;background:#2563eb;border-color:#3b82f6;color:#fff"><i data-lucide="check"></i>Apply</button></div>`;
   $('modalBg').classList.add('open');
   lucideRefresh();
