@@ -1918,40 +1918,62 @@ function loadLS(){
     return true;
   } catch(e){ return false; }
 }
+function contentBBox(){
+  /* bbox koordinat-dunia dari seluruh konten (tanpa grid & overlay) */
+  const ids = ['lyrPanel','lyrBus','lyrRail','lyrDuct','lyrElem','lyrWire','lyrTerm','lyrLabel'];
+  let x0=Infinity, y0=Infinity, x1=-Infinity, y1=-Infinity, found=false;
+  for (const id of ids){
+    const g = document.getElementById(id); if (!g) continue;
+    let bb; try { bb = g.getBBox(); } catch(e){ continue; }
+    if (!bb || (!bb.width && !bb.height)) continue;
+    x0=Math.min(x0, bb.x); y0=Math.min(y0, bb.y);
+    x1=Math.max(x1, bb.x+bb.width); y1=Math.max(y1, bb.y+bb.height);
+    found = true;
+  }
+  if (!found) return { x:0, y:0, w:S.w, h:S.h };
+  return { x:x0, y:y0, w:x1-x0, h:y1-y0 };
+}
 function printPanel(){
-  /* Clone kanvas SVG, reset view ke skala panel, tampilkan overlay print, lalu window.print() */
-  const w = S.w, h = S.h;
-  const pad = 24;      /* margin kiri/kanan/bawah (mm = satuan dunia) */
-  const padTop = 22;   /* ruang untuk judul di atas panel */
-  const svgW = w + pad*2, svgH = padTop + h + pad;
+  /* viewBox mencakup panel + semua kabel yang dirutekan di luar box */
+  const bb = contentBBox();
+  const m = 24;        /* margin sekeliling konten (mm) */
+  const titleH = 18;   /* ruang judul di atas */
+  const minX = Math.min(0, bb.x) - m;
+  const minY = Math.min(0, bb.y) - m - titleH;
+  const maxX = Math.max(S.w, bb.x + bb.w) + m;
+  const maxY = Math.max(S.h, bb.y + bb.h) + m;
+  const vbW = maxX - minX, vbH = maxY - minY;
+
   const clone = svg.cloneNode(true);
   clone.removeAttribute('id');
-  clone.setAttribute('width', svgW);
-  clone.setAttribute('height', svgH);
-  clone.setAttribute('viewBox', `0 0 ${svgW} ${svgH}`);
+  clone.setAttribute('width', Math.round(vbW));
+  clone.setAttribute('height', Math.round(vbH));
+  clone.setAttribute('viewBox', `${minX} ${minY} ${vbW} ${vbH}`);
   clone.setAttribute('preserveAspectRatio', 'xMidYMid meet');
   clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
   /* bersihkan elemen interaktif & grid */
   clone.querySelectorAll('.term-hit,.wire-hit,.ghost,.sel-outline').forEach(n => n.remove());
   const gGrid = clone.querySelector('#lyrGrid'); if (gGrid) gGrid.style.display = 'none';
   const gOver = clone.querySelector('#lyrOver'); if (gOver) gOver.style.display = 'none';
-  /* reset transform viewport: panel (0,0)-(w,h) mm -> (pad,padTop) */
+  /* background box panel -> putih */
+  const gPanel = clone.querySelector('#lyrPanel');
+  if (gPanel){ const pr = gPanel.querySelector('rect'); if (pr) pr.setAttribute('fill', '#ffffff'); }
+  /* viewBox memakai koordinat dunia, jadi transform viewport direset */
   const gView = clone.querySelector('#viewport');
-  if (gView) gView.setAttribute('transform', `translate(${pad} ${padTop})`);
-  /* latar putih + judul + bingkai panel */
+  if (gView) gView.removeAttribute('transform');
+  /* latar putih + judul + ukuran */
   const mk = (tag, attrs) => { const e = document.createElementNS('http://www.w3.org/2000/svg', tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; };
-  clone.insertBefore(mk('rect', { x:0, y:0, width:svgW, height:svgH, fill:'#ffffff' }), clone.firstChild);
-  const border = mk('rect', { x:pad, y:padTop, width:w, height:h, fill:'none', stroke:'#cbd5e1', 'stroke-width':0.6 });
-  const title = mk('text', { x:pad, y:padTop-8, 'font-size':13, 'font-weight':600, fill:'#111' });
+  clone.insertBefore(mk('rect', { x:minX, y:minY, width:vbW, height:vbH, fill:'#ffffff' }), clone.firstChild);
+  const title = mk('text', { x:minX+m, y:minY+m+4, 'font-size':13, 'font-weight':600, fill:'#111' });
   title.textContent = S.name || 'Panel Designer';
-  const sub = mk('text', { x:pad + w, y:padTop-8, 'font-size':9, 'text-anchor':'end', fill:'#64748b' });
-  sub.textContent = `${w} x ${h} mm`;
-  clone.appendChild(border); clone.appendChild(title); clone.appendChild(sub);
+  const sub = mk('text', { x:maxX-m, y:minY+m+4, 'font-size':9, 'text-anchor':'end', fill:'#64748b' });
+  sub.textContent = `${S.w} x ${S.h} mm`;
+  clone.appendChild(title); clone.appendChild(sub);
 
-  /* orientasi halaman mengikuti rasio panel */
+  /* orientasi halaman mengikuti rasio bbox cetak */
   let ps = document.getElementById('printPageStyle');
   if (!ps){ ps = document.createElement('style'); ps.id = 'printPageStyle'; document.head.appendChild(ps); }
-  ps.textContent = `@page{ size:${w > h ? 'landscape' : 'portrait'}; margin:8mm }`;
+  ps.textContent = `@page{ size:${vbW > vbH ? 'landscape' : 'portrait'}; margin:8mm }`;
 
   /* Overlay */
   let ov = $('printOverlay');
