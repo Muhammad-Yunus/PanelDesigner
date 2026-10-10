@@ -135,6 +135,20 @@ html.printing #printOverlay svg{display:block;margin:0 auto}
   html.printing #printOverlay{position:static;width:100%;height:100%}
   html.printing #printOverlay svg{width:100vw;height:100vh}
 }
+/* BOM preview (paper look) */
+.bom-paper{background:#fff;color:#111;padding:20px 22px;border-radius:6px;max-height:60vh;overflow:auto}
+.bom-paper h1{font-size:18px;margin:0 0 2px}
+.bom-meta{color:#555;font-size:12px;margin-bottom:12px}
+.bom-table{width:100%;border-collapse:collapse;font-size:12px}
+.bom-table th,.bom-table td{border:1px solid #999;padding:5px 8px;vertical-align:top}
+.bom-table th{background:#f0f0f0;text-align:left}
+.bom-table td.c,.bom-table th.c{text-align:center;width:44px}
+.bom-table td.r,.bom-table th.r{text-align:right;width:70px}
+html.printing #printOverlay .bom-paper{max-height:none;overflow:visible;border-radius:0;padding:0}
+@media print{
+  html.printing #printOverlay .bom-paper{width:100%;height:auto;overflow:visible}
+  .bom-table th{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
 </style>
 </head>
 <body>
@@ -2316,46 +2330,64 @@ function buildBOM(){
     rows.push({ item:`Wire ${g} mm²`, desc:`${wcnt[g]} potong kabel`, qty:(wlen[g] / 1000).toFixed(1), unit:'m' });
   return rows;
 }
-function downloadBOM(){
+function buildBOMInner(){
   const rows = buildBOM();
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
   const date = new Date().toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric' });
   const trs = rows.map((r,i) =>
     `<tr><td class="c">${i+1}</td><td>${esc(r.item)}</td><td>${esc(r.desc)}</td><td class="r">${esc(r.qty)}</td><td class="c">${esc(r.unit)}</td></tr>`
   ).join('');
-  const html = `<!doctype html>
-<html lang="id"><head><meta charset="utf-8">
-<title>BOM - ${esc(S.name || 'Panel')}</title>
-<style>
-  *{box-sizing:border-box}
-  body{font-family:Arial,Helvetica,sans-serif;color:#111;margin:28px;background:#fff}
-  h1{font-size:20px;margin:0 0 2px}
-  .meta{color:#555;font-size:12px;margin-bottom:16px}
-  table{width:100%;border-collapse:collapse;font-size:12px}
-  th,td{border:1px solid #999;padding:6px 8px;vertical-align:top}
-  th{background:#f0f0f0;text-align:left}
-  td.c,th.c{text-align:center;width:48px}
-  td.r,th.r{text-align:right;width:72px}
-  thead{display:table-header-group}
-  @media print{ body{margin:10mm} }
-</style></head>
-<body>
-  <h1>Bill of Materials</h1>
-  <div class="meta"><b>${esc(S.name || 'Panel')}</b> &middot; ${S.w}\u00d7${S.h}\u00d7${S.d} mm &middot; ${date}</div>
-  <table>
-    <thead><tr><th class="c">No</th><th>Item</th><th>Desc</th><th class="r">Qty</th><th class="c">Unit</th></tr></thead>
-    <tbody>${trs || '<tr><td colspan="5" style="text-align:center;color:#888">Tidak ada item</td></tr>'}</tbody>
-  </table>
-</body></html>`;
-  const blob = new Blob([html], { type:'text/html;charset=utf-8' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = (S.name || 'panel').replace(/[^\w\- ]+/g,'').replace(/\s+/g,'_').toLowerCase() + '_bom.html';
-  a.click();
-  URL.revokeObjectURL(a.href);
-  setStatus('BOM dibuat ✓ ' + rows.length + ' item');
+  const html =
+    `<h1>Bill of Materials</h1>` +
+    `<div class="bom-meta"><b>${esc(S.name || 'Panel')}</b> &middot; ${S.w}\u00d7${S.h}\u00d7${S.d} mm &middot; ${date}</div>` +
+    `<table class="bom-table">` +
+      `<thead><tr><th class="c">No</th><th>Item</th><th>Desc</th><th class="r">Qty</th><th class="c">Unit</th></tr></thead>` +
+      `<tbody>${trs || '<tr><td colspan="5" style="text-align:center;color:#888">Tidak ada item</td></tr>'}</tbody>` +
+    `</table>`;
+  return { html, count: rows.length };
 }
-$('btnBOM').addEventListener('click', downloadBOM);
+function openBOM(){
+  const { html, count } = buildBOMInner();
+  const m = $('modal');
+  m.innerHTML =
+    `<h3>Bill of Materials</h3>` +
+    `<div class="mbody"><div class="bom-paper" id="bomPaper">${html}</div></div>` +
+    `<div class="mfoot">` +
+      `<button class="rp-btn" id="bomClose" style="width:auto;margin:0"><i data-lucide="x"></i>Close</button>` +
+      `<button class="rp-btn" id="bomPrint" style="width:auto;margin:0;background:#2563eb;border-color:#3b82f6;color:#fff"><i data-lucide="printer"></i>Print (PDF)</button>` +
+    `</div>`;
+  $('modalBg').classList.add('open');
+  lucideRefresh();
+  $('bomClose').addEventListener('click', () => $('modalBg').classList.remove('open'));
+  $('bomPrint').addEventListener('click', printBOM);
+  setStatus('BOM dibuat ✓ ' + count + ' item');
+}
+function printBOM(){
+  const paper = $('bomPaper');
+  if (!paper) return;
+  let ov = $('printOverlay');
+  if (!ov){
+    ov = document.createElement('div');
+    ov.id = 'printOverlay';
+    document.body.appendChild(ov);
+  }
+  ov.innerHTML = '';
+  const clone = paper.cloneNode(true);
+  clone.removeAttribute('id');
+  ov.appendChild(clone);
+  let ps = document.getElementById('printPageStyle');
+  if (!ps){ ps = document.createElement('style'); ps.id = 'printPageStyle'; document.head.appendChild(ps); }
+  ps.textContent = '@page{ size:portrait; margin:10mm }';
+  document.documentElement.classList.add('printing');
+  setTimeout(() => window.print(), 50);
+  const afterPrint = () => {
+    document.documentElement.classList.remove('printing');
+    ov.innerHTML = '';
+    window.removeEventListener('afterprint', afterPrint);
+  };
+  window.addEventListener('afterprint', afterPrint);
+}
+$('btnBOM').addEventListener('click', openBOM);
 $('btnExport').addEventListener('click', () => {
   const blob = new Blob([JSON.stringify(S, null, 2)], { type:'application/json' });
   const a = document.createElement('a');
