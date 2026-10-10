@@ -146,6 +146,7 @@ html.printing #printOverlay svg{display:block;margin:0 auto}
       <button class="tb-btn" id="btnExport" title="Export"><i data-lucide="download"></i></button>
       <button class="tb-btn" id="btnImport" title="Import"><i data-lucide="upload"></i></button>
       <button class="tb-btn" id="btnPrint" title="Print"><i data-lucide="printer"></i></button>
+      <button class="tb-btn" id="btnBOM" title="Bill of Materials"><i data-lucide="clipboard-list"></i></button>
       <button class="tb-btn" id="btnWires"><i data-lucide="filter"></i>Filters</button>
     </div>
     <div class="tb-group">
@@ -2271,6 +2272,90 @@ function printPanel(){
   window.addEventListener('afterprint', afterPrint);
 }
 setInterval(() => { if (ui.dirty) saveLS(); }, 5000);
+/* ===================== BILL OF MATERIALS ===================== */
+function bomSegLen(pts){
+  let L = 0;
+  for (let i=1;i<pts.length;i++){
+    const a = pts[i-1], b = pts[i];
+    L += Math.hypot(b.x - a.x, b.y - a.y);
+  }
+  return L;
+}
+function buildBOM(){
+  const rows = [];
+  const ecnt = {};
+  for (const e of S.elements) ecnt[e.type] = (ecnt[e.type] || 0) + 1;
+  for (const type of Object.keys(ecnt)){
+    const c = CATALOG[type]; if (!c) continue;
+    rows.push({ item:c.label, desc:[c.catalog, c.rating].filter(Boolean).join(' · '), qty:ecnt[type], unit:'pcs' });
+  }
+  const rcnt = {};
+  for (const r of S.rails) rcnt[r.len] = (rcnt[r.len] || 0) + 1;
+  for (const len of Object.keys(rcnt).map(Number).sort((a,b)=>a-b))
+    rows.push({ item:'Din Rail TS35', desc:`TS35 · panjang ${len} mm`, qty:rcnt[len], unit:'pcs' });
+  const dcnt = {};
+  for (const d of S.ducts){ const k = d.w + 'x' + d.h; dcnt[k] = (dcnt[k] || 0) + 1; }
+  for (const k of Object.keys(dcnt)){
+    const [w,h] = k.split('x');
+    rows.push({ item:'Cable Ducting', desc:`${w} x ${h} mm`, qty:dcnt[k], unit:'pcs' });
+  }
+  const buses = S.buses || [];
+  if (buses.length){
+    const bars = buses.reduce((n,b) => n + (4 + (b.pe !== false ? 1 : 0)), 0);
+    const lens = Array.from(new Set(buses.map(b => b.len))).sort((a,b)=>a-b).join('/');
+    const hasPE = buses.some(b => b.pe !== false);
+    rows.push({ item:'Busbar', desc:`${buses.length} set (L1/L2/L3/N${hasPE ? '/PE' : ''}) · ${lens} mm`, qty:bars, unit:'pcs' });
+  }
+  const wcnt = {}, wlen = {};
+  for (const w of S.wires){
+    const g = w.gauge || 0;
+    wcnt[g] = (wcnt[g] || 0) + 1;
+    wlen[g] = (wlen[g] || 0) + (w.pts ? bomSegLen(w.pts) : 0);
+  }
+  for (const g of Object.keys(wcnt).map(Number).sort((a,b)=>a-b))
+    rows.push({ item:`Wire ${g} mm²`, desc:`${wcnt[g]} potong kabel`, qty:(wlen[g] / 1000).toFixed(1), unit:'m' });
+  return rows;
+}
+function downloadBOM(){
+  const rows = buildBOM();
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
+  const date = new Date().toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric' });
+  const trs = rows.map((r,i) =>
+    `<tr><td class="c">${i+1}</td><td>${esc(r.item)}</td><td>${esc(r.desc)}</td><td class="r">${esc(r.qty)}</td><td class="c">${esc(r.unit)}</td></tr>`
+  ).join('');
+  const html = `<!doctype html>
+<html lang="id"><head><meta charset="utf-8">
+<title>BOM - ${esc(S.name || 'Panel')}</title>
+<style>
+  *{box-sizing:border-box}
+  body{font-family:Arial,Helvetica,sans-serif;color:#111;margin:28px;background:#fff}
+  h1{font-size:20px;margin:0 0 2px}
+  .meta{color:#555;font-size:12px;margin-bottom:16px}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th,td{border:1px solid #999;padding:6px 8px;vertical-align:top}
+  th{background:#f0f0f0;text-align:left}
+  td.c,th.c{text-align:center;width:48px}
+  td.r,th.r{text-align:right;width:72px}
+  thead{display:table-header-group}
+  @media print{ body{margin:10mm} }
+</style></head>
+<body>
+  <h1>Bill of Materials</h1>
+  <div class="meta"><b>${esc(S.name || 'Panel')}</b> &middot; ${S.w}\u00d7${S.h}\u00d7${S.d} mm &middot; ${date}</div>
+  <table>
+    <thead><tr><th class="c">No</th><th>Item</th><th>Desc</th><th class="r">Qty</th><th class="c">Unit</th></tr></thead>
+    <tbody>${trs || '<tr><td colspan="5" style="text-align:center;color:#888">Tidak ada item</td></tr>'}</tbody>
+  </table>
+</body></html>`;
+  const blob = new Blob([html], { type:'text/html;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (S.name || 'panel').replace(/[^\w\- ]+/g,'').replace(/\s+/g,'_').toLowerCase() + '_bom.html';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  setStatus('BOM dibuat ✓ ' + rows.length + ' item');
+}
+$('btnBOM').addEventListener('click', downloadBOM);
 $('btnExport').addEventListener('click', () => {
   const blob = new Blob([JSON.stringify(S, null, 2)], { type:'application/json' });
   const a = document.createElement('a');

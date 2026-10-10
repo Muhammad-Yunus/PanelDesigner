@@ -37,6 +37,7 @@ Untuk merancang panel distribusi & kontrol: MCB, meter, kontaktor, PLC, PSU hing
 - **Common PLC & S/S** - terminal common keluaran PLC (COM) maupun input *sink/source* (S/S) boleh disambung ke L, 24V+ (DC+) atau 0V (DC-) tanpa peringatan.
 - **Auto-save ke localStorage** + **Export/Import JSON**.
 - **Print / Export PDF** - cetak layout panel langsung dari browser (pas satu halaman, orientasi mengikuti rasio, kabel yang dirutekan di luar box tetap ikut ter-cetak).
+- **Bill of Materials (BOM)** - tombol BOM men-generate & mengunduh dokumen HTML berisi judul panel + tabel **No / Item / Desc / Qty / Unit** (komponen, din rail, ducting, busbar, dan total panjang kabel per ukuran); bisa dibuka di browser lalu di-print ke PDF.
 - **Show/hide wire (ala KiCad)** - floating panel expand/collapse berisi daftar **sinyal distinct** (wire dengan nama & warna sama digabung) dengan checkbox, bar warna, dan nama; bisa difilter berdasarkan nama dan warna (color picker).
 - **Ubah Class per kabel** - dropdown *Class* di panel properti kabel (pilihan *Auto* atau L1/L2/L3/L/N/PE/DC+/DC-/COM/DC_IN/PLC_RELAY_OUT/COIL/AC/OTHER) untuk memindahkan kabel antar grup sinyal; warna & nama kabel mengikuti class terpilih (selama tak ada override warna manual).
 - **Dialog selamat datang** - pilih *Simple BAS*, *Complete BAS* (520×720 mm) atau *Empty Panel*.
