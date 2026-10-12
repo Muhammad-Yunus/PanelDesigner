@@ -2336,6 +2336,12 @@ function bomColorName(hex){
 function bomTwistName(w){
   return rs485Side(w) ? 'RS485' : wireName(w);
 }
+/* kabel yang melewati terminal DC (DC_IN/DC+/DC-) dikategorikan AWG18 */
+const BOM_DC_CLASSES = { 'DC_IN':1, 'DC+':1, 'DC-':1 };
+function bomWireIsDC(w){
+  if (BOM_DC_CLASSES[wireClsName(w)]) return true;
+  return !!BOM_DC_CLASSES[refClass(w.from)] || !!BOM_DC_CLASSES[refClass(w.to)];
+}
 function buildBOM(){
   const rows = [];
   const ecnt = {};
@@ -2364,7 +2370,7 @@ function buildBOM(){
   const wgroups = new Map();
   for (const w of S.wires){
     const twisted = !!w.twist;
-    const awg = awgOfGauge(w.gauge);
+    const awg = twisted ? awgOfGauge(w.gauge) : (bomWireIsDC(w) ? 18 : awgOfGauge(w.gauge));
     const key = twisted
       ? 'T|' + awg + '|' + bomTwistName(w)
       : 'N|' + awg + '|' + String(wireColor(w)).toLowerCase();
