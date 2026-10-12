@@ -2295,6 +2295,22 @@ function bomSegLen(pts){
   }
   return L;
 }
+/* gauge (mm²) -> AWG terdekat */
+const AWG_TABLE = [[8,8.37],[10,5.26],[12,3.31],[14,2.08],[16,1.31],[18,0.823],[20,0.518],[22,0.326],[24,0.205],[26,0.128]];
+function awgOfGauge(mm2){
+  if (!mm2) return null;
+  let best = AWG_TABLE[0];
+  for (const s of AWG_TABLE){ if (Math.abs(s[1] - mm2) < Math.abs(best[1] - mm2)) best = s; }
+  return best[0];
+}
+const COLOR_NAME = { '#ef4444':'merah','#f97316':'oranye','#eab308':'kuning','#dc2626':'merah','#3b82f6':'biru',
+  '#16a34a':'hijau','#a855f7':'ungu','#15803d':'hijau tua','#64748b':'abu','#0ea5e9':'cyan','#14b8a6':'teal',
+  '#d946ef':'magenta','#f59e0b':'amber','#94a3b8':'abu' };
+function bomColorName(hex){ return COLOR_NAME[String(hex).toLowerCase()] || String(hex); }
+/* nama pair untuk kabel twisted: RS485 A & B digabung jadi satu pair */
+function bomTwistName(w){
+  return rs485Side(w) ? 'RS485' : wireName(w);
+}
 function buildBOM(){
   const rows = [];
   const ecnt = {};
@@ -2320,14 +2336,41 @@ function buildBOM(){
     const hasPE = buses.some(b => b.pe !== false);
     rows.push({ item:'Busbar', desc:`${buses.length} set (L1/L2/L3/N${hasPE ? '/PE' : ''}) · ${lens} mm`, qty:bars, unit:'pcs' });
   }
-  const wcnt = {}, wlen = {};
+  const wgroups = new Map();
   for (const w of S.wires){
-    const g = w.gauge || 0;
-    wcnt[g] = (wcnt[g] || 0) + 1;
-    wlen[g] = (wlen[g] || 0) + (w.pts ? bomSegLen(w.pts) : 0);
+    const twisted = !!w.twist;
+    const awg = awgOfGauge(w.gauge);
+    const key = twisted
+      ? 'T|' + awg + '|' + bomTwistName(w)
+      : 'N|' + awg + '|' + String(wireColor(w)).toLowerCase();
+    let g = wgroups.get(key);
+    if (!g){ g = { twisted, awg, gauge:w.gauge, color:String(wireColor(w)), name:'', conductors:0, len:0, names:new Set() }; wgroups.set(key, g); }
+    if (twisted) g.name = bomTwistName(w);
+    g.conductors++;
+    g.len += (w.pts ? bomSegLen(w.pts) : 0);
+    g.names.add(twisted ? bomTwistName(w) : wireName(w));
   }
-  for (const g of Object.keys(wcnt).map(Number).sort((a,b)=>a-b))
-    rows.push({ item:`Wire ${g} mm²`, desc:`${wcnt[g]} potong kabel`, qty:(wlen[g] / 1000).toFixed(1), unit:'m' });
+  const wlist = Array.from(wgroups.values()).sort((a,b)=>
+    (a.twisted - b.twisted) || ((a.awg||0) - (b.awg||0)) || a.color.localeCompare(b.color));
+  for (const g of wlist){
+    if (g.twisted){
+      const pairs = g.conductors / 2;
+      const ptxt = (pairs % 1 === 0) ? String(pairs) : pairs.toFixed(1);
+      rows.push({
+        item: 'Kabel UTP Cat-6',
+        desc: `Twisted pair · ${ptxt} pair · sinyal: ${Array.from(g.names).join(', ')}`,
+        qty: (g.len / 2000).toFixed(1),
+        unit: 'm'
+      });
+    } else {
+      rows.push({
+        item: `Kabel AWG${g.awg}`,
+        desc: `Non-twisted · ${bomColorName(g.color)} (${g.color}) · ${g.conductors} kabel · ${Array.from(g.names).join(', ')}`,
+        qty: (g.len / 1000).toFixed(1),
+        unit: 'm'
+      });
+    }
+  }
   return rows;
 }
 function buildBOMInner(){
